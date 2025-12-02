@@ -1,5 +1,5 @@
 export const config = {
-  appName: "Shipfree",
+  appName: "GoDigital",
   domainName: "https://shipfree.idee8.agency",
   mailgun: {
     // subdomain to use when sending emails, if you don't have a subdomain, just remove it. Highly recommended to have one (i.e. mg.yourdomain.com or mail.yourdomain.com)

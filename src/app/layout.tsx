@@ -1,41 +1,33 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
-import type React from "react"; // Import React
 import { cn } from "@/lib/utils";
+import Sidebar from "@/components/utils/Sidebar";
 
-const bricolageGrotesque = Bricolage_Grotesque({
+export const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "ShipFree",
-  description:
-    "Open Source Alternative to ShipFast - Launch your startup in days Not in weeks",
-  keywords: [
-    "saas",
-    "boilerplate",
-    "open source",
-    "free",
-    "open source shipfast",
-    "shipfree",
-    "idee8",
-    "made by idee8",
-    "free boilerplate",
-    "github",
-  ],
+  title: "GoDigital",
+  description: "Plataforma de automatización y gestión financiera para PYMES",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={cn(bricolageGrotesque.className, "antialiased")}>
-        {children}
+      <body className={cn(bricolage.className, "antialiased")}>
+        <div className="flex">
+          <Sidebar />
+
+          <main className="flex-1 min-h-screen">{children}</main>
+        </div>
       </body>
     </html>
   );

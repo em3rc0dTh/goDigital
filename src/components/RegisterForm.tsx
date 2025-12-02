@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,17 +11,17 @@ export function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-  const supabase = createClient();
+  // const supabase = createClient();
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      console.error("Error registering:", error.message);
-    } else {
-      router.push("/dashboard");
-    }
-  };
+  // const handleRegister = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   const { error } = await supabase.auth.signUp({ email, password });
+  //   if (error) {
+  //     console.error("Error registering:", error.message);
+  //   } else {
+  //     router.push("/dashboard");
+  //   }
+  // };
 
   return (
     <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
@@ -32,7 +31,7 @@ export function RegisterForm() {
         </h2>
       </div>
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form onSubmit={handleRegister} className="space-y-4">
+        {/* <form onSubmit={handleRegister} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -56,7 +55,7 @@ export function RegisterForm() {
           <Button type="submit" className="w-full">
             Register
           </Button>
-        </form>
+        </form> */}
         <p className="text-center text-sm pt-4">
           Already have an account?{" "}
           <Link href="/login" className="text-blue-500 hover:underline">

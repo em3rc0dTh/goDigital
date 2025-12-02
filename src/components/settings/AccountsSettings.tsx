@@ -1,0 +1,155 @@
+"use client";
+
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Trash2 } from "lucide-react";
+import React, { RefObject } from "react";
+import { AccountsTable } from "../extract/AccountsTable";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
+import { SelectValue } from "@radix-ui/react-select";
+
+interface AccountsTabProps {
+  accounts: any[];
+  activeAccount: string | null;
+  selectAccount: (id: string) => void;
+  addAccount: (event: React.FormEvent<HTMLFormElement>) => void;
+  saveAccountUpdates: () => void;
+  deleteSelectedAccount: () => void;
+  bankAlias: RefObject<HTMLInputElement>;
+  bankName: RefObject<HTMLInputElement>;
+  bankHolder: RefObject<HTMLInputElement>;
+  bankNumber: RefObject<HTMLInputElement>;
+  bankAccountType: React.MutableRefObject<string>;
+  bankCurrency: RefObject<HTMLInputElement>;
+  bankType: RefObject<HTMLInputElement>;
+  settingsAlias: RefObject<HTMLInputElement>;
+  settingsBankName: RefObject<HTMLInputElement>;
+  settingsHolder: RefObject<HTMLInputElement>;
+  settingsNumber: RefObject<HTMLInputElement>;
+  settingsCurrency: RefObject<HTMLInputElement>;
+  settingsType: RefObject<HTMLInputElement>;
+}
+
+export function AccountsTab({
+  accounts,
+  activeAccount,
+  selectAccount,
+  addAccount,
+  saveAccountUpdates,
+  deleteSelectedAccount,
+  bankAlias,
+  bankName,
+  bankHolder,
+  bankNumber,
+  bankAccountType,
+  bankCurrency,
+  bankType,
+  settingsAlias,
+  settingsBankName,
+  settingsHolder,
+  settingsNumber,
+  settingsCurrency,
+  settingsType,
+}: AccountsTabProps) {
+  return (
+    <div className="space-y-6">
+      {/* Accounts Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Bank Accounts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AccountsTable
+            accounts={accounts}
+            activeId={activeAccount}
+            onSelect={selectAccount}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Add Account */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="w-5 h-5" />
+            Add New Account
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={addAccount} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input ref={bankAlias} placeholder="Alias (e.g., Main)" />
+              <Input ref={bankName} placeholder="Bank Name" required />
+              <Input ref={bankHolder} placeholder="Account Holder" required />
+              <Select onValueChange={(v) => (bankAccountType.current = v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Bank Account Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Personal">Personal</SelectItem>
+                  <SelectItem value="Business">Business</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Input ref={bankNumber} placeholder="Account Number" required />
+              <Input ref={bankCurrency} placeholder="Currency (PEN, USD...)" />
+              <Input
+                ref={bankType}
+                placeholder="Account Type (Savings, Checking...)"
+              />
+            </div>
+            <Button type="submit">Add Account</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Update Account */}
+      {activeAccount && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Update Selected Account</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input ref={settingsAlias} placeholder="Alias" />
+              <Input ref={settingsBankName} placeholder="Bank Name" />
+              <Input ref={settingsHolder} placeholder="Account Holder" />
+              <Input
+                ref={settingsNumber}
+                placeholder="Account Number"
+                readOnly
+                className="bg-gray-100"
+              />
+              <Input ref={settingsCurrency} placeholder="Currency" />
+              <Input ref={settingsType} placeholder="Account Type" />
+            </div>
+            <Button onClick={saveAccountUpdates}>Save Changes</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Delete Account */}
+      {activeAccount && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-600">Danger Zone</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-red-800 mb-4">
+              Deleting this account will also remove all associated transactions
+            </p>
+            <Button
+              variant="destructive"
+              onClick={deleteSelectedAccount}
+              className="w-full"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Account
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
