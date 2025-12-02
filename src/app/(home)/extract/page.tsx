@@ -1,11 +1,11 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AccountsView from "../../components/extract/accountsView";
-import Transactions from "../../components/extract/transactions";
-import SettingsView from "../../components/extract/settings";
-import EmailsView from "../../components/extract/emails";
-import EmailsPage from "../../components/extract/emailsPage";
+import AccountsView from "../../../components/extract/accountsView";
+import Transactions from "../../../components/extract/transactions";
+import SettingsView from "../../../components/extract/settings";
+import EmailsView from "../../../components/extract/emails";
+import EmailsPage from "../../../components/extract/emailsPage";
 
 export default function Extract() {
   return (

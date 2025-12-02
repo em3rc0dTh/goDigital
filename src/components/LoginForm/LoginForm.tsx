@@ -4,6 +4,17 @@ import { useState } from "react";
 import { AuthLeftContent } from "../AuthLeftContent";
 import { AuthTabs } from "../AuthTabs";
 import { ResetPasswordForm } from "../ResetPasswordForm";
+import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "../ui/button";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const [tab, setTab] = useState<
@@ -12,8 +23,57 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const handleLogin = () => {};
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const action = tab === "login" ? "login" : "signup";
+
+      const res = await fetch("/api/back/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, email, password, fullName }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error("Authentication Failed", {
+          description: data.error || "An error occurred",
+        });
+        return;
+      }
+
+      const successMessage =
+        action === "login"
+          ? `Welcome back, ${data.user.fullName}!`
+          : `Welcome, ${data.user.fullName}!`;
+
+      toast.success("Success!", {
+        description: successMessage,
+      });
+
+      // Limpiar form
+      setEmail("");
+      setPassword("");
+      setFullName("");
+
+      // Redirigir
+      router.push("/home");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error", {
+        description: "An unexpected error occurred",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="max-h-screen bg-transparent flex items-center justify-center">
@@ -37,9 +97,29 @@ export function LoginForm() {
             fullName={fullName}
             setFullName={setFullName}
             handleLogin={handleLogin}
+            isLoading={isLoading}
           />
         )}
       </div>
+
+      <Dialog open={!!errorMessage} onOpenChange={() => setErrorMessage(null)}>
+        <DialogContent className="bg-neutral-900 border border-neutral-700 rounded-lg">
+          <DialogHeader>
+            <DialogTitle className="text-white">Error</DialogTitle>
+            <DialogDescription className="text-neutral-300">
+              {errorMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+              onClick={() => setErrorMessage(null)}
+            >
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

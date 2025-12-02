@@ -18,6 +18,7 @@ import {
   Share2,
   HelpCircle,
   Signal,
+  LogOut,
   Menu,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -62,6 +63,7 @@ export default function Sidebar() {
     { icon: Share2, label: "Share Secret" },
     { icon: HelpCircle, label: "Support" },
     { icon: Signal, label: "Status" },
+    { icon: LogOut, label: "Log Out" },
   ];
 
   return (
@@ -164,19 +166,34 @@ function SidebarContent({
       </ScrollArea>
 
       <Separator />
+
       <ScrollArea className="px-2 py-3">
-        {bottomItems.map((item: any, index: number) => (
-          <Button
-            key={index}
-            variant="ghost"
-            className={`w-full justify-start gap-3 mb-1 ${
-              collapsed ? "px-2" : "px-3"
-            }`}
-          >
-            <item.icon className="w-5 h-5" />
-            {!collapsed && item.label}
-          </Button>
-        ))}
+        {bottomItems.map((item: any, index: number) => {
+          const handleClick =
+            item.label === "Log Out"
+              ? async () => {
+                  await fetch("/api/back/logout", {
+                    method: "POST",
+                    credentials: "include",
+                  });
+                  window.location.href = "/login";
+                }
+              : () => {};
+
+          return (
+            <Button
+              key={index}
+              variant="ghost"
+              className={`w-full justify-start gap-3 mb-1 ${
+                collapsed ? "px-2" : "px-3"
+              }`}
+              onClick={handleClick}
+            >
+              <item.icon className="w-5 h-5" />
+              {!collapsed && item.label}
+            </Button>
+          );
+        })}
       </ScrollArea>
     </>
   );

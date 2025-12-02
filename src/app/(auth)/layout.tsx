@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import { Toaster } from "sonner";
 
 export default function AuthLayout({
   children,
@@ -22,6 +23,7 @@ export default function AuthLayout({
       </nav>
       <div className="min-h-screen w-full bg-black/40 flex items-center justify-center">
         {children}
+        <Toaster position="top-right" />
       </div>
     </div>
   );

@@ -4,7 +4,6 @@ import Image from "next/image";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { useState } from "react";
-import { redirect, useRouter } from "next/navigation";
 
 export function AuthTabs({
   tab,
@@ -16,9 +15,10 @@ export function AuthTabs({
   setFullName,
   setPassword,
   handleLogin,
+  isLoading,
 }: any) {
   const [showEmailSignUp, setShowEmailSignUp] = useState(false);
-  const router = useRouter();
+
   return (
     <div className="bg-transparent border border-neutral-700 rounded-xl p-8 w-full max-w-md">
       <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "signUp")}>
@@ -41,6 +41,7 @@ export function AuthTabs({
         <TabsContent value="login">
           <Button
             variant="outline"
+            disabled={isLoading}
             className="w-full flex items-center justify-center gap-3 border-neutral-600 text-white bg-[#0f0f17] hover:bg-neutral-800 py-5"
           >
             <Image src="/google.png" alt="Google" width={18} height={18} />
@@ -49,15 +50,16 @@ export function AuthTabs({
 
           <Button
             variant="outline"
+            disabled={isLoading}
             className="w-full flex items-center justify-center gap-3 border-neutral-600 text-white bg-[#0f0f17] hover:bg-neutral-800 py-5"
           >
             <Image src="/github.png" alt="Github" width={18} height={18} />
             Log in with GitHub
           </Button>
 
-          <div className="text-center text-neutral-500 text-sm">or</div>
+          <div className="text-center text-neutral-500 text-sm my-4">or</div>
 
-          <form onSubmit={handleLogin} className="space-y-4 ">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="flex flex-col gap-2">
               <Label className="text-neutral-300 text-sm">
                 Work Email Address
@@ -67,6 +69,8 @@ export function AuthTabs({
                 className="bg-neutral-900 border-neutral-700 text-white h-11"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                required
               />
             </div>
 
@@ -77,6 +81,8 @@ export function AuthTabs({
                 className="bg-neutral-900 border-neutral-700 text-white h-11"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                required
               />
             </div>
 
@@ -91,11 +97,11 @@ export function AuthTabs({
             </p>
 
             <Button
-              type="button"
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 text-md font-semibold"
-              onClick={() => {router.push("/")}}
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 text-md font-semibold disabled:opacity-50"
             >
-              Log In →
+              {isLoading ? "Logging in..." : "Log In →"}
             </Button>
           </form>
         </TabsContent>
@@ -105,6 +111,7 @@ export function AuthTabs({
             <div className="flex flex-col gap-4 justify-center">
               <Button
                 variant="outline"
+                disabled={isLoading}
                 className="w-full flex items-center justify-center gap-3 border-neutral-600 text-white bg-[#0f0f17] hover:bg-neutral-800 py-5"
               >
                 <Image src="/google.png" alt="Google" width={18} height={18} />
@@ -113,6 +120,7 @@ export function AuthTabs({
 
               <Button
                 variant="outline"
+                disabled={isLoading}
                 className="w-full flex items-center justify-center gap-3 border-neutral-600 text-white bg-[#0f0f17] hover:bg-neutral-800 py-5"
               >
                 <Image src="/github.png" alt="Github" width={18} height={18} />
@@ -124,7 +132,8 @@ export function AuthTabs({
               <Button
                 type="button"
                 onClick={() => setShowEmailSignUp(true)}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 text-md font-semibold"
+                disabled={isLoading}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 text-md font-semibold disabled:opacity-50"
               >
                 Sign Up With Email →
               </Button>
@@ -141,6 +150,8 @@ export function AuthTabs({
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Full Name"
+                  disabled={isLoading}
+                  required
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -153,6 +164,8 @@ export function AuthTabs({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Work Email Address"
+                  disabled={isLoading}
+                  required
                 />
               </div>
 
@@ -164,22 +177,24 @@ export function AuthTabs({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
+                  disabled={isLoading}
+                  required
                 />
               </div>
 
               <Button
-                type="button"
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 text-md font-semibold"
-                onClick={() => router.push("../setup")}
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 text-md font-semibold disabled:opacity-50"
               >
-                Sign Up →
+                {isLoading ? "Signing up..." : "Sign Up →"}
               </Button>
 
               <p
                 className="text-center text-sm text-neutral-400 hover:underline cursor-pointer"
                 onClick={() => setShowEmailSignUp(false)}
               >
-                ← Sign up with others options
+                ← Sign up with other options
               </p>
             </form>
           )}
