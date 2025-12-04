@@ -46,7 +46,7 @@ export default function SettingsView() {
 
   async function loadAccountsFromDB() {
     try {
-      const res = await fetch("/api/back/account", { cache: "no-store" });
+      const res = await fetch("http://localhost:4000/api/accounts", { cache: "no-store" });
       const data = await res.json();
       setAccountsState(data);
 
@@ -137,7 +137,7 @@ export default function SettingsView() {
     }
 
     try {
-      const res = await fetch("/api/back/account", {
+      const res = await fetch("http://localhost:4000/api/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -188,7 +188,7 @@ export default function SettingsView() {
     }
 
     try {
-      await fetch(`/api/back/account/${activeAccount}`, {
+      await fetch(`http://localhost:4000/api/accounts/${activeAccount}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -226,7 +226,7 @@ export default function SettingsView() {
     if (!ok) return;
 
     try {
-      await fetch(`/api/back/account/${activeAccount}`, {
+      await fetch(`http://localhost:4000/api/accounts/${activeAccount}`, {
         method: "DELETE",
       });
 

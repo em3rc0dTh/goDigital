@@ -27,7 +27,7 @@ export default function AccountsView() {
   // CARGA DESDE BACKEND
   async function fetchAccounts() {
     try {
-      const res = await fetch("/api/back/account", { cache: "no-store" });
+      const res = await fetch("http://localhost:4000/api/accounts", { cache: "no-store" });
       if (!res.ok) return;
 
       const data = await res.json();

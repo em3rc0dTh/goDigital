@@ -47,7 +47,7 @@ export default function Transactions() {
 
   async function loadAccountsFromDB() {
     try {
-      const res = await fetch("/api/back/account", { cache: "no-store" });
+      const res = await fetch("http://localhost:4000/api/accounts", { cache: "no-store" });
       const data = await res.json();
       setAccountsState(data);
     } catch (error) {
@@ -59,7 +59,7 @@ export default function Transactions() {
   async function loadTransactionsFromAPI(accountId: string) {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/back/transactions/${accountId}`, {
+      const res = await fetch(`http://localhost:4000/api/transactions/${accountId}`, {
         cache: "no-store",
       });
       if (!res.ok) {
@@ -79,7 +79,7 @@ export default function Transactions() {
   async function saveTransactionsToAPI(accountId: string, transactions: any[]) {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/back/transactions/${accountId}`, {
+      const res = await fetch(`http://localhost:4000/api/transactions/${accountId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transactions }),

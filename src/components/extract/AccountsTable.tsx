@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { loadTransactionsForAccount } from "./transaction";
 import { format } from "date-fns";
 
-const BASE = "/api/back/account";
+const BASE = "http://localhost:4000/api/accounts";
 
 export async function fetchAccounts() {
   const res = await fetch(BASE, { cache: "no-store" });

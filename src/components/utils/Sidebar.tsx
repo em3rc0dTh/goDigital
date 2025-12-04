@@ -171,7 +171,7 @@ function SidebarContent({
           const handleClick =
             item.label === "Log Out"
               ? async () => {
-                  await fetch("/api/back/logout", {
+                  await fetch("http://localhost:4000/api/logout", {
                     method: "POST",
                     credentials: "include",
                   });
