@@ -1,13 +1,14 @@
 // Archivo: /app/api/back/transactions/[id]/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../db";
 import Transaction from "../transaction-model";
 import mongoose from "mongoose";
 
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteParams = {
+  params: { id: string };
+};
+
+export async function GET(_req: NextRequest, { params }: RouteParams) {
   try {
     await connectDB();
     const { id } = await params;
@@ -26,18 +27,15 @@ export async function GET(
 
     return NextResponse.json(docs);
   } catch (err) {
-    console.error("GET error:", err);
+    console.error("GET /api/back/transactions/[id] error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: NextRequest, { params }: RouteParams) {
   try {
     await connectDB();
-    const { id } = await params;
+    const { id } = params;
     const body = await req.json();
 
     if (!id) {
@@ -55,15 +53,17 @@ export async function POST(
       );
     }
 
+    // Borra todas las transacciones actuales para esa cuenta
     await Transaction.deleteMany({ accountId: id });
 
+    // Inserta las nuevas transacciones asociadas a la cuenta
     const inserted = await Transaction.insertMany(
       body.transactions.map((x: any) => ({ ...x, accountId: id }))
     );
 
     return NextResponse.json({ ok: true, inserted: inserted.length });
   } catch (err) {
-    console.error("POST error:", err);
+    console.error("POST /api/back/transactions/[id] error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

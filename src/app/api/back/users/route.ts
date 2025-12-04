@@ -18,8 +18,6 @@ async function verifyPassword(password: string, hash: string) {
 export async function POST(req: NextRequest) {
   try {
     const { action, email, password, fullName } = await req.json();
-    console.log("AEA")
-    // Validation
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },
@@ -98,8 +96,8 @@ export async function POST(req: NextRequest) {
 
       res.cookies.set("session_token", token, {
         httpOnly: true,
-        secure: false, // NO HTTPS en localhost
-        sameSite: "lax", // para desarrollo
+        secure: false,
+        sameSite: "lax",
         path: "/",
         maxAge: 60 * 60 * 24 * 7,
       });

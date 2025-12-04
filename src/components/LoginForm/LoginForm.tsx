@@ -57,13 +57,10 @@ export function LoginForm() {
       toast.success("Success!", {
         description: successMessage,
       });
-
-      // Limpiar form
       setEmail("");
       setPassword("");
       setFullName("");
 
-      // Redirigir
       router.push("/home");
     } catch (error) {
       console.error(error);

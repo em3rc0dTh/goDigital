@@ -1,79 +1,115 @@
-// archivo: /app/api/back/account/[id]/route.ts
-
 import Account from "@/app/api/back/account/account";
 import mongoose from "mongoose";
 import { connectDB } from "../../db";
+import { NextRequest, NextResponse } from "next/server";
+type RouteParams = {
+  params: { id: string };
+};
 
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: RouteParams) {
   try {
     await connectDB();
-    const data = await req.json();
-    const { id } = await params;
+    const { id } = params;
+
+    if (!id) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return Response.json({ error: "Invalid account ID" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
 
-    const updated = await Account.findByIdAndUpdate(
-      id,
-      { $set: data }, // ← obligatorio
-      {
-        new: true,
-        runValidators: true,
-        strict: false, // ← obligatorio
-      }
-    );
+    const account: any = await Account.findById(id).lean();
 
-    if (!updated) {
-      return Response.json({ error: "Account not found" }, { status: 404 });
+    if (!account) {
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
-    // devolver todos los campos, incluidos los nuevos
-    return Response.json({
-      id: updated._id.toString(),
-      alias: updated.alias,
-      bank_name: updated.bank_name,
-      account_holder: updated.account_holder,
-      account_number: updated.account_number,
-      bank_account_type: updated.bank_account_type,
-      currency: updated.currency,
-      account_type: updated.account_type,
-      tx_count: updated.tx_count ?? 0,
-      oldest: updated.oldest ?? null,
-      newest: updated.newest ?? null,
-      createdAt: updated.createdAt,
+    return NextResponse.json({
+      id: account._id.toString(),
+      alias: account.alias,
+      bank_name: account.bank_name,
+      account_holder: account.account_holder,
+      account_number: account.account_number,
+      bank_account_type: account.bank_account_type,
+      currency: account.currency,
+      account_type: account.account_type,
+      createdAt: account.createdAt,
+      tx_count: account.tx_count,
+      oldest: account.oldest,
+      newest: account.newest,
     });
   } catch (err) {
-    console.error("PUT error:", err);
-    return Response.json({ error: "Error updating account" }, { status: 500 });
+    console.error("GET /api/back/account/[id] error:", err);
+    return NextResponse.json(
+      { error: "Error fetching account" },
+      { status: 500 }
+    );
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
     await connectDB();
-    const { id } = await params; // ✅ AWAIT params
+    const { id } = params;
+    const data = await req.json();
 
-    // Validar que es un ObjectId válido
+    if (!id) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return Response.json({ error: "Invalid account ID" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    }
+
+    const updated = await Account.findByIdAndUpdate(id, data, {
+      new: true,
+      runValidators: true,
+      strict: false, // allow partial updates
+    });
+
+    if (!updated) {
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(updated);
+  } catch (err) {
+    console.error("PUT /api/back/account/[id] error:", err);
+    return NextResponse.json(
+      { error: "Error updating account" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(_req: NextRequest, { params }: RouteParams) {
+  try {
+    await connectDB();
+    const { id } = params;
+
+    if (!id) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
 
     const deleted = await Account.findByIdAndDelete(id);
 
     if (!deleted) {
-      return Response.json({ error: "Account not found" }, { status: 404 });
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
-    return Response.json({ ok: true, message: "Account deleted successfully" });
+    return NextResponse.json(
+      { ok: true, message: "Account deleted successfully" },
+      { status: 200 }
+    );
   } catch (err) {
-    console.error("DELETE error:", err);
-    return Response.json({ error: "Error deleting account" }, { status: 500 });
+    console.error("DELETE /api/back/account/[id] error:", err);
+    return NextResponse.json(
+      { error: "Error deleting account" },
+      { status: 500 }
+    );
   }
 }

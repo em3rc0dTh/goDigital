@@ -8,7 +8,6 @@ import {
   CardContent,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -127,7 +126,6 @@ export default function Transactions() {
   }
 
   function normalizeDateTime(fechaRaw: string): string {
-    // 1. Formato business: dd/mm/yyyy
     const parts = fechaRaw.split("/");
     if (parts.length === 3) {
       const [dd, mm, yyyy] = parts.map((p) => parseInt(p, 10));
@@ -139,9 +137,8 @@ export default function Transactions() {
       }
     }
 
-    // 2. Formato personal sin año → agregar el año actual
     const currentYear = new Date().getFullYear();
-    const withYear = `${fechaRaw} ${currentYear}`; // <-- AQUI SE SOLUCIONA
+    const withYear = `${fechaRaw} ${currentYear}`;
 
     const parsed = new Date(withYear);
     if (!isNaN(parsed.getTime())) {
@@ -521,10 +518,8 @@ export default function Transactions() {
     let result: any[] = [];
     try {
       if (accountType === "personal") {
-        // Usa el parser actual de personal
         result = parsePersonalText(text, accountNormCurrency);
       } else {
-        // Business parser
         result = parseBusinessText(text, accountNormCurrency);
       }
     } catch (err: any) {
@@ -537,7 +532,6 @@ export default function Transactions() {
       return;
     }
 
-    // Detección de moneda en el batch
     const detectedCurrencies = new Set(result.map((r) => r.currency));
     if (detectedCurrencies.size > 1) {
       setSaveStatus("❌ Multiple currencies detected in same batch.");
@@ -552,7 +546,6 @@ export default function Transactions() {
       return;
     }
 
-    // Lógica de duplicados
     const cleanAccNum = (account.account_number || "").replace(
       /[^0-9A-Za-z]/g,
       ""
@@ -704,7 +697,6 @@ export default function Transactions() {
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 pb-10">
-      {/* HEADER */}
       <div className="space-y-2">
         <h1 className="text-4xl font-bold">Transactions</h1>
         <p className="text-muted-foreground">
@@ -712,7 +704,6 @@ export default function Transactions() {
         </p>
       </div>
 
-      {/* ACCOUNT SELECTION */}
       <Card>
         <CardHeader>
           <CardTitle>Select Account</CardTitle>
@@ -738,7 +729,6 @@ export default function Transactions() {
 
       {activeAccount && (
         <>
-          {/* PARSE AREA */}
           <Card>
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
@@ -821,7 +811,6 @@ export default function Transactions() {
             </CardContent>
           </Card>
 
-          {/* DUPLICATES */}
           {sessionDuplicates.length > 0 && (
             <Card className="border-yellow-300 bg-yellow-50">
               <CardHeader>
@@ -860,7 +849,6 @@ export default function Transactions() {
             </Card>
           )}
 
-          {/* TRANSACTIONS TABLE */}
           {storedTransactions.length > 0 && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -932,7 +920,6 @@ export default function Transactions() {
             </Card>
           )}
 
-          {/* MANAGEMENT */}
           <Card>
             <CardHeader>
               <CardTitle>Management</CardTitle>

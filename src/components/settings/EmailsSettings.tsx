@@ -3,7 +3,13 @@
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import React, { RefObject, useState } from "react";
 
 interface EmailSetup {
@@ -78,7 +84,6 @@ export function EmailTab({
 
   return (
     <div className="space-y-6">
-      {/* IMAP Config */}
       <Card>
         <CardHeader>
           <CardTitle>IMAP Configuration</CardTitle>
@@ -118,14 +123,17 @@ export function EmailTab({
                 <Button size="sm" onClick={() => setImapModalOpen(true)}>
                   Update Password
                 </Button>
-                <Button size="sm" variant="destructive" onClick={deleteImapConfig}>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={deleteImapConfig}
+                >
                   Delete
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Optional: History */}
           <div className="mt-4">
             <h4 className="font-semibold mb-2 text-sm">IMAP Config History</h4>
             {imapConfig?.history?.length > 0 ? (
@@ -138,7 +146,9 @@ export function EmailTab({
                     <p>
                       {conf.user} -{" "}
                       {conf.active ? (
-                        <span className="text-green-600 font-semibold">Active</span>
+                        <span className="text-green-600 font-semibold">
+                          Active
+                        </span>
                       ) : (
                         <span className="text-gray-500">Inactive</span>
                       )}
@@ -156,7 +166,6 @@ export function EmailTab({
         </CardContent>
       </Card>
 
-      {/* Email Setup */}
       <Card>
         <CardHeader>
           <CardTitle>Email Connector Setup</CardTitle>
@@ -206,7 +215,6 @@ export function EmailTab({
         </CardContent>
       </Card>
 
-      {/* Edit Email Setup Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -216,12 +224,16 @@ export function EmailTab({
             <div className="space-y-4">
               <Input
                 value={editData.alias}
-                onChange={(e) => setEditData({ ...editData, alias: e.target.value })}
+                onChange={(e) =>
+                  setEditData({ ...editData, alias: e.target.value })
+                }
                 placeholder="Alias"
               />
               <Input
                 value={editData.bank_name}
-                onChange={(e) => setEditData({ ...editData, bank_name: e.target.value })}
+                onChange={(e) =>
+                  setEditData({ ...editData, bank_name: e.target.value })
+                }
                 placeholder="Bank Name"
               />
               <Input
@@ -240,7 +252,10 @@ export function EmailTab({
               />
               <DialogFooter className="flex gap-2">
                 <Button onClick={handleSaveEdit}>Save</Button>
-                <Button variant="destructive" onClick={() => setModalOpen(false)}>
+                <Button
+                  variant="destructive"
+                  onClick={() => setModalOpen(false)}
+                >
                   Cancel
                 </Button>
               </DialogFooter>
@@ -249,7 +264,6 @@ export function EmailTab({
         </DialogContent>
       </Dialog>
 
-      {/* IMAP Password Modal */}
       <Dialog open={imapModalOpen} onOpenChange={setImapModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -264,7 +278,10 @@ export function EmailTab({
             />
             <DialogFooter className="flex gap-2">
               <Button onClick={handleSaveImapPass}>Save</Button>
-              <Button variant="destructive" onClick={() => setImapModalOpen(false)}>
+              <Button
+                variant="destructive"
+                onClick={() => setImapModalOpen(false)}
+              >
                 Cancel
               </Button>
             </DialogFooter>

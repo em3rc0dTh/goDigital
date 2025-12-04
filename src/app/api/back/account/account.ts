@@ -9,12 +9,11 @@ const AccountSchema = new mongoose.Schema({
   currency: { type: String },
   account_type: { type: String },
 
-  // Agregados
   tx_count: { type: Number, default: 0 },
   oldest: { type: Date, default: null },
   newest: { type: Date, default: null },
 
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
 
 export default mongoose.models.Account ||

@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { AccountsTable } from "./AccountsTable";
-import { Trash2, Mail, Database, Plus } from "lucide-react";
+import { Mail, Database } from "lucide-react";
 import { AccountsTab } from "../settings/AccountsSettings";
 import { EmailTab } from "../settings/EmailsSettings";
 
@@ -19,7 +15,6 @@ export default function SettingsView() {
   const [imapConfig, setImapConfig] = useState<any>(null);
   const [statusMessage, setStatusMessage] = useState("");
 
-  // Refs for forms
   const bankAlias = useRef<any>(null);
   const bankName = useRef<any>(null);
   const bankHolder = useRef<any>(null);
@@ -43,14 +38,12 @@ export default function SettingsView() {
   const serviceTypeEmail = useRef<any>(null);
   const bankEmailSender = useRef<any>(null);
 
-  // Load all data on mount
   useEffect(() => {
     loadAccountsFromDB();
     loadEmailSetups();
     loadImapConfig();
   }, []);
 
-  // Load accounts
   async function loadAccountsFromDB() {
     try {
       const res = await fetch("/api/back/account", { cache: "no-store" });
@@ -68,7 +61,6 @@ export default function SettingsView() {
     }
   }
 
-  // Load email setups
   async function loadEmailSetups() {
     try {
       const res = await fetch("http://localhost:8000/email/setup");
@@ -81,7 +73,6 @@ export default function SettingsView() {
     }
   }
 
-  // Load IMAP config
   async function loadImapConfig() {
     try {
       const res = await fetch("http://localhost:8000/imap/config");
@@ -126,7 +117,6 @@ export default function SettingsView() {
     populateSettingsForm(id, accountsState);
   };
 
-  // ===== ACCOUNTS TAB =====
   async function addAccount(event: any) {
     event.preventDefault();
 
@@ -258,7 +248,6 @@ export default function SettingsView() {
     }
   }
 
-  // ===== EMAIL TAB =====
   async function addEmailConfig(event: any) {
     event.preventDefault();
 
@@ -330,7 +319,6 @@ export default function SettingsView() {
     }
   }
 
-  // ===== EMAIL TAB CRUD =====
   async function updateImapConfig(user: string, password: string) {
     try {
       const res = await fetch(`http://localhost:8000/imap/config`, {
@@ -399,7 +387,6 @@ export default function SettingsView() {
     }
   }
 
-  // Tabs
   const tabs = [
     { id: "accounts", label: "Accounts", icon: Database },
     { id: "email", label: "Email Setup", icon: Mail },
@@ -414,7 +401,6 @@ export default function SettingsView() {
         </p>
       </div>
 
-      {/* Status Message */}
       {statusMessage && (
         <div
           className={`p-3 rounded text-sm ${
@@ -427,7 +413,6 @@ export default function SettingsView() {
         </div>
       )}
 
-      {/* Tabs */}
       <div className="flex gap-2 border-b">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -449,7 +434,6 @@ export default function SettingsView() {
         })}
       </div>
 
-      {/* ACCOUNTS TAB */}
       {activeTab === "accounts" && (
         <AccountsTab
           accounts={accountsState}
@@ -474,7 +458,6 @@ export default function SettingsView() {
         />
       )}
 
-      {/* EMAIL TAB */}
       {activeTab === "email" && (
         <EmailTab
           imapConfig={imapConfig}

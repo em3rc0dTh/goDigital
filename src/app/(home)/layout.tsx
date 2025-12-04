@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
+"use client";
 import { Bricolage_Grotesque } from "next/font/google";
-import { cn } from "@/lib/utils";
 import Sidebar from "@/components/utils/Sidebar";
+import { usePathname } from "next/navigation";
 
 export const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -9,21 +9,19 @@ export const bricolage = Bricolage_Grotesque({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "GoDigital",
-  description: "Plataforma de automatización y gestión financiera para PYMES",
-};
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-        <div className="flex">
-          <Sidebar />
+  const pathname = usePathname();
 
-          <main className="flex-1 min-h-screen">{children}</main>
-        </div>
+  const showSidebar = pathname !== "/setup";
+
+  return (
+    <div className="flex">
+      {showSidebar && <Sidebar />}
+      <main className="flex-1 min-h-screen">{children}</main>
+    </div>
   );
 }

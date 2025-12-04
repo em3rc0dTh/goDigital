@@ -54,7 +54,6 @@ export function AccountsTab({
 }: AccountsTabProps) {
   return (
     <div className="space-y-6">
-      {/* Accounts Table */}
       <Card>
         <CardHeader>
           <CardTitle>Your Bank Accounts</CardTitle>
@@ -68,7 +67,6 @@ export function AccountsTab({
         </CardContent>
       </Card>
 
-      {/* Add Account */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -104,7 +102,6 @@ export function AccountsTab({
         </CardContent>
       </Card>
 
-      {/* Update Account */}
       {activeAccount && (
         <Card>
           <CardHeader>
@@ -129,7 +126,6 @@ export function AccountsTab({
         </Card>
       )}
 
-      {/* Delete Account */}
       {activeAccount && (
         <Card className="border-red-200 bg-red-50">
           <CardHeader>

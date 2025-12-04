@@ -4,20 +4,14 @@ import { cn } from "@/lib/utils";
 import { loadTransactionsForAccount } from "./transaction";
 import { format } from "date-fns";
 
-/* -----------------------------------------------------
-   API CLIENT – TODO CENTRALIZADO AQUÍ
------------------------------------------------------ */
-
 const BASE = "/api/back/account";
 
-// GET all accounts
 export async function fetchAccounts() {
   const res = await fetch(BASE, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed fetching accounts");
   return res.json();
 }
 
-// POST create
 export async function createAccount(data: any) {
   const res = await fetch(BASE, {
     method: "POST",
@@ -28,7 +22,6 @@ export async function createAccount(data: any) {
   return res.json();
 }
 
-// PUT update
 export async function updateAccount(id: string, data: any) {
   const res = await fetch(`${BASE}/${id}`, {
     method: "PUT",
@@ -39,16 +32,11 @@ export async function updateAccount(id: string, data: any) {
   return res.json();
 }
 
-// DELETE account
 export async function deleteAccount(id: string) {
   const res = await fetch(`${BASE}/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed deleting account");
   return res.json();
 }
-
-/* -----------------------------------------------------
-   TYPES
------------------------------------------------------ */
 
 type Account = {
   id: string;
@@ -64,20 +52,16 @@ type Account = {
   newest: Date | null;
 };
 
-/* -----------------------------------------------------
-   COMPONENT – AccountsTable
------------------------------------------------------ */
-
 export function AccountsTable({
   accounts,
   activeId,
   onSelect,
-  columns, // nueva prop opcional
+  columns,
 }: {
   accounts: Account[];
   activeId: string | null;
   onSelect: (id: string) => void;
-  columns?: string[]; // puede ser ['Alias', 'Bank Name'] etc.
+  columns?: string[];
 }) {
   if (!accounts.length)
     return (

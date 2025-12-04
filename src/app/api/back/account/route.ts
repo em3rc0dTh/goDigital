@@ -1,5 +1,6 @@
 import { connectDB } from "@/app/api/back/db";
 import Account from "@/app/api/back/account/account";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function saveAccount(req: any, res: any) {
   try {
@@ -16,33 +17,50 @@ export async function saveAccount(req: any, res: any) {
   }
 }
 
-export async function POST(req: Request) {
-  await connectDB();
-  const data = await req.json();
-  const doc = await Account.create(data);
-  return Response.json(doc);
+export async function POST(req: NextRequest) {
+  try {
+    await connectDB();
+
+    const data = await req.json();
+
+    const doc = await Account.create(data);
+
+    return NextResponse.json(doc, { status: 201 });
+  } catch (err) {
+    console.error("POST /api/back/account error:", err);
+    return NextResponse.json(
+      { error: "Error creating account" },
+      { status: 500 }
+    );
+  }
 }
-
 export async function GET() {
-  await connectDB();
-  const docs = await Account.find().sort({ createdAt: -1 });
+  try {
+    await connectDB();
+    const docs = await Account.find().sort({ createdAt: -1 }).lean();
 
-  const normalized = docs.map((d: any) => ({
-    id: d._id.toString(),
-    alias: d.alias,
-    bank_name: d.bank_name,
-    account_holder: d.account_holder,
-    account_number: d.account_number,
-    bank_account_type: d.bank_account_type,
-    currency: d.currency,
-    account_type: d.account_type,
-    createdAt: d.createdAt,
-    tx_count: d.tx_count,
-    oldest: d.oldest,
-    newest: d.newest,
-  }));
-
-  return Response.json(normalized);
+    const normalized = docs.map((d: any) => ({
+      id: d._id.toString(),
+      alias: d.alias,
+      bank_name: d.bank_name,
+      account_holder: d.account_holder,
+      account_number: d.account_number,
+      bank_account_type: d.bank_account_type,
+      currency: d.currency,
+      account_type: d.account_type,
+      createdAt: d.createdAt,
+      tx_count: d.tx_count,
+      oldest: d.oldest,
+      newest: d.newest,
+    }));
+    return NextResponse.json(normalized);
+  } catch (err) {
+    console.error("GET /api/back/account error:", err);
+    return NextResponse.json(
+      { error: "Error fetching accounts" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function PUT(req: Request, { params }: any) {

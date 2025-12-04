@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import Sidebar from "@/components/utils/Sidebar";
 
 export const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -22,16 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      {/* <body className={cn(bricolage.className, "antialiased")}>
-        <div className="flex">
-          <Sidebar />
-
-          <main className="flex-1 min-h-screen">{children}</main>
-        </div>
-      </body> */}
-      <body className={cn(bricolage.className, "antialiased")}>
-        {children}
-      </body>
+      <body className={cn(bricolage.className, "antialiased")}>{children}</body>
     </html>
   );
 }

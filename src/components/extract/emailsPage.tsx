@@ -2,14 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, RefreshCw } from "lucide-react";
@@ -83,9 +75,6 @@ function normalizarFecha(raw: any) {
   return raw;
 }
 
-// ----------------------
-// PARSE TEXT EMAIL
-// ----------------------
 function parseEmailText(body: any) {
   // normalizar
   body = body
@@ -202,9 +191,6 @@ function parseEmailText(body: any) {
   };
 }
 
-// ----------------------
-// PARSE INTERBANK
-// ----------------------
 function parseInterbankEmail(body: any) {
   const extract = (pattern: any) => {
     const m = body.match(pattern);
@@ -243,9 +229,6 @@ function parseInterbankEmail(body: any) {
   };
 }
 
-// ----------------------
-// PARSE HTML BODY
-// ----------------------
 function parseEmailBody(body: any) {
   const extract = (patterns: any) => {
     for (let p of patterns) {
@@ -255,7 +238,6 @@ function parseEmailBody(body: any) {
     return "-";
   };
 
-  // --- MONEDA ---
   const monedaRaw = extract([
     /(S\/)\s*[\d,.]+/,
     /(USD)\s*[\d,.]+/,
@@ -268,7 +250,6 @@ function parseEmailBody(body: any) {
     else tipo_moneda = "USD";
   }
 
-  // --- Monto ---
   const monto = extract([
     /<td[^>]*class="soles-amount"[^>]*>\s*([\d.]+)\s*<\/td>/,
     /<strong>Monto de yapeo\*<\/strong>[\s\S]*?<td.*?style="[^"]*font-size:50px[^"]*">([\d,.]+)<\/td>/,
@@ -284,7 +265,6 @@ function parseEmailBody(body: any) {
     /Monto Total:<\/span><\/td>[\s\S]*?<span>S\/<\/span>\s*<span>([\d,.]+)<\/span>/,
   ]);
 
-  // --- Yapero / Titular ---
   const yapero = extract([
     /Yapero\s*<\/td>\s*<td.*?>(.*?)<\/td>/,
     /Hola <b>(.*?)<\/b>/,
@@ -292,7 +272,6 @@ function parseEmailBody(body: any) {
     /Hola\s*<span>([^<]+)<\/span>/,
   ]);
 
-  // --- Origen (celular o cuenta) ---
   const origen = extract([
     /Tu número de celular\s*<\/td>\s*<td.*?>(.*?)<\/td>/,
     /Número de Tarjeta de Crédito<\/td>[\s\S]*?<b>(.*?)<\/b>/,
@@ -300,43 +279,33 @@ function parseEmailBody(body: any) {
     /Cuenta cargo:<\/span><\/td>[\s\S]*?<span>(?:Cuenta Simple|Cuenta Corriente|Cuenta Interbank)<\/span> <span>Soles<\/span><br clear="none"><span>([\d\s]+)<\/span>/,
   ]);
 
-  // --- Fecha ---
   const fechaRaw = extract([
-    // BCP / BBVA clásicas
     /Fecha y Hora de la operación\s*<\/td>\s*<td.*?>(.*?)<\/td>/i,
-
-    // Interbank / Scotiabank variantes
     /Fecha y hora<\/td>[\s\S]*?<b><a.*?>(.*?)<\/a><\/b>/i,
     /Date:<\/td>[\s\S]*?<b><a.*?>(.*?)<\/a><\/b>/i,
-
-    // Variantes generales con formato "dd ... yyyy - hh:mm AM/PM"
     /Fecha y hora\s*[:\-]?\s*([\d]{1,2}.*?\d{4}\s*-\s*\d{1,2}:\d{2}\s*(?:AM|PM))/i,
   ]);
 
   const fechaFinal = () => {
     const f = normalizarFecha(fechaRaw || "");
 
-    // invalid results, broken HTML or emails that embed "@"
     if (!f || f.trim() === "" || f.includes("@")) return "-";
 
     return f;
   };
   const fecha = fechaFinal();
 
-  // --- Nombre del beneficiario ---
   const nombreBenef = extract([
     /Nombre del Beneficiario\s*<\/td>\s*<td.*?>(.*?)<\/td>/,
     /Empresa<\/td>[\s\S]*?<b>(.*?)<\/b>/,
     /Cuenta destino:<\/span><\/td>[\s\S]*?<span>([^<]+)<\/span>/,
   ]);
 
-  // --- Cuenta / celular del beneficiario ---
   const cuentaBenef = extract([
     /Celular del Beneficiario\s*<\/td>\s*<td.*?>(.*?)<\/td>/,
     /Cuenta destino:<\/span><\/td>[\s\S]*?<span>.*?<\/span><br clear="none"><span>(.*?)<\/span>/,
   ]);
 
-  // --- Número de operación ---
   const nroOperacionRaw = extract([
     /Nº de operación\s*<\/td>\s*<td.*?>(.*?)<\/td>/,
     /Número de operación<\/td>[\s\S]*?<b><a.*?>(.*?)<\/a><\/b>/,
@@ -346,7 +315,6 @@ function parseEmailBody(body: any) {
   ]);
   const nroOperacion = nroOperacionRaw.includes("@") ? "-" : nroOperacionRaw;
 
-  // --- Celular o cuenta destino (backup) ---
   const celularBenef = extract([
     /Celular del Beneficiario\s*<\/td>\s*<td.*?>(.*?)<\/td>/,
     /Cuenta destino:<\/span><\/td>[\s\S]*?<span>(?:.*?)<\/span><br clear="none"><span>(.*?)<\/span>/,
@@ -370,10 +338,6 @@ function parseEmailBody(body: any) {
     tipo_moneda,
   };
 }
-
-// ======================================================
-// ===============   COMPONENTE NEXT.JS     =============
-// ======================================================
 
 export default function EmailsPage() {
   const [emails, setEmails] = useState<any[]>([]);
