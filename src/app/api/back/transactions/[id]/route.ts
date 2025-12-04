@@ -35,7 +35,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 export async function POST(req: NextRequest, { params }: RouteParams) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
 
     if (!id) {
@@ -53,10 +53,8 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Borra todas las transacciones actuales para esa cuenta
     await Transaction.deleteMany({ accountId: id });
 
-    // Inserta las nuevas transacciones asociadas a la cuenta
     const inserted = await Transaction.insertMany(
       body.transactions.map((x: any) => ({ ...x, accountId: id }))
     );

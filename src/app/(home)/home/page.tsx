@@ -1,4 +1,5 @@
 "use client";
+import { BusinessTable, PersonalTable } from "@/components/table/transactionTable";
 import { Eye, EyeOff, TrendingUp, TrendingDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -84,23 +85,45 @@ export default function Home() {
                 <button
                   key={account.id}
                   onClick={() => selectAccount(account.id)}
-                  className={`flex-shrink-0 px-6 py-3 rounded-lg border-2 transition-all duration-200 ${
-                    activeAccount === account.id
+                  className={`flex-shrink-0 px-6 py-3 rounded-lg border-2 transition-all duration-200
+    ${activeAccount === account.id
                       ? "border-black bg-black text-white"
                       : "border-gray-200 bg-white text-black hover:border-black"
-                  }`}
+                    }`}
                 >
-                  <p className={`text-xs font-medium ${activeAccount === account.id ? "text-gray-300" : "text-gray-600"}`}>
-                    {account.bank_name}
+                  {/* Primera fila */}
+                  <div className="flex flex-row">
+                    <p
+                      className={`text-xs font-medium ${activeAccount === account.id ? "text-white" : "text-black"
+                        }`}
+                    >
+                      {account.bank_name} |{" "}
+                      <span
+                        className={`font-semibold ${activeAccount === account.id ? "text-white" : "text-black"
+                          }`}
+                      >
+                        {account.alias}
+                      </span>
+                    </p>
+                  </div>
+
+                  {/* Segunda fila */}
+                  <p
+                    className={`text-xs font-mono mt-1 ${activeAccount === account.id ? "text-gray-300" : "text-gray-600"
+                      }`}
+                  >
+                    {account.account_type} | {account.bank_account_type}
                   </p>
-                  <p className={`text-xs font-medium ${activeAccount === account.id ? "text-gray-300" : "text-gray-600"}`}>
-                    {account.account_number}
-                  </p>
-                  <p className="text-sm font-semibold mt-1">{account.alias}</p>
-                  <p className={`text-xs font-mono mt-1 ${activeAccount === account.id ? "text-gray-400" : "text-gray-500"}`}>
+
+                  {/* Tercera fila */}
+                  <p
+                    className={`text-xs font-mono mt-1 ${activeAccount === account.id ? "text-gray-300" : "text-gray-600"
+                      }`}
+                  >
                     {account.currency}
                   </p>
                 </button>
+
               ))}
             </div>
           ) : currentAccount ? (
@@ -170,38 +193,18 @@ export default function Home() {
           </div>
 
           {showTransactions ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-white border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">#</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Descripción</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Fecha</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Monto</th>
-                    <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Moneda</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {storedTransactions.slice(0, 5).map((tx, idx) => (
-                    <tr key={tx._id || `tx-${idx}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-gray-500">{idx + 1}</td>
-                      <td className="px-6 py-4 text-sm font-medium text-black">{tx.descripcion}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{tx.fecha_hora}</td>
-                      <td className={`px-6 py-4 text-sm font-semibold text-right ${tx.monto > 0 ? "text-green-600" : "text-red-600"}`}>
-                        {tx.monto > 0 ? "+" : ""}{Number(tx.monto).toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-700">{tx.currency}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            currentAccount?.bank_account_type === "Business" ? (
+              <BusinessTable storedTransactions={storedTransactions} />
+            ) : (
+              <PersonalTable storedTransactions={storedTransactions} />
+            )
           ) : (
             <div className="flex flex-col justify-center items-center px-6 py-16 text-gray-600">
               <EyeOff size={32} className="mb-3 text-gray-300" />
               <p className="text-sm">Transacciones ocultas</p>
             </div>
           )}
+
         </div>
       </div>
     </div>

@@ -9,7 +9,7 @@ type RouteParams = {
 export async function GET(_req: NextRequest, { params }: RouteParams) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
@@ -51,7 +51,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
     const data = await req.json();
 
     if (!id) {
@@ -85,7 +85,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });

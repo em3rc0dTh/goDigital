@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { AccountsTable, updateAccount } from "./AccountsTable";
 import { Trash2, Download, Upload, Eye, EyeOff } from "lucide-react";
+import { GenericTable } from "../table/common-table";
+import { BusinessTable, PersonalTable } from "../table/transactionTable";
 
 export default function Transactions() {
   const [accountsState, setAccountsState] = useState<any[]>([]);
@@ -24,20 +26,27 @@ export default function Transactions() {
   const [saveStatus, setSaveStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showTransactions, setShowTransactions] = useState(true);
-  const [accountType, setAccountType] = useState<"personal" | "business">(
-    "personal"
-  );
   const [bankType, setBankType] = useState<string>("");
+  const [parsedType, setParsedType] = useState<"personal" | "business">("personal");
   const [currencyType, setCurrencyType] = useState<string>("");
   const inputTextRef = useRef<HTMLTextAreaElement>(null);
   const clearStartDateRef = useRef<HTMLInputElement>(null);
   const clearEndDateRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     loadAccountsFromDB();
-    const saved = localStorage.getItem("activeAccountId");
-    if (saved) setActiveAccount(saved);
   }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("activeAccountId");
+    if (saved) {
+      const acc = accountsState.find(a => a.id === saved);
+      if (acc) {
+        setParsedType(acc.bank_account_type === "Business" ? "business" : "personal");
+      }
+      setActiveAccount(saved);
+
+    }
+  }, [accountsState]);
 
   useEffect(() => {
     if (activeAccount) {
@@ -79,22 +88,46 @@ export default function Transactions() {
   async function saveTransactionsToAPI(accountId: string, transactions: any[]) {
     try {
       setIsLoading(true);
+
+      const normalized = transactions.map((t) => ({
+        accountId,
+        descripcion: t.descripcion ?? null,
+        fecha_hora: t.fecha_hora ?? null,
+        fecha_hora_raw: t.fecha_hora_raw ?? null,
+        monto: t.monto ?? null,
+        currency: t.currency ?? null,
+        currency_raw: t.currency_raw ?? null,
+        uuid: t.uuid ?? null,
+
+        // ---- business ----
+        operation_date: t.operation_date ?? null,
+        process_date: t.process_date ?? null,
+        operation_number: t.operation_number ?? null,
+        movement: t.movement ?? null,
+        channel: t.channel ?? null,
+        amount: t.amount ?? null,
+        balance: t.balance ?? null,
+      }));
+
       const res = await fetch(`/api/back/transactions/${accountId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactions }),
+        body: JSON.stringify({ transactions: normalized }),
       });
+
       if (!res.ok) throw new Error("Save failed");
+
       await loadTransactionsFromAPI(accountId);
       await updateAccount(accountId, {
-        tx_count: transactions.length,
+        tx_count: normalized.length,
         oldest:
-          transactions.length > 0 ? new Date(transactions[0].fecha_hora) : null,
+          normalized.length > 0 ? new Date(normalized[0].fecha_hora) : null,
         newest:
-          transactions.length > 0
-            ? new Date(transactions[transactions.length - 1].fecha_hora)
+          normalized.length > 0
+            ? new Date(normalized[normalized.length - 1].fecha_hora)
             : null,
       });
+
       await loadAccountsFromDB();
     } catch (error) {
       console.error("Error saving transactions:", error);
@@ -156,8 +189,17 @@ export default function Transactions() {
   const selectAccount = (id: string) => {
     setActiveAccount(id);
     localStorage.setItem("activeAccountId", id);
+
+    const acc = accountsState.find(a => a.id === id);
+    console.log(acc);
+
+    if (acc) {
+      setParsedType(acc.bank_account_type === "Business" ? "business" : "personal");
+    }
+
     setSaveStatus("");
   };
+
 
   async function clearAllTransactionsForAccount() {
     if (!activeAccount) {
@@ -281,213 +323,6 @@ export default function Transactions() {
     a.click();
     URL.revokeObjectURL(url);
   }
-
-  // async function parseText() {
-  //   setSessionDuplicates([]);
-
-  //   const text = inputTextRef.current?.value || "";
-
-  //   if (!activeAccount) {
-  //     alert("Please select a bank account first.");
-  //     setSaveStatus("❌ No bank account selected.");
-  //     return;
-  //   }
-
-  //   const account = accountsState.find((a) => a.id === activeAccount);
-  //   if (!account) {
-  //     setSaveStatus("❌ Selected account not found.");
-  //     return;
-  //   }
-
-  //   if (!text.trim()) {
-  //     setSaveStatus("❌ No text to parse.");
-  //     return;
-  //   }
-
-  //   const accountNormCurrency = normalizeCurrency(account.currency || "");
-  //   if (!accountNormCurrency) {
-  //     setSaveStatus("❌ Account currency invalid.");
-  //     return;
-  //   }
-
-  //   const lines = text
-  //     .split("\n")
-  //     .map((l) => l.trim())
-  //     .filter((l) => l.length > 0);
-
-  //   const result: any[] = [];
-  //   let detectedNormCurrency: string | null = null;
-  //   let detectedRawCurrency: string | null = null;
-
-  //   const dateRegex =
-  //     /([\wáéíóúüñÁÉÍÓÚÜÑ]{3,4}\.? \d{1,2} [\wáéíóúüñÁÉÍÓÚÜÑ]{3} \d{2}:\d{2})\s*([A-Za-z$€¥\/\.\s]+)\s*([+-]?[0-9.,-]+)/i;
-
-  //   for (let i = 0; i < lines.length - 1; i++) {
-  //     const line = lines[i];
-
-  //     if (
-  //       /cargo\s+realizado\s+por/i.test(line) ||
-  //       /movimientos/i.test(line) ||
-  //       /fecha\s+y\s+hora/i.test(line) ||
-  //       /^monto$/i.test(line)
-  //     )
-  //       continue;
-
-  //     const desc = line;
-  //     const next = lines[i + 1] || "";
-  //     const match = next.match(dateRegex);
-
-  //     if (match) {
-  //       const fechaRaw = match[1];
-  //       const currencyToken = match[2];
-  //       let montoStr = match[3];
-
-  //       const txNormCurrency = normalizeCurrency(currencyToken);
-  //       if (!txNormCurrency) {
-  //         setSaveStatus(`❌ Unrecognized currency "${currencyToken}"`);
-  //         return;
-  //       }
-
-  //       if (!detectedNormCurrency) {
-  //         detectedNormCurrency = txNormCurrency;
-  //         detectedRawCurrency = currencyToken;
-  //       } else if (txNormCurrency !== detectedNormCurrency) {
-  //         setSaveStatus("❌ Multiple currencies detected in same batch.");
-  //         return;
-  //       }
-
-  //       montoStr = montoStr.replace(/,/g, "").replace(/[^0-9.-]/g, "");
-  //       const monto = parseFloat(montoStr);
-
-  //       if (!isNaN(monto)) {
-  //         const fechaIso = normalizeDateTime(fechaRaw);
-  //         result.push({
-  //           descripcion: desc,
-  //           fecha_hora: fechaIso,
-  //           fecha_hora_raw: fechaRaw,
-  //           monto,
-  //           currency: txNormCurrency,
-  //           currency_raw: currencyToken,
-  //         });
-  //       }
-  //     }
-  //   }
-
-  //   if (!result.length) {
-  //     setSaveStatus("❌ No transactions found in text.");
-  //     return;
-  //   }
-
-  //   if (detectedNormCurrency && detectedNormCurrency !== accountNormCurrency) {
-  //     setSaveStatus(
-  //       `❌ Currency mismatch: Account is "${account.currency}", data is "${detectedRawCurrency}".`
-  //     );
-  //     return;
-  //   }
-
-  //   const cleanAccNum = (account.account_number || "").replace(
-  //     /[^0-9A-Za-z]/g,
-  //     ""
-  //   );
-
-  //   const existingUUIDs = new Set();
-  //   storedTransactions.forEach((t: any) => {
-  //     if (t.uuid) existingUUIDs.add(t.uuid);
-  //   });
-
-  //   const newTransactions: any[] = [];
-  //   const duplicates: any[] = [];
-
-  //   result.forEach((rt) => {
-  //     const uuid = cleanAccNum + "_" + rt.fecha_hora;
-  //     rt.uuid = uuid;
-  //     if (existingUUIDs.has(uuid)) {
-  //       duplicates.push(rt);
-  //     } else {
-  //       newTransactions.push(rt);
-  //     }
-  //   });
-
-  //   if (!newTransactions.length && !duplicates.length) {
-  //     setSaveStatus("⚠️ No new or duplicate transactions found.");
-  //     return;
-  //   }
-
-  //   try {
-  //     const allTransactions = [...storedTransactions, ...newTransactions];
-  //     await saveTransactionsToAPI(activeAccount, allTransactions);
-
-  //     setParsedBatchData(newTransactions);
-  //     setSessionDuplicates(duplicates);
-
-  //     const savedCount = newTransactions.length;
-  //     const dupCount = duplicates.length;
-
-  //     let summaryMsg = `✅ Parsed ${savedCount} new transaction(s). `;
-  //     if (dupCount > 0) summaryMsg += `⚠️ ${dupCount} duplicate(s) skipped.`;
-
-  //     setSaveStatus(summaryMsg);
-  //     if (inputTextRef.current) inputTextRef.current.value = "";
-  //   } catch (error) {
-  //     setSaveStatus("❌ Error saving transactions");
-  //   }
-  // }
-
-  // async function parseBusinessText(text: string, accountCurrency: string) {
-  //   const lines = text
-  //     .split("\n")
-  //     .map((l) => l.trim())
-  //     .filter((l) => l.length > 0);
-
-  //   const result: any[] = [];
-
-  //   for (const line of lines) {
-  //     // Buscamos importe con símbolo S/ o $
-  //     const match = line.match(
-  //       /^(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+([^\s]+)?\s+([^\n]+)\s+([^\n]+)\s+([^\s]+)\s+([S$\/][0-9.,-]+)\s+([S$\/][0-9.,-]+)/
-  //     );
-  //     if (!match) continue;
-
-  //     const [
-  //       ,
-  //       fechaOperacion,
-  //       fechaProceso,
-  //       nroOperacion,
-  //       movimiento,
-  //       descripcion,
-  //       canal,
-  //       importeRaw,
-  //       saldoRaw,
-  //     ] = match;
-
-  //     const currencyToken = importeRaw.slice(0, 2).trim(); // "S/" o "$"
-  //     const montoStr = importeRaw.slice(currencyToken.length).replace(/,/g, "");
-  //     const monto = parseFloat(montoStr);
-
-  //     if (!monto || !currencyToken) continue;
-
-  //     const normalizedCurrency = normalizeCurrency(currencyToken);
-  //     if (normalizedCurrency !== accountCurrency) {
-  //       throw new Error(
-  //         `Currency mismatch: Account is "${accountCurrency}", data is "${currencyToken}"`
-  //       );
-  //     }
-
-  //     result.push({
-  //       fecha_operacion: fechaOperacion,
-  //       fecha_proceso: fechaProceso,
-  //       nro_operacion: nroOperacion,
-  //       movimiento,
-  //       descripcion,
-  //       canal,
-  //       monto,
-  //       currency: normalizedCurrency,
-  //     });
-  //   }
-
-  //   return result;
-  // }
-
   async function parseText(accountType: "personal" | "business") {
     setSessionDuplicates([]);
 
@@ -645,46 +480,61 @@ export default function Transactions() {
         continue;
       }
 
-      const fechaOperacion = lines[i++];
-      const fechaProceso = i < lines.length ? lines[i++] : "-";
-      const nroOperacion = i < lines.length ? lines[i++] : "-";
-      const movimiento = i < lines.length ? lines[i++] : "-";
-      const descripcion = i < lines.length ? lines[i++] : "-";
-      const canal = i < lines.length ? lines[i++] : "-";
-      const importeRaw = i < lines.length ? lines[i++] : "-";
-      const saldoRaw = i < lines.length ? lines[i++] : "-";
+      const operationDate = lines[i++];
+      const processDate = i < lines.length ? lines[i++] : "-";
+      const operationNumber = i < lines.length ? lines[i++] : "-";
+      const movement = i < lines.length ? lines[i++] : "-";
+      const description = i < lines.length ? lines[i++] : "-";
+      const channel = i < lines.length ? lines[i++] : "-";
+      const amountRaw = i < lines.length ? lines[i++] : "-";
+      const balanceRaw = i < lines.length ? lines[i++] : "-";
 
-      const symbolMatch = importeRaw.match(/^(S\/|\$)/);
+      // Currency detection
+      const symbolMatch = amountRaw.match(/^(S\/|\$)/);
       if (!symbolMatch) continue;
 
       const currencyToken = symbolMatch[0];
-      const montoStr = importeRaw.slice(currencyToken.length).replace(/,/g, "");
-      const monto = parseFloat(montoStr);
-      if (isNaN(monto)) continue;
+      const amountStr = amountRaw.slice(currencyToken.length).replace(/,/g, "");
+      const amount = parseFloat(amountStr);
+      if (isNaN(amount)) continue;
 
-      const normalizedCurrency = normalizeCurrency(currencyToken); // aquí conviertes "S/" a "PEN", "$" a "USD", etc.
+      const normalizedCurrency = normalizeCurrency(currencyToken);
       const normalizedAccountCurrency = normalizeCurrency(accountCurrency);
 
-      if (normalizedCurrency !== normalizedAccountCurrency) continue; // o lanza error si quieres
+      if (normalizedCurrency !== normalizedAccountCurrency) continue;
 
-      const uuid = `123456789_${fechaOperacion}`;
+      const uuid = `biz_${operationDate}_${operationNumber}`;
 
       result.push({
-        descripcion,
-        fecha_hora: normalizeDateTime(fechaOperacion),
-        fecha_hora_raw: fechaOperacion,
-        monto,
+        descripcion: description,
+        fecha_hora: normalizeDateTime(operationDate),
+        fecha_hora_raw: operationDate,
+        monto: amount,
         currency: normalizedCurrency,
         currency_raw: currencyToken,
         uuid,
-        canal,
-        movimiento,
-        nroOperacion,
-        saldo: saldoRaw,
+
+        operation_date: operationDate,
+        process_date: processDate,
+        operation_number: operationNumber,
+        movement,
+        channel,
+        amount: parseMoney(amountRaw),
+        balance: parseMoney(balanceRaw),
       });
     }
 
     return result;
+  }
+  const parseMoney = (value: string) => {
+    if (!value) return 0;
+
+    return Number(
+      value
+        .replace("S/", "")
+        .replace(/,/g, "")
+        .trim()
+    );
   }
 
   const transactionSummary = {
@@ -755,16 +605,13 @@ export default function Transactions() {
                     const selectedAccount = accountsState.find(
                       (a) => a.id === activeAccount
                     );
-                    console.log(
-                      "Selected Account: ",
-                      selectedAccount.bank_account_type.toLowerCase().trim()
-                    );
-                    parseText(
-                      selectedAccount.bank_account_type.toLowerCase().trim() ===
-                        "business"
+
+                    const type =
+                      selectedAccount.bank_account_type.toLowerCase().trim() === "business"
                         ? "business"
-                        : "personal"
-                    );
+                        : "personal";
+                    parseText(type);
+                    setParsedType(type);
                   }}
                   disabled={isLoading}
                 >
@@ -791,13 +638,12 @@ export default function Transactions() {
 
               {saveStatus && (
                 <div
-                  className={`p-3 rounded text-sm ${
-                    saveStatus.includes("✅")
-                      ? "bg-green-100 text-green-800"
-                      : saveStatus.includes("⚠️")
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                  }`}
+                  className={`p-3 rounded text-sm ${saveStatus.includes("✅")
+                    ? "bg-green-100 text-green-800"
+                    : saveStatus.includes("⚠️")
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
+                    }`}
                 >
                   {saveStatus}
                 </div>
@@ -873,50 +719,11 @@ export default function Transactions() {
 
               {showTransactions && (
                 <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-100 sticky top-0">
-                        <tr>
-                          <th className="px-4 py-2 text-left">#</th>
-                          <th className="px-4 py-2 text-left">Description</th>
-                          <th className="px-4 py-2 text-left">Date & Time</th>
-                          <th className="px-4 py-2 text-right">Amount</th>
-                          <th className="px-4 py-2 text-center">Currency</th>
-                        </tr>
-                      </thead>
-                      <tbody className="max-h-96 overflow-y-auto">
-                        {storedTransactions.map((tx, idx) => (
-                          <tr
-                            key={idx}
-                            className="border-b hover:bg-gray-50 transition"
-                          >
-                            <td className="px-4 py-2 text-gray-500">
-                              {idx + 1}
-                            </td>
-                            <td className="px-4 py-2 font-medium">
-                              {tx.descripcion}
-                            </td>
-                            <td className="px-4 py-2 text-sm text-gray-600">
-                              {tx.fecha_hora_raw || tx.fecha_hora}
-                            </td>
-                            <td
-                              className={`px-4 py-2 text-right font-semibold ${
-                                tx.monto > 0 ? "text-green-600" : "text-red-600"
-                              }`}
-                            >
-                              {tx.monto > 0 ? "+" : ""}
-                              {Number(tx.monto).toFixed(2)}
-                            </td>
-                            <td className="px-4 py-2 text-center text-sm">
-                              {tx.currency_raw || tx.currency}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  {parsedType === "personal" && <PersonalTable storedTransactions={storedTransactions} />}
+                  {parsedType === "business" && <BusinessTable storedTransactions={storedTransactions} />}
                 </CardContent>
               )}
+
             </Card>
           )}
 
