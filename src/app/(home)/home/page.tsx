@@ -177,16 +177,41 @@ export default function Home() {
 
         {/* Transactions Table */}
         <div className="border border-gray-200 rounded-lg overflow-hidden flex flex-col">
-          <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-black">Últimas Transacciones</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                {isLoading ? "Cargando..." : `Mostrando ${Math.min(5, transactionSummary.count)} de ${transactionSummary.count}`}
+          <div className="px-6 py-4 flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="text-lg font-semibold text-gray-900">Últimas Transacciones</h2>
+                {currentAccount && (
+                  <div className="flex items-center gap-2 px-3 py-1">
+                    <span className="text-sm font-medium text-gray-700">{currentAccount.alias}</span>
+                    <span className="text-xs font-semibold text-blue-600 px-2 py-0.5">
+                      {currentAccount.currency}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                {isLoading ? (
+                  <span className="flex items-center gap-1">
+                    <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
+                    Cargando...
+                  </span>
+                ) : (
+                  <span>
+                    Mostrando <span className="font-semibold text-gray-900">{Math.min(5, transactionSummary.count)}</span> de{" "}
+                    <span className="font-semibold text-gray-900">{transactionSummary.count}</span> transacción{transactionSummary.count !== 1 ? "es" : ""}
+                  </span>
+                )}
               </p>
             </div>
+
             <button
               onClick={() => setShowTransactions(!showTransactions)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-700"
+              className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 ${showTransactions
+                ? "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              aria-label={showTransactions ? "Ocultar transacciones" : "Mostrar transacciones"}
             >
               {showTransactions ? <Eye size={20} /> : <EyeOff size={20} />}
             </button>

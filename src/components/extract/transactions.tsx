@@ -76,7 +76,17 @@ export default function Transactions() {
         return;
       }
       const data = await res.json();
-      setStoredTransactions(Array.isArray(data) ? data : []);
+
+      // Ordenar por fecha_hora (más reciente primero)
+      const sorted = Array.isArray(data)
+        ? data.sort((a, b) => {
+          const dateA = new Date(a.fecha_hora).getTime();
+          const dateB = new Date(b.fecha_hora).getTime();
+          return dateB - dateA; // Descendente (más reciente primero)
+        })
+        : [];
+
+      setStoredTransactions(sorted);
     } catch (error) {
       console.error("Error loading transactions:", error);
       setStoredTransactions([]);
@@ -323,6 +333,7 @@ export default function Transactions() {
     a.click();
     URL.revokeObjectURL(url);
   }
+
   async function parseText(accountType: "personal" | "business") {
     setSessionDuplicates([]);
 
@@ -364,6 +375,11 @@ export default function Transactions() {
 
     if (!result.length) {
       setSaveStatus("❌ No transactions found in text.");
+      return;
+    }
+
+    if (result.some((r) => r.currency !== accountNormCurrency)) {
+      setSaveStatus(`❌ Currency mismatch: Account is "${account.currency}", data is "${accountNormCurrency}".`);
       return;
     }
 
@@ -420,6 +436,7 @@ export default function Transactions() {
       setSaveStatus("❌ Error saving transactions");
     }
   }
+
   function parsePersonalText(text: string, accountCurrency: string) {
     const lines = text
       .split("\n")
@@ -472,6 +489,7 @@ export default function Transactions() {
       .filter((l) => l.length > 0);
 
     const result: any[] = [];
+    const skipped: any[] = [];
     let i = 0;
 
     while (i < lines.length) {
@@ -491,17 +509,37 @@ export default function Transactions() {
 
       // Currency detection
       const symbolMatch = amountRaw.match(/^(S\/|\$)/);
-      if (!symbolMatch) continue;
+      if (!symbolMatch) {
+        skipped.push({
+          operationDate,
+          reason: `No currency symbol found in amount: "${amountRaw}" or missing amount`,
+        });
+        continue;
+      }
 
       const currencyToken = symbolMatch[0];
       const amountStr = amountRaw.slice(currencyToken.length).replace(/,/g, "");
       const amount = parseFloat(amountStr);
-      if (isNaN(amount)) continue;
+      if (isNaN(amount)) {
+        skipped.push({
+          operationDate,
+          reason: `Invalid amount: "${amountRaw}"`,
+        });
+        continue;
+      }
 
       const normalizedCurrency = normalizeCurrency(currencyToken);
       const normalizedAccountCurrency = normalizeCurrency(accountCurrency);
 
-      if (normalizedCurrency !== normalizedAccountCurrency) continue;
+      if (normalizedCurrency !== normalizedAccountCurrency) {
+        skipped.push({
+          operationDate,
+          reason: `Currency mismatch: Found "${normalizedCurrency}", account is "${normalizedAccountCurrency}"`,
+          detected: normalizedCurrency,
+          account: normalizedAccountCurrency,
+        });
+        continue;
+      }
 
       const uuid = `biz_${operationDate}_${operationNumber}`;
 
@@ -524,17 +562,39 @@ export default function Transactions() {
       });
     }
 
+    if (!result.length && skipped.length > 0) {
+      const currencyMismatches = skipped.filter((s) => s.reason.includes("Currency mismatch"));
+      if (currencyMismatches.length > 0) {
+        const first = currencyMismatches[0];
+        throw new Error(
+          `Currency mismatch: Account is "${first.account}", data is "${first.detected}"`
+        );
+      }
+      throw new Error(
+        `Could not parse transactions. Issues: ${skipped.map((s) => s.reason).join("; ")}`
+      );
+    }
+
     return result;
   }
-  const parseMoney = (value: string) => {
-    if (!value) return 0;
 
-    return Number(
-      value
-        .replace("S/", "")
-        .replace(/,/g, "")
-        .trim()
+  const parseMoney = (value: string) => {
+    if (!value || value === "-") return null;
+
+    const symbols = ["S/.", "S/", "US$", "$", "€", "£", "¥"];
+    let numericPart = value;
+
+    for (const symbol of symbols) {
+      if (value.startsWith(symbol)) {
+        numericPart = value.slice(symbol.length);
+        break;
+      }
+    }
+    const parsed = Number(
+      numericPart.replace(/,/g, "").trim()
     );
+
+    return isNaN(parsed) ? null : parsed;
   }
 
   const transactionSummary = {

@@ -52,7 +52,7 @@ export default function Sidebar() {
     { icon: Users, label: "Team", link: "/team" },
     { icon: Coins, label: "Tokens", link: "/tokens" },
     { icon: CreditCard, label: "Billing", link: "/billing" },
-    { icon: Settings, label: "Settings", link: "/settings" },
+    // { icon: Settings, label: "Settings", link: "/settings" },
     { icon: Landmark, label: "Bank Extract", link: "/extract" },
   ];
 
@@ -83,7 +83,7 @@ export default function Sidebar() {
 
             <SidebarContent
               collapsed={false}
-              setCollapsed={() => {}}
+              setCollapsed={() => { }}
               menuItems={menuItems}
               bottomItems={bottomItems}
               router={router}
@@ -95,9 +95,8 @@ export default function Sidebar() {
 
       {/* DESKTOP SIDEBAR */}
       <aside
-        className={`hidden lg:flex flex-col h-screen border-r bg-background transition-all duration-300 ${
-          collapsed ? "w-16" : "w-64"
-        }`}
+        className={`hidden lg:flex flex-col h-screen border-r bg-background transition-all duration-300 ${collapsed ? "w-16" : "w-64"
+          }`}
       >
         <SidebarContent
           collapsed={collapsed}
@@ -150,9 +149,8 @@ function SidebarContent({
           <Button
             key={index}
             variant={item.active ? "secondary" : "ghost"}
-            className={`w-full justify-start gap-3 mb-1 ${
-              collapsed ? "px-2" : "px-3"
-            }`}
+            className={`w-full justify-start gap-3 mb-1 ${collapsed ? "px-2" : "px-3"
+              }`}
             onClick={() => {
               router.push(item.link);
               if (closeMobileMenu) closeMobileMenu();
@@ -171,21 +169,20 @@ function SidebarContent({
           const handleClick =
             item.label === "Log Out"
               ? async () => {
-                  await fetch("/api/back/logout", {
-                    method: "POST",
-                    credentials: "include",
-                  });
-                  window.location.href = "/login";
-                }
-              : () => {};
+                await fetch("/api/back/logout", {
+                  method: "POST",
+                  credentials: "include",
+                });
+                window.location.href = "/login";
+              }
+              : () => { };
 
           return (
             <Button
               key={index}
               variant="ghost"
-              className={`w-full justify-start gap-3 mb-1 ${
-                collapsed ? "px-2" : "px-3"
-              }`}
+              className={`w-full justify-start gap-3 mb-1 ${collapsed ? "px-2" : "px-3"
+                }`}
               onClick={handleClick}
             >
               <item.icon className="w-5 h-5" />
