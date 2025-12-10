@@ -2,6 +2,7 @@
 import { BusinessTable, PersonalTable } from "@/components/table/transactionTable";
 import { Eye, EyeOff, TrendingUp, TrendingDown } from "lucide-react";
 import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
 
 export default function Home() {
   const [accountsState, setAccountsState] = useState<any[]>([]);
@@ -32,7 +33,8 @@ export default function Home() {
 
   async function loadAccountsFromDB() {
     try {
-      const res = await fetch("/api/back/account", { cache: "no-store" });
+      const tenantId = Cookies.get("tenantId");
+      const res = await fetch(`http://localhost:4000/api/accounts/tenant/${tenantId}`, { cache: "no-store" });
       const data = await res.json();
       setAccountsState(data);
 
@@ -51,7 +53,7 @@ export default function Home() {
   async function loadTransactionsFromAPI(accountId: string) {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/back/transactions/${accountId}`, {
+      const res = await fetch(`http://localhost:4000/api/accounts/${accountId}/transactions`, {
         cache: "no-store",
       });
       if (!res.ok) {

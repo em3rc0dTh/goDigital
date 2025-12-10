@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
+import Cookies from "js-cookie";
+
 
 export function LoginForm() {
   const [tab, setTab] = useState<
@@ -34,20 +36,28 @@ export function LoginForm() {
     try {
       const action = tab === "login" ? "login" : "signup";
 
-      const res = await fetch("/api/back/users", {
+      const res = await fetch("http://localhost:4000/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, email, password, fullName }),
       });
 
       const data = await res.json();
-
+      console.log("User logged", data);
       if (!res.ok) {
         toast.error("Authentication Failed", {
           description: data.error || "An error occurred",
         });
         return;
       }
+      Cookies.set("session_token", data.user.token, {
+        expires: 7,
+        sameSite: "lax",
+      });
+      Cookies.set("tenantId", data.user.tenantId, {
+        expires: 7,
+        sameSite: "lax",
+      });
 
       const successMessage =
         action === "login"

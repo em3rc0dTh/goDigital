@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
 import React, { RefObject } from "react";
 import { AccountsTable } from "../extract/AccountsTable";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
-import { SelectValue } from "@radix-ui/react-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 interface AccountsTabProps {
   accounts: any[];
@@ -17,11 +16,11 @@ interface AccountsTabProps {
   saveAccountUpdates: () => void;
   deleteSelectedAccount: () => void;
   bankAlias: RefObject<HTMLInputElement>;
-  bankName: RefObject<HTMLInputElement>;
+  bankName: React.MutableRefObject<string>;
   bankHolder: RefObject<HTMLInputElement>;
   bankNumber: RefObject<HTMLInputElement>;
   bankAccountType: React.MutableRefObject<string>;
-  bankCurrency: RefObject<HTMLInputElement>;
+  bankCurrency: React.MutableRefObject<string>;
   bankType: RefObject<HTMLInputElement>;
   settingsAlias: RefObject<HTMLInputElement>;
   settingsBankName: RefObject<HTMLInputElement>;
@@ -52,6 +51,22 @@ export function AccountsTab({
   settingsCurrency,
   settingsType,
 }: AccountsTabProps) {
+  const BANKS = [
+    "BCP",
+    "BBVA",
+    "Interbank",
+    "Scotiabank",
+    "Banco de la Nación",
+    "Caja Arequipa",
+    "Caja Huancayo",
+  ];
+
+  const CURRENCIES = [
+    { value: "PEN", label: "PEN" },
+    { value: "USD", label: "USD" },
+    { value: "EUR", label: "EUR" },
+  ];
+
   return (
     <div className="space-y-6">
       <Card>
@@ -78,7 +93,19 @@ export function AccountsTab({
           <form onSubmit={addAccount} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Input ref={bankAlias} placeholder="Alias (e.g., Main)" />
-              <Input ref={bankName} placeholder="Bank Name" required />
+              <Select onValueChange={(v) => (bankName.current = v
+              )}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Bank" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BANKS.map((bank) => (
+                    <SelectItem key={bank} value={bank}>
+                      {bank}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Input ref={bankHolder} placeholder="Account Holder" required />
               <Select onValueChange={(v) => (bankAccountType.current = v)}>
                 <SelectTrigger>
@@ -89,9 +116,19 @@ export function AccountsTab({
                   <SelectItem value="Business">Business</SelectItem>
                 </SelectContent>
               </Select>
-
               <Input ref={bankNumber} placeholder="Account Number" required />
-              <Input ref={bankCurrency} placeholder="Currency (PEN, USD...)" />
+              <Select onValueChange={(v) => (bankCurrency.current = v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      {c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Input
                 ref={bankType}
                 placeholder="Account Type (Savings, Checking...)"
@@ -110,7 +147,22 @@ export function AccountsTab({
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Input ref={settingsAlias} placeholder="Alias" />
-              <Input ref={settingsBankName} placeholder="Bank Name" />
+              <Select
+                onValueChange={(v) => {
+                  if (settingsBankName.current) settingsBankName.current.value = v;
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Bank Name" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BANKS.map((bank) => (
+                    <SelectItem key={bank} value={bank}>
+                      {bank}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Input ref={settingsHolder} placeholder="Account Holder" />
               <Input
                 ref={settingsNumber}
@@ -118,7 +170,18 @@ export function AccountsTab({
                 readOnly
                 className="bg-gray-100"
               />
-              <Input ref={settingsCurrency} placeholder="Currency" />
+              <Select onValueChange={(v) => (bankCurrency.current = v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      {c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Input ref={settingsType} placeholder="Account Type" />
             </div>
             <Button onClick={saveAccountUpdates}>Save Changes</Button>

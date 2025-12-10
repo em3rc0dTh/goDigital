@@ -22,7 +22,7 @@ import {
   Menu,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
+import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -169,10 +169,12 @@ function SidebarContent({
           const handleClick =
             item.label === "Log Out"
               ? async () => {
-                await fetch("/api/back/logout", {
+                await fetch("http://localhost:4000/api/logout", {
                   method: "POST",
                   credentials: "include",
                 });
+                Cookies.remove("session_token");
+                Cookies.remove("tenantId");
                 window.location.href = "/login";
               }
               : () => { };

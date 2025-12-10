@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Mail, Database } from "lucide-react";
 import { AccountsTab } from "../settings/AccountsSettings";
 import { EmailTab } from "../settings/EmailsSettings";
+import Cookies from "js-cookie";
 
 export default function SettingsView() {
   const [activeTab, setActiveTab] = useState<"accounts" | "email" | "imap">(
@@ -46,7 +47,8 @@ export default function SettingsView() {
 
   async function loadAccountsFromDB() {
     try {
-      const res = await fetch("/api/back/account", { cache: "no-store" });
+      const tenantId = Cookies.get("tenantId");
+      const res = await fetch(`http://localhost:4000/api/accounts/tenant/${tenantId}`, { cache: "no-store" });
       const data = await res.json();
       setAccountsState(data);
 
@@ -121,10 +123,10 @@ export default function SettingsView() {
     event.preventDefault();
 
     const alias = bankAlias.current.value.trim();
-    const bank_name = bankName.current.value.trim();
+    const bank_name = bankName.current;
     const account_holder = bankHolder.current.value.trim();
     const account_number = bankNumber.current.value.trim();
-    const currency = bankCurrency.current.value.trim();
+    const currency = bankCurrency.current;
     const account_type = bankType.current.value.trim();
     const bank_account_type = bankAccountType.current;
 
@@ -137,7 +139,7 @@ export default function SettingsView() {
     }
 
     try {
-      const res = await fetch("/api/back/account", {
+      const res = await fetch("http://localhost:4000/api/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -148,18 +150,19 @@ export default function SettingsView() {
           currency,
           account_type,
           bank_account_type,
+          tenantId: Cookies.get("tenantId"),
         }),
       });
 
       const saved = await res.json();
 
       bankAlias.current.value = "";
-      bankName.current.value = "";
+      bankName.current = null;
       bankHolder.current.value = "";
       bankNumber.current.value = "";
-      bankCurrency.current.value = "";
+      bankCurrency.current = null;
       bankType.current.value = "";
-      bankAccountType.current = "";
+      bankAccountType.current = null;
 
       await loadAccountsFromDB();
       selectAccount(saved.id);
@@ -177,9 +180,9 @@ export default function SettingsView() {
     }
 
     const alias = settingsAlias.current.value.trim();
-    const bank_name = settingsBankName.current.value.trim();
+    const bank_name = settingsBankName.current;
     const account_holder = settingsHolder.current.value.trim();
-    const currency = settingsCurrency.current.value.trim();
+    const currency = settingsCurrency.current;
     const account_type = settingsType.current.value.trim();
 
     if (!bank_name || !account_holder) {
@@ -188,7 +191,7 @@ export default function SettingsView() {
     }
 
     try {
-      await fetch(`/api/back/account/${activeAccount}`, {
+      await fetch(`http://localhost:4000/api/accounts/${activeAccount}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -226,7 +229,7 @@ export default function SettingsView() {
     if (!ok) return;
 
     try {
-      await fetch(`/api/back/account/${activeAccount}`, {
+      await fetch(`http://localhost:4000/api/accounts/${activeAccount}`, {
         method: "DELETE",
       });
 
@@ -403,11 +406,10 @@ export default function SettingsView() {
 
       {statusMessage && (
         <div
-          className={`p-3 rounded text-sm ${
-            statusMessage.includes("✅")
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
+          className={`p-3 rounded text-sm ${statusMessage.includes("✅")
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800"
+            }`}
         >
           {statusMessage}
         </div>
@@ -421,11 +423,10 @@ export default function SettingsView() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 flex items-center gap-2 border-b-2 transition ${
-                isActive
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className={`px-4 py-2 flex items-center gap-2 border-b-2 transition ${isActive
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
             >
               <Icon className="w-4 h-4" />
               {tab.label}

@@ -15,6 +15,8 @@ import { AccountsTable, updateAccount } from "./AccountsTable";
 import { Trash2, Download, Upload, Eye, EyeOff } from "lucide-react";
 import { GenericTable } from "../table/common-table";
 import { BusinessTable, PersonalTable } from "../table/transactionTable";
+import Cookies from "js-cookie";
+import crypto from "crypto";
 
 export default function Transactions() {
   const [accountsState, setAccountsState] = useState<any[]>([]);
@@ -56,7 +58,8 @@ export default function Transactions() {
 
   async function loadAccountsFromDB() {
     try {
-      const res = await fetch("/api/back/account", { cache: "no-store" });
+      const tenantId = Cookies.get("tenantId");
+      const res = await fetch(`http://localhost:4000/api/accounts/tenant/${tenantId}`, { cache: "no-store" });
       const data = await res.json();
       setAccountsState(data);
     } catch (error) {
@@ -68,7 +71,7 @@ export default function Transactions() {
   async function loadTransactionsFromAPI(accountId: string) {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/back/transactions/${accountId}`, {
+      const res = await fetch(`http://localhost:4000/api/accounts/${accountId}/transactions`, {
         cache: "no-store",
       });
       if (!res.ok) {
@@ -100,6 +103,7 @@ export default function Transactions() {
       setIsLoading(true);
 
       const normalized = transactions.map((t) => ({
+        tenantId: Cookies.get("tenantId"),
         accountId,
         descripcion: t.descripcion ?? null,
         fecha_hora: t.fecha_hora ?? null,
@@ -118,8 +122,9 @@ export default function Transactions() {
         amount: t.amount ?? null,
         balance: t.balance ?? null,
       }));
+      console.log("Payload: ", normalized);
 
-      const res = await fetch(`/api/back/transactions/${accountId}`, {
+      const res = await fetch(`http://localhost:4000/api/accounts/${accountId}/transactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transactions: normalized }),
@@ -409,7 +414,15 @@ export default function Transactions() {
     const duplicates: any[] = [];
 
     result.forEach((tx) => {
-      tx.uuid = cleanAccNum + "_" + (tx.fecha_hora || tx.fecha_operacion);
+      tx.uuid = crypto
+        .createHash("sha1")
+        .update(JSON.stringify({
+          acc: cleanAccNum,
+          fecha: tx.fecha_hora,
+          desc: tx.descripcion,
+          monto: tx.monto,
+        }))
+        .digest("hex");
       if (existingUUIDs.has(tx.uuid)) duplicates.push(tx);
       else newTransactions.push(tx);
     });
