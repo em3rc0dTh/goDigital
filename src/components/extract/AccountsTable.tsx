@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { loadTransactionsForAccount } from "./transaction";
 import { format } from "date-fns";
-
+import Cookies from "js-cookie";
 // const BASE = "/api/back/account";
 const BASE = "http://localhost:4000/api/accounts";
 
@@ -24,10 +24,12 @@ export async function createAccount(data: any) {
 }
 
 export async function updateAccount(id: string, data: any) {
+  const token = Cookies.get("session_token");
   const res = await fetch(`${BASE}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify(data),
+    credentials: "include",
   });
   if (!res.ok) throw new Error("Failed updating account");
   return res.json();

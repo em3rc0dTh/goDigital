@@ -16,11 +16,14 @@ interface AccountsTabProps {
   saveAccountUpdates: () => void;
   deleteSelectedAccount: () => void;
   bankAlias: RefObject<HTMLInputElement>;
-  bankName: React.MutableRefObject<string>;
+  bankName: string | null;
+  setBankName: (v: string) => void;
   bankHolder: RefObject<HTMLInputElement>;
   bankNumber: RefObject<HTMLInputElement>;
-  bankAccountType: React.MutableRefObject<string>;
-  bankCurrency: React.MutableRefObject<string>;
+  bankAccountType: string | null;
+  setBankAccountType: (v: string) => void;
+  bankCurrency: string | null;
+  setBankCurrency: (v: string) => void;
   bankType: RefObject<HTMLInputElement>;
   settingsAlias: RefObject<HTMLInputElement>;
   settingsBankName: RefObject<HTMLInputElement>;
@@ -39,10 +42,13 @@ export function AccountsTab({
   deleteSelectedAccount,
   bankAlias,
   bankName,
+  setBankName,
   bankHolder,
   bankNumber,
   bankAccountType,
+  setBankAccountType,
   bankCurrency,
+  setBankCurrency,
   bankType,
   settingsAlias,
   settingsBankName,
@@ -93,8 +99,7 @@ export function AccountsTab({
           <form onSubmit={addAccount} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Input ref={bankAlias} placeholder="Alias (e.g., Main)" />
-              <Select onValueChange={(v) => (bankName.current = v
-              )}>
+              <Select value={bankName ?? undefined} onValueChange={setBankName}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Bank" />
                 </SelectTrigger>
@@ -106,8 +111,12 @@ export function AccountsTab({
                   ))}
                 </SelectContent>
               </Select>
+
               <Input ref={bankHolder} placeholder="Account Holder" required />
-              <Select onValueChange={(v) => (bankAccountType.current = v)}>
+              <Select
+                value={bankAccountType ?? undefined}
+                onValueChange={setBankAccountType}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Bank Account Type" />
                 </SelectTrigger>
@@ -116,8 +125,12 @@ export function AccountsTab({
                   <SelectItem value="Business">Business</SelectItem>
                 </SelectContent>
               </Select>
+
               <Input ref={bankNumber} placeholder="Account Number" required />
-              <Select onValueChange={(v) => (bankCurrency.current = v)}>
+              <Select
+                value={bankCurrency ?? undefined}
+                onValueChange={setBankCurrency}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Currency" />
                 </SelectTrigger>
@@ -129,6 +142,7 @@ export function AccountsTab({
                   ))}
                 </SelectContent>
               </Select>
+
               <Input
                 ref={bankType}
                 placeholder="Account Type (Savings, Checking...)"
@@ -170,7 +184,11 @@ export function AccountsTab({
                 readOnly
                 className="bg-gray-100"
               />
-              <Select onValueChange={(v) => (bankCurrency.current = v)}>
+              <Select
+                onValueChange={(v) => {
+                  if (settingsCurrency.current) settingsCurrency.current.value = v;
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Currency" />
                 </SelectTrigger>

@@ -1,27 +1,25 @@
 "use client";
+
 import { BusinessTable, PersonalTable } from "@/components/table/transactionTable";
-import { Eye, EyeOff, TrendingUp, TrendingDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [accountsState, setAccountsState] = useState<any[]>([]);
   const [activeAccount, setActiveAccount] = useState<string | null>(null);
   const [storedTransactions, setStoredTransactions] = useState<any[]>([]);
   const [showTransactions, setShowTransactions] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-
-  const currentAccount = accountsState.find((a) => a.id === activeAccount);
-  const currencySymbol = currentAccount?.currency || "USD";
-
-  const transactionSummary = {
-    count: storedTransactions.length,
-    net: storedTransactions.reduce((sum, t) => sum + t.monto, 0),
-    positive: storedTransactions.filter((t) => t.monto > 0).reduce((sum, t) => sum + t.monto, 0),
-    negative: Math.abs(storedTransactions.filter((t) => t.monto < 0).reduce((sum, t) => sum + t.monto, 0)),
-  };
+  const [error, setError] = useState<string | null>(null);
+  const [workspaceName, setWorkspaceName] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
+    setWorkspaceName(Cookies.get("workspaceName") || null);
+    setUserRole(Cookies.get("userRole") || null);
     loadAccountsFromDB();
   }, []);
 
@@ -31,12 +29,62 @@ export default function Home() {
     }
   }, [activeAccount]);
 
+  const hasRedirected = useRef(false);
+  const isLoadingAccounts = useRef(false);
+
+  const currentAccount = accountsState.find((a) => a.id === activeAccount);
+  const currencySymbol = currentAccount?.currency || "USD";
+
+  const transactionSummary = {
+    count: storedTransactions.length,
+    net: storedTransactions.reduce((sum, t) => sum + (t.monto || 0), 0),
+    positive: storedTransactions
+      .filter((t) => t.monto > 0)
+      .reduce((sum, t) => sum + t.monto, 0),
+    negative: Math.abs(
+      storedTransactions
+        .filter((t) => t.monto < 0)
+        .reduce((sum, t) => sum + t.monto, 0)
+    ),
+  };
+
   async function loadAccountsFromDB() {
+    if (isLoadingAccounts.current) return;
+
+    isLoadingAccounts.current = true;
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const tenantId = Cookies.get("tenantId");
-      const res = await fetch(`http://localhost:4000/api/accounts/tenant/${tenantId}`, { cache: "no-store" });
+      const token = Cookies.get("session_token");
+
+      const res = await fetch("http://localhost:4000/api/accounts", {
+        cache: "no-store",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+        credentials: "include",
+      });
+      console.log(res)
+      if (!res.ok) {
+        if (res.status === 401) {
+          // Token inválido o expirado
+          Cookies.remove("session_token");
+          Cookies.remove("tenantId");
+          Cookies.remove("workspaceName");
+          Cookies.remove("userRole");
+
+          if (!hasRedirected.current) {
+            hasRedirected.current = true;
+            router.push("/login");
+          }
+          return;
+        }
+        throw new Error(`Failed to load accounts: ${res.status}`);
+      }
+
       const data = await res.json();
-      setAccountsState(data);
+      setAccountsState(data.reverse());
 
       const saved = localStorage.getItem("activeAccountId");
       if (saved && data.find((a: any) => a.id === saved)) {
@@ -47,19 +95,40 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error loading accounts:", error);
+      setError("Failed to load accounts. Please try again.");
+    } finally {
+      setIsLoading(false);
+      isLoadingAccounts.current = false;
     }
   }
 
   async function loadTransactionsFromAPI(accountId: string) {
     try {
       setIsLoading(true);
-      const res = await fetch(`http://localhost:4000/api/accounts/${accountId}/transactions`, {
-        cache: "no-store",
-      });
+      const token = Cookies.get("session_token");
+
+      const res = await fetch(
+        `http://localhost:4000/api/accounts/${accountId}/transactions`,
+        {
+          cache: "no-store",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+          credentials: "include",
+        }
+      );
+
       if (!res.ok) {
+        if (res.status === 401) {
+          Cookies.remove("session_token");
+          Cookies.remove("tenantId");
+          router.push("/login");
+          return;
+        }
         setStoredTransactions([]);
         return;
       }
+
       const data = await res.json();
       setStoredTransactions(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -75,11 +144,52 @@ export default function Home() {
     localStorage.setItem("activeAccountId", id);
   };
 
+  // ⭐ NUEVO: Mostrar loading state
+  if (isLoadingAccounts.current && accountsState.length === 0) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600">Loading your workspace...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Main Content */}
       <div className="px-6 py-8 md:px-12 max-w-7xl mx-auto">
-        {/* Account Selector - Compact Version */}
+        {/* Header con workspace info */}
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <div className="text-right">
+            <p className="text-sm font-medium text-gray-900">
+              {workspaceName ?? "Workspace"}
+            </p>
+            <p className="text-xs text-gray-600">
+              Role: {userRole?.toUpperCase() || "USER"}
+            </p>
+          </div>
+        </div>
+
+        {/* ⭐ NUEVO: Mostrar errores */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800 text-sm">{error}</p>
+            <button
+              onClick={() => {
+                setError(null);
+                isLoadingAccounts.current = false;
+                loadAccountsFromDB();
+              }}
+              className="mt-2 text-red-600 hover:text-red-800 text-sm font-medium"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {/* Account Selector */}
         <div className="mb-8">
           {accountsState.length > 1 ? (
             <div className="flex gap-3 overflow-x-auto pb-2">
@@ -88,12 +198,11 @@ export default function Home() {
                   key={account.id}
                   onClick={() => selectAccount(account.id)}
                   className={`flex-shrink-0 px-6 py-3 rounded-lg border-2 transition-all duration-200
-    ${activeAccount === account.id
+                    ${activeAccount === account.id
                       ? "border-black bg-black text-white"
                       : "border-gray-200 bg-white text-black hover:border-black"
                     }`}
                 >
-                  {/* Primera fila */}
                   <div className="flex flex-row">
                     <p
                       className={`text-xs font-medium ${activeAccount === account.id ? "text-white" : "text-black"
@@ -109,23 +218,24 @@ export default function Home() {
                     </p>
                   </div>
 
-                  {/* Segunda fila */}
                   <p
-                    className={`text-xs font-mono mt-1 ${activeAccount === account.id ? "text-gray-300" : "text-gray-600"
+                    className={`text-xs font-mono mt-1 ${activeAccount === account.id
+                      ? "text-gray-300"
+                      : "text-gray-600"
                       }`}
                   >
                     {account.account_type} | {account.bank_account_type}
                   </p>
 
-                  {/* Tercera fila */}
                   <p
-                    className={`text-xs font-mono mt-1 ${activeAccount === account.id ? "text-gray-300" : "text-gray-600"
+                    className={`text-xs font-mono mt-1 ${activeAccount === account.id
+                      ? "text-gray-300"
+                      : "text-gray-600"
                       }`}
                   >
                     {account.currency}
                   </p>
                 </button>
-
               ))}
             </div>
           ) : currentAccount ? (
@@ -134,105 +244,97 @@ export default function Home() {
               <div className="flex items-center justify-between mt-2">
                 <div>
                   <h3 className="text-2xl font-semibold">{currentAccount.alias}</h3>
-                  <p className="text-sm text-gray-400 font-mono mt-2">{currentAccount.account_number}</p>
+                  <p className="text-sm text-gray-400 font-mono mt-2">
+                    {currentAccount.account_number}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-light">{currentAccount.currency}</p>
-                  <p className="text-xs text-gray-400 mt-1">{currentAccount.account_type || "Account"}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {currentAccount.account_type || "Account"}
+                  </p>
                 </div>
               </div>
+            </div>
+          ) : accountsState.length === 0 ? (
+            <div className="p-6 rounded-lg border-2 border-gray-200 bg-gray-50">
+              <p className="text-gray-600 text-center">
+                No accounts found. Create one in Settings.
+              </p>
             </div>
           ) : null}
         </div>
 
-        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="border border-gray-200 rounded-lg p-4">
-            <p className="text-sm text-gray-600 font-medium uppercase tracking-wide">Total Transacciones</p>
-            <p className="text-3xl font-light mt-2 text-black">{transactionSummary.count}</p>
-          </div>
-
-          <div className="border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp size={18} className="text-green-600" />
-              <p className="text-sm text-gray-600 font-medium uppercase tracking-wide">Ingresos</p>
-            </div>
-            <p className="text-3xl font-light mt-2 text-green-600">{transactionSummary.positive.toFixed(0)}</p>
-            <p className="text-xs text-gray-500 mt-1">{currencySymbol}</p>
-          </div>
-          <div className="border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center gap-2">
-              <TrendingDown size={18} className="text-red-600" />
-              <p className="text-sm text-gray-600 font-medium uppercase tracking-wide">Gastos</p>
-            </div>
-            <p className="text-3xl font-light mt-2 text-red-600">{transactionSummary.negative.toFixed(0)}</p>
-            <p className="text-xs text-gray-500 mt-1">{currencySymbol}</p>
-          </div>
-
-          <div className={`border-2 rounded-lg p-4 ${transactionSummary.net >= 0 ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
-            <p className="text-sm font-medium uppercase tracking-wide text-gray-600">Balance Neto</p>
-            <p className={`text-3xl font-light mt-2 ${transactionSummary.net >= 0 ? "text-green-600" : "text-red-600"}`}>
-              {transactionSummary.net >= 0 ? "+" : ""}{transactionSummary.net.toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">{currencySymbol}</p>
-          </div>
-        </div> */}
-
         {/* Transactions Table */}
-        <div className="border border-gray-200 rounded-lg overflow-hidden flex flex-col">
-          <div className="px-6 py-4 flex items-center justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-lg font-semibold text-gray-900">Últimas Transacciones</h2>
-                {currentAccount && (
-                  <div className="flex items-center gap-2 px-3 py-1">
-                    <span className="text-sm font-medium text-gray-700">{currentAccount.alias}</span>
-                    <span className="text-xs font-semibold text-blue-600 px-2 py-0.5">
-                      {currentAccount.currency}
+        {currentAccount && (
+          <div className="border border-gray-200 rounded-lg overflow-hidden flex flex-col">
+            <div className="px-6 py-4 flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Latest Transactions
+                  </h2>
+                  {currentAccount && (
+                    <div className="flex items-center gap-2 px-3 py-1">
+                      <span className="text-sm font-medium text-gray-700">
+                        {currentAccount.alias}
+                      </span>
+                      <span className="text-xs font-semibold text-blue-600 px-2 py-0.5">
+                        {currentAccount.currency}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  {isLoading ? (
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
+                      Loading...
                     </span>
-                  </div>
-                )}
+                  ) : (
+                    <span>
+                      Showing{" "}
+                      <span className="font-semibold text-gray-900">
+                        {Math.min(5, transactionSummary.count)}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-gray-900">
+                        {transactionSummary.count}
+                      </span>{" "}
+                      transaction{transactionSummary.count !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </p>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
-                {isLoading ? (
-                  <span className="flex items-center gap-1">
-                    <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
-                    Cargando...
-                  </span>
-                ) : (
-                  <span>
-                    Mostrando <span className="font-semibold text-gray-900">{Math.min(5, transactionSummary.count)}</span> de{" "}
-                    <span className="font-semibold text-gray-900">{transactionSummary.count}</span> transacción{transactionSummary.count !== 1 ? "es" : ""}
-                  </span>
-                )}
-              </p>
+
+              <button
+                onClick={() => setShowTransactions(!showTransactions)}
+                className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 ${showTransactions
+                  ? "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                aria-label={
+                  showTransactions ? "Hide transactions" : "Show transactions"
+                }
+              >
+                {showTransactions ? <Eye size={20} /> : <EyeOff size={20} />}
+              </button>
             </div>
 
-            <button
-              onClick={() => setShowTransactions(!showTransactions)}
-              className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 ${showTransactions
-                ? "bg-blue-100 text-blue-600 hover:bg-blue-200"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              aria-label={showTransactions ? "Ocultar transacciones" : "Mostrar transacciones"}
-            >
-              {showTransactions ? <Eye size={20} /> : <EyeOff size={20} />}
-            </button>
-          </div>
-
-          {showTransactions ? (
-            currentAccount?.bank_account_type === "Business" ? (
-              <BusinessTable storedTransactions={storedTransactions} />
+            {showTransactions ? (
+              currentAccount?.bank_account_type === "Business" ? (
+                <BusinessTable storedTransactions={storedTransactions} />
+              ) : (
+                <PersonalTable storedTransactions={storedTransactions} />
+              )
             ) : (
-              <PersonalTable storedTransactions={storedTransactions} />
-            )
-          ) : (
-            <div className="flex flex-col justify-center items-center px-6 py-16 text-gray-600">
-              <EyeOff size={32} className="mb-3 text-gray-300" />
-              <p className="text-sm">Transacciones ocultas</p>
-            </div>
-          )}
-
-        </div>
+              <div className="flex flex-col justify-center items-center px-6 py-16 text-gray-600">
+                <EyeOff size={32} className="mb-3 text-gray-300" />
+                <p className="text-sm">Transactions hidden</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

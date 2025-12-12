@@ -1,12 +1,11 @@
+// components/accounts/AccountsView.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { AccountsTable } from "./AccountsTable";
+import Cookies from "js-cookie";
 
-// ----------------------
-// ACTIVE ACCOUNT STORAGE
-// ----------------------
 function saveActiveAccount(id: string) {
   if (typeof window === "undefined") return;
   localStorage.setItem("active_account_id", id);
@@ -17,33 +16,59 @@ function loadActiveAccount() {
   return localStorage.getItem("active_account_id");
 }
 
-// ----------------------
-// MAIN COMPONENT
-// ----------------------
 export default function AccountsView() {
   const [accountsState, setAccountsState] = useState<any[]>([]);
   const [activeAccount, setActiveAccount] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // CARGA DESDE BACKEND
+  // ⭐ ACTUALIZADO: Ya no necesitas pasar tenantId en URL
   async function fetchAccounts() {
     try {
-      const res = await fetch("http://localhost:4000/api/accounts", { cache: "no-store" });
-      if (!res.ok) return;
+      setIsLoading(true);
+      setError(null);
+
+      const token = Cookies.get("session_token");
+
+      if (!token) {
+        setError("No authentication token");
+        return;
+      }
+
+      // ⭐ El backend ahora extrae tenantId del JWT automáticamente
+      const res = await fetch("http://localhost:4000/api/accounts", {
+        cache: "no-store",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          setError("Session expired. Please login again.");
+          // Opcional: redirigir a login
+          window.location.href = "/login";
+          return;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
 
       const data = await res.json();
       setAccountsState(data);
     } catch (error) {
       console.error("Error fetching accounts:", error);
+      setError("Failed to load accounts");
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  // CARGA INICIAL
   useEffect(() => {
     fetchAccounts();
     setActiveAccount(loadActiveAccount());
   }, []);
 
-  // SELECT ACCOUNT → react + storage
   function selectAccount(id: string) {
     saveActiveAccount(id);
     setActiveAccount(id);
@@ -51,11 +76,33 @@ export default function AccountsView() {
 
   return (
     <div id="accountsView" className="w-full max-w-5xl mx-auto space-y-6">
-      <h2 className="text-2xl font-semibold">Bank Accounts</h2>
-      <p className="text-sm text-muted-foreground">
-        Register all your bank accounts here. Click a row to select it as the
-        active account.
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold">Bank Accounts</h2>
+          <p className="text-sm text-muted-foreground">
+            Register all your bank accounts here. Click a row to select it as the
+            active account.
+          </p>
+        </div>
+
+        {/* ⭐ NUEVO: Mostrar workspace actual */}
+        <div className="text-sm text-gray-600">
+          <p className="font-medium">{Cookies.get("workspaceName") || "Workspace"}</p>
+          <p className="text-xs">Role: {Cookies.get("userRole") || "member"}</p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+          {error}
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">
+          Loading accounts...
+        </div>
+      )}
 
       <Card>
         <CardHeader>

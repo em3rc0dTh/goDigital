@@ -17,12 +17,12 @@ export default function SettingsView() {
   const [statusMessage, setStatusMessage] = useState("");
 
   const bankAlias = useRef<any>(null);
-  const bankName = useRef<any>(null);
   const bankHolder = useRef<any>(null);
   const bankNumber = useRef<any>(null);
-  const bankAccountType = useRef<any>(null);
-  const bankCurrency = useRef<any>(null);
   const bankType = useRef<any>(null);
+  const [bankName, setBankName] = useState<string | null>(null);
+  const [bankCurrency, setBankCurrency] = useState<string | null>(null);
+  const [bankAccountType, setBankAccountType] = useState<string | null>(null);
 
   const settingsAlias = useRef<any>(null);
   const settingsBankName = useRef<any>(null);
@@ -47,8 +47,13 @@ export default function SettingsView() {
 
   async function loadAccountsFromDB() {
     try {
-      const tenantId = Cookies.get("tenantId");
-      const res = await fetch(`http://localhost:4000/api/accounts/tenant/${tenantId}`, { cache: "no-store" });
+      const token = Cookies.get("session_token");
+      const res = await fetch("http://localhost:4000/api/accounts", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+        credentials: "include",
+      })
       const data = await res.json();
       setAccountsState(data);
 
@@ -122,13 +127,13 @@ export default function SettingsView() {
   async function addAccount(event: any) {
     event.preventDefault();
 
-    const alias = bankAlias.current.value.trim();
-    const bank_name = bankName.current;
-    const account_holder = bankHolder.current.value.trim();
-    const account_number = bankNumber.current.value.trim();
-    const currency = bankCurrency.current;
-    const account_type = bankType.current.value.trim();
-    const bank_account_type = bankAccountType.current;
+    const alias = bankAlias.current?.value.trim() || "";
+    const bank_name = bankName; // ✅ viene del useState (string)
+    const account_holder = bankHolder.current?.value.trim() || "";
+    const account_number = bankNumber.current?.value.trim() || "";
+    const currency = bankCurrency; // ✅ string
+    const account_type = bankType.current?.value.trim() || "";
+    const bank_account_type = bankAccountType; // ✅ string
 
     if (!bank_name || !account_holder || !account_number) {
       showStatus(
@@ -138,31 +143,43 @@ export default function SettingsView() {
       return;
     }
 
+    const payload = {
+      alias,
+      bank_name,
+      account_holder,
+      account_number,
+      currency,
+      account_type,
+      bank_account_type,
+      tenantId: Cookies.get("tenantId"),
+    };
+
+    console.log("✅ Payload limpio:", payload);
+
     try {
+      const token = Cookies.get("session_token");
+      console.log("✅ Token:", token);
       const res = await fetch("http://localhost:4000/api/accounts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          alias,
-          bank_name,
-          account_holder,
-          account_number,
-          currency,
-          account_type,
-          bank_account_type,
-          tenantId: Cookies.get("tenantId"),
-        }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
       });
+
+      if (!res.ok) throw new Error("Create failed");
 
       const saved = await res.json();
 
-      bankAlias.current.value = "";
-      bankName.current = null;
-      bankHolder.current.value = "";
-      bankNumber.current.value = "";
-      bankCurrency.current = null;
-      bankType.current.value = "";
-      bankAccountType.current = null;
+      bankAlias.current!.value = "";
+      bankHolder.current!.value = "";
+      bankNumber.current!.value = "";
+      bankType.current!.value = "";
+      setBankName(null);
+      setBankCurrency(null);
+      setBankAccountType(null);
 
       await loadAccountsFromDB();
       selectAccount(saved.id);
@@ -191,9 +208,13 @@ export default function SettingsView() {
     }
 
     try {
+      const token = Cookies.get("session_token");
       await fetch(`http://localhost:4000/api/accounts/${activeAccount}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
         body: JSON.stringify({
           alias,
           bank_name,
@@ -229,9 +250,34 @@ export default function SettingsView() {
     if (!ok) return;
 
     try {
-      await fetch(`http://localhost:4000/api/accounts/${activeAccount}`, {
-        method: "DELETE",
-      });
+      const token = Cookies.get("session_token");
+
+      if (!token) {
+        showStatus("❌ No authentication token", "error");
+        return;
+      }
+
+      const res = await fetch(
+        `http://localhost:4000/api/accounts/${activeAccount}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
+        showStatus(
+          `❌ ${errorData.error || "Failed to delete account"}`,
+          "error"
+        );
+        return;
+      }
 
       setActiveAccount(null);
       localStorage.removeItem("activeAccountId");
@@ -254,8 +300,8 @@ export default function SettingsView() {
   async function addEmailConfig(event: any) {
     event.preventDefault();
 
-    const email = emailUser.current.value.trim();
-    const pass = emailPass.current.value.trim();
+    const email = emailUser.current?.value.trim() || "";
+    const pass = emailPass.current?.value.trim() || "";
 
     if (!email || !pass) {
       showStatus("❌ Email and password required", "error");
@@ -271,8 +317,8 @@ export default function SettingsView() {
 
       if (!res.ok) throw new Error("Save error");
 
-      emailUser.current.value = "";
-      emailPass.current.value = "";
+      if (emailUser.current) emailUser.current.value = "";
+      if (emailPass.current) emailPass.current.value = "";
 
       await loadImapConfig();
       showStatus("✅ IMAP configuration saved", "success");
@@ -286,10 +332,10 @@ export default function SettingsView() {
     event.preventDefault();
 
     const payload = {
-      alias: aliasEmail.current.value.trim(),
-      bank_name: bankNameEmail.current.value.trim(),
-      service_type: serviceTypeEmail.current.value.trim(),
-      bank_sender: bankEmailSender.current.value.trim(),
+      alias: aliasEmail.current?.value.trim() || "",
+      bank_name: bankNameEmail.current?.value.trim() || "",
+      service_type: serviceTypeEmail.current?.value.trim() || "",
+      bank_sender: bankEmailSender.current?.value.trim() || "",
     };
 
     if (!payload.bank_name || !payload.service_type || !payload.bank_sender) {
@@ -309,10 +355,10 @@ export default function SettingsView() {
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      aliasEmail.current.value = "";
-      bankNameEmail.current.value = "";
-      serviceTypeEmail.current.value = "";
-      bankEmailSender.current.value = "";
+      if (aliasEmail.current) aliasEmail.current.value = "";
+      if (bankNameEmail.current) bankNameEmail.current.value = "";
+      if (serviceTypeEmail.current) serviceTypeEmail.current.value = "";
+      if (bankEmailSender.current) bankEmailSender.current.value = "";
 
       await loadEmailSetups();
       showStatus("✅ Email setup saved successfully", "success");
@@ -445,10 +491,13 @@ export default function SettingsView() {
           deleteSelectedAccount={deleteSelectedAccount}
           bankAlias={bankAlias}
           bankName={bankName}
+          setBankName={setBankName}
           bankHolder={bankHolder}
           bankNumber={bankNumber}
           bankAccountType={bankAccountType}
+          setBankAccountType={setBankAccountType}
           bankCurrency={bankCurrency}
+          setBankCurrency={setBankCurrency}
           bankType={bankType}
           settingsAlias={settingsAlias}
           settingsBankName={settingsBankName}

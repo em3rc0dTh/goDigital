@@ -58,8 +58,16 @@ export default function Transactions() {
 
   async function loadAccountsFromDB() {
     try {
-      const tenantId = Cookies.get("tenantId");
-      const res = await fetch(`http://localhost:4000/api/accounts/tenant/${tenantId}`, { cache: "no-store" });
+      const token = Cookies.get("session_token");
+
+      const res = await fetch("http://localhost:4000/api/accounts", {
+        cache: "no-store",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+        credentials: "include",
+      });
+
       const data = await res.json();
       setAccountsState(data);
     } catch (error) {
@@ -71,8 +79,13 @@ export default function Transactions() {
   async function loadTransactionsFromAPI(accountId: string) {
     try {
       setIsLoading(true);
+      const token = Cookies.get("session_token");
       const res = await fetch(`http://localhost:4000/api/accounts/${accountId}/transactions`, {
         cache: "no-store",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+        credentials: "include",
       });
       if (!res.ok) {
         setStoredTransactions([]);
@@ -123,10 +136,12 @@ export default function Transactions() {
         balance: t.balance ?? null,
       }));
       console.log("Payload: ", normalized);
-
+      const token = Cookies.get("session_token");
+      console.log("✅ Token:", token);
       const res = await fetch(`http://localhost:4000/api/accounts/${accountId}/transactions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        credentials: "include",
         body: JSON.stringify({ transactions: normalized }),
       });
 

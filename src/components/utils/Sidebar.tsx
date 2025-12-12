@@ -175,6 +175,9 @@ function SidebarContent({
                 });
                 Cookies.remove("session_token");
                 Cookies.remove("tenantId");
+                Cookies.remove("workspaceName");
+                Cookies.remove("userRole");
+                Cookies.remove("temp_token");
                 window.location.href = "/login";
               }
               : () => { };
