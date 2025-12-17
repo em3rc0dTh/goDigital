@@ -5,6 +5,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, RefreshCw } from "lucide-react";
+import Cookies from "js-cookie";
+
+// ============================================================================
+// PARSING FUNCTIONS (sin cambios)
+// ============================================================================
 
 function normalizarFecha(raw: any) {
   if (!raw || raw === "-") return "-";
@@ -76,7 +81,6 @@ function normalizarFecha(raw: any) {
 }
 
 function parseEmailText(body: any) {
-  // normalizar
   body = body
     .replace(/\r/g, "")
     .replace(/\u00a0/g, " ")
@@ -90,20 +94,20 @@ function parseEmailText(body: any) {
     return "-";
   };
 
-  // ====== MONTO ======
   const monto = extract([
     /Monto(?: Total)?:?\s*S\/\s*([\d,.]+)/i,
     /Total del consumo:?\s*S\/\s*([\d,.]+)/i,
     /S\/\s*([\d,.]+)\s*(?:PEN)?/i,
   ]);
+
   const OPERACION_PATTERNS = [
-    /n[°º]?\s*de\s*operación[:\s]*([0-9]+)/i, // "N° de operación 4498092"
-    /numero\s*de\s*operacion[:\s]*([0-9]+)/i, // "Número de operación 11173152"
-    /num\.?\s*operación[:\s]*([0-9]+)/i, // Variantes abreviadas
-    /c[oó]digo\s*de\s*operaci[oó]n[:\s]*([0-9]+)/i, // "Código de operación 5469011"
-    /operación[:\s]*([0-9]{4,10})/i, // Respaldo genérico → "operación 7383425"
+    /n[°º]?\s*de\s*operación[:\s]*([0-9]+)/i,
+    /numero\s*de\s*operacion[:\s]*([0-9]+)/i,
+    /num\.?\s*operación[:\s]*([0-9]+)/i,
+    /c[oó]digo\s*de\s*operaci[oó]n[:\s]*([0-9]+)/i,
+    /operación[:\s]*([0-9]{4,10})/i,
   ];
-  // ====== NÚMERO DE OPERACIÓN ======
+
   const nroOperacion = extract([
     /N(?:ú|u)mero de operación:?\s*(\d+)/i,
     /N° de operación:?\s*(\d+)/i,
@@ -113,7 +117,6 @@ function parseEmailText(body: any) {
     ...OPERACION_PATTERNS,
   ]);
 
-  // ====== FECHA ======
   const fechaRaw = extract([
     /(\d{1,2}\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\s+\d{4}\s*-\s*\d{1,2}:\d{2}\s*(a\.?m\.?|p\.?m\.?))/i,
     /\bFecha(?: y hora)?:?\s*(.+)/i,
@@ -124,14 +127,13 @@ function parseEmailText(body: any) {
   ]);
 
   const fecha = normalizarFecha(fechaRaw);
-  // ====== YAPERO / REMITENTE ======
+
   const yapero = extract([
     /Hola[, ]+([A-Za-zÁÉÍÓÚÑáéíóúñ ]+)/i,
     /De: ([A-Za-zÁÉÍÓÚÑáéíóúñ ]+)/i,
     /Titular:?\s*([A-Za-zÁÉÍÓÚÑáéíóúñ ]+)/i,
   ]);
 
-  // ====== ORIGEN ======
   const origen = extract([
     /Cuenta cargo:?\s*([\d ]+)/i,
     /Desde el número:?\s*(\d{6,})/i,
@@ -139,7 +141,6 @@ function parseEmailText(body: any) {
     /Cuenta origen:?\s*([\d ]{6,})/i,
   ]);
 
-  // ====== BENEFICIARIO (NOMBRE) ======
   const nombreBenef = extract([
     /Nombre del Beneficiario:?\s*(.+)/i,
     /Enviado a:?\s*(.+)/i,
@@ -147,25 +148,19 @@ function parseEmailText(body: any) {
     /Para:?\s*([A-Za-zÁÉÍÓÚÑáéíóúñ ]+)/i,
   ]);
 
-  // ====== BENEFICIARIO (CUENTA/CELULAR) ======
   const cuentaBenef = extract([
     /Cuenta destino:?\s*([\d ]+)/i,
     /Celular del Beneficiario:?\s*(\d{6,})/i,
     /Nro destino:?\s*(\d{6,})/i,
   ]);
 
-  // ====== CELULAR BENEF ======
   const celularBenef = extract([
     /celular del beneficiario[:\s]*([x\d]{6,})/i,
     /celular[:\s]*([x\d]{6,})/i,
     /destinatario[:\s]*([x\d]{6,})/i,
     /cuenta destino[:\s]*([x\d]{6,})/i,
-    /Nombre del Beneficiario:?\s*(.+)/i,
-    /Enviado a:?\s*(.+)/i,
-    /Beneficiario:?\s*(.+)/i,
-    /Para:?\s*([A-Za-zÁÉÍÓÚÑáéíóúñ ]+)/i,
   ]);
-  // --- MONEDA ---
+
   const monedaRaw = extract([
     /(S\/)\s*[\d,.]+/i,
     /(USD)\s*[\d,.]+/i,
@@ -187,44 +182,6 @@ function parseEmailText(body: any) {
     cuentaBenef,
     nroOperacion,
     celularBenef,
-    tipo_moneda,
-  };
-}
-
-function parseInterbankEmail(body: any) {
-  const extract = (pattern: any) => {
-    const m = body.match(pattern);
-    return m && m[1] ? m[1].trim() : "-";
-  };
-
-  const monto = extract(/Monto Total:\s*S\/\s*([\d,.]+)/i);
-  const yapero = extract(/Hola\s+([^\n,]+)/i); // Nombre del remitente
-  const origen = extract(
-    /Cuenta cargo:\s*Cuenta Simple Soles\s*([\d\s]+)/i
-  ).replace(/\s+/g, "");
-  const fecha = extract(/(\d{2}\s\w{3}\s\d{4}\s\d{2}:\d{2}\s[AP]M)/i);
-  const nombreBenef = extract(/Cuenta destino:\s*([^\n]+)/i);
-  const cuentaBenef = extract(/Cuenta destino:[^\n]+\n([\d\s]+)/i).replace(
-    /\s+/g,
-    ""
-  );
-  const nroOperacion = extract(/Código de operación:\s*(\d+)/i);
-  const tipoOperacion = extract(/Tipo de operación:\s*([^\n]+)/i);
-  const comision = extract(/Comisión:\s*S\/\s*([\d,.]+)/i);
-  const monedaRaw = extract(/(S\/|USD|\$)\s*[\d,.]+/i);
-  let tipo_moneda = "-";
-  if (monedaRaw !== "-") tipo_moneda = monedaRaw.includes("S/") ? "PEN" : "USD";
-
-  return {
-    monto,
-    yapero,
-    origen,
-    fecha,
-    nombreBenef,
-    cuentaBenef,
-    nroOperacion,
-    tipoOperacion,
-    comision,
     tipo_moneda,
   };
 }
@@ -253,14 +210,8 @@ function parseEmailBody(body: any) {
   const monto = extract([
     /<td[^>]*class="soles-amount"[^>]*>\s*([\d.]+)\s*<\/td>/,
     /<strong>Monto de yapeo\*<\/strong>[\s\S]*?<td.*?style="[^"]*font-size:50px[^"]*">([\d,.]+)<\/td>/,
-    /<strong>Monto de yapeo*\*<\/strong>[\s\S]*?<td.*?style="[^"]*font-size:50px[^"]*">([\d,.]+)<\/td>/,
     /Monto de Yapeo<\/td>\s*<td[^>]*>\s*S\/\s*([\d,.]+)/,
     /Total del consumo<\/td>.*?<b>S\/\s*([\d,.]+)<\/b>/,
-    /Moneda y monto:<\/span><\/td>[\s\S]*?<span>S\/<\/span>\s*<span>([\d,.]+)<\/span>/,
-    /Total del consumo<\/td>.*?<b>S\/\s*([\d,.]+)<\/b>/,
-    /Moneda y monto:<\/span><\/td>[\s\S]*?<span>S\/<\/span>\s*<span>([\d,.]+)<\/span>/,
-    /Total del consumo\s*S\/\s*([\d,.]+)/,
-    /S\/\s*([\d,.]+)<\/b>/,
     /Moneda y monto:<\/span><\/td>[\s\S]*?<span>S\/<\/span>\s*<span>([\d,.]+)<\/span>/,
     /Monto Total:<\/span><\/td>[\s\S]*?<span>S\/<\/span>\s*<span>([\d,.]+)<\/span>/,
   ]);
@@ -268,8 +219,8 @@ function parseEmailBody(body: any) {
   const yapero = extract([
     /Yapero\s*<\/td>\s*<td.*?>(.*?)<\/td>/,
     /Hola <b>(.*?)<\/b>/,
-    /Cuenta destino:<\/span><\/td>[\s\S]*?<span>([^<]+)<\/span>/,
     /Hola\s*<span>([^<]+)<\/span>/,
+    /Cuenta destino:<\/span><\/td>[\s\S]*?<span>([^<]+)<\/span>/,
   ]);
 
   const origen = extract([
@@ -288,9 +239,7 @@ function parseEmailBody(body: any) {
 
   const fechaFinal = () => {
     const f = normalizarFecha(fechaRaw || "");
-
     if (!f || f.trim() === "" || f.includes("@")) return "-";
-
     return f;
   };
   const fecha = fechaFinal();
@@ -318,12 +267,6 @@ function parseEmailBody(body: any) {
   const celularBenef = extract([
     /Celular del Beneficiario\s*<\/td>\s*<td.*?>(.*?)<\/td>/,
     /Cuenta destino:<\/span><\/td>[\s\S]*?<span>(?:.*?)<\/span><br clear="none"><span>(.*?)<\/span>/,
-    /Nombre del Beneficiario\s*<\/td>\s*<td.*?>(.*?)<\/td>/,
-    /Empresa<\/td>[\s\S]*?<b>(.*?)<\/b>/,
-    /Cuenta destino:<\/span><\/td>[\s\S]*?<span>(.*?)<\/span>/,
-    /Nombre del Beneficiario\s*<\/td>\s*<td.*?>(.*?)<\/td>/,
-    /Empresa<\/td>[\s\S]*?<b>(.*?)<\/b>/,
-    /Cuenta destino:<\/span><\/td>[\s\S]*?<span>([^<]+)<\/span>/,
   ]);
 
   return {
@@ -339,16 +282,102 @@ function parseEmailBody(body: any) {
   };
 }
 
-export default function EmailsPage() {
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
+interface EmailsPageProps {
+  activeDatabase: string;
+}
+
+export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
   const [emails, setEmails] = useState<any[]>([]);
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<any>(null);
 
+  // 🆕 Estado para tenant DB name
+  const [tenantDbName, setTenantDbName] = useState<string>("");
+
+  // 🆕 Cargar dbName del tenant activo
+  useEffect(() => {
+    loadTenantDbName();
+  }, []);
+
+  useEffect(() => {
+    if (tenantDbName) {
+      loadEmails();
+    }
+  }, [activeDatabase, tenantDbName]);
+
+  async function loadTenantDbName() {
+    try {
+      const token = Cookies.get("session_token");
+      const tenantId = Cookies.get("tenantId");
+      const tenantDetailId = Cookies.get("tenantDetailId");
+
+      if (!tenantId || !tenantDetailId) {
+        console.error("Missing tenantId or tenantDetailId in cookies");
+        setStatus("❌ Missing tenant information");
+        return;
+      }
+
+      const res = await fetch(
+        `http://localhost:4000/api/tenants/details/${tenantId}`,
+        {
+          cache: "no-store",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to load tenant details");
+      }
+
+      const data = await res.json();
+
+      // Buscar el detail activo
+      const activeDetail = data.details.find(
+        (d: any) => d.detailId === tenantDetailId
+      );
+
+      if (activeDetail?.dbName) {
+        setTenantDbName(activeDetail.dbName);
+        console.log("✅ Loaded tenant DB name for emails:", activeDetail.dbName);
+      } else {
+        console.error("No dbName found for active tenant detail");
+        setStatus("❌ Could not load database name");
+      }
+    } catch (error) {
+      console.error("Error loading tenant DB name:", error);
+      setStatus("❌ Error loading tenant information");
+    }
+  }
+
   const loadEmails = async () => {
+    if (!tenantDbName) {
+      console.warn("No tenantDbName available, skipping email load");
+      setStatus("⚠️ Database name not loaded yet");
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const res = await fetch("http://localhost:8000/emails");
+      setStatus("⏳ Loading emails...");
+
+      const res = await fetch("http://localhost:8000/emails", {
+        headers: {
+          "X-Database-Name": tenantDbName,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
       const data = await res.json();
 
       const normalized = data.map((mail: any) => {
@@ -362,7 +391,9 @@ export default function EmailsPage() {
       });
 
       setEmails(normalized);
-    } catch {
+      setStatus(normalized.length > 0 ? "" : "ℹ️ No emails found");
+    } catch (error) {
+      console.error("Error loading emails:", error);
       setEmails([]);
       setStatus("❌ Error loading emails");
     } finally {
@@ -371,23 +402,37 @@ export default function EmailsPage() {
   };
 
   const runIngest = async () => {
-    setStatus("⏳ Processing emails...");
+    if (!tenantDbName) {
+      setStatus("❌ Database name not loaded");
+      return;
+    }
+
+    setStatus("⏳ Processing emails from IMAP...");
     setIsLoading(true);
+
     try {
-      const res = await fetch("http://localhost:8000/ingest");
+      const res = await fetch("http://localhost:8000/ingest?limit=50", {
+        headers: {
+          "X-Database-Name": tenantDbName,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
       const data = await res.json();
       setStatus(`✅ Processed: ${data.count} emails`);
+
+      // Recargar emails después de ingest
       await loadEmails();
-    } catch {
+    } catch (error) {
+      console.error("Error running ingest:", error);
       setStatus("❌ Error connecting to server");
     } finally {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadEmails();
-  }, []);
 
   return (
     <div className="w-full space-y-6 pb-10">
@@ -399,7 +444,7 @@ export default function EmailsPage() {
             Parsed bank transaction emails from IMAP
           </p>
         </div>
-        <Button onClick={runIngest} disabled={isLoading}>
+        <Button onClick={runIngest} disabled={isLoading || !tenantDbName}>
           <RefreshCw
             className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
           />
@@ -410,13 +455,14 @@ export default function EmailsPage() {
       {/* STATUS */}
       {status && (
         <div
-          className={`p-4 rounded text-sm ${
-            status.includes("✅")
-              ? "bg-green-100 text-green-800"
-              : status.includes("⏳")
-                ? "bg-blue-100 text-blue-800"
+          className={`p-4 rounded text-sm ${status.includes("✅")
+            ? "bg-green-100 text-green-800"
+            : status.includes("⏳")
+              ? "bg-blue-100 text-blue-800"
+              : status.includes("⚠️")
+                ? "bg-yellow-100 text-yellow-800"
                 : "bg-red-100 text-red-800"
-          }`}
+            }`}
         >
           {status}
         </div>
@@ -432,6 +478,11 @@ export default function EmailsPage() {
           {emails.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>No emails found. Click "Ingest IMAP" to load emails.</p>
+              {!tenantDbName && (
+                <p className="text-xs text-red-500 mt-2">
+                  ⚠️ Database name not loaded. Please refresh the page.
+                </p>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -453,13 +504,15 @@ export default function EmailsPage() {
                   {emails.map((email, idx) => {
                     const fromName = email.from?.split(" ")[0] || "Unknown";
                     return (
-                      <tr key={idx} className="border-b hover:bg-gray-50">
+                      <tr key={email._id || idx} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
                         <td className="px-4 py-2 text-sm font-medium truncate">
                           {fromName}
                         </td>
                         <td className="px-4 py-2 text-xs font-mono">
-                          {email.parsed.nroOperacion.slice(-6)}
+                          {email.parsed.nroOperacion !== "-"
+                            ? email.parsed.nroOperacion.slice(-6)
+                            : "-"}
                         </td>
                         <td className="px-4 py-2 text-sm truncate max-w-xs">
                           {email.parsed.nombreBenef}
@@ -505,7 +558,7 @@ export default function EmailsPage() {
               <CardTitle>{selectedEmail.subject}</CardTitle>
               <button
                 onClick={() => setSelectedEmail(null)}
-                className="text-xl font-bold"
+                className="text-xl font-bold hover:bg-gray-100 px-3 py-1 rounded"
               >
                 ✕
               </button>
@@ -514,7 +567,7 @@ export default function EmailsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-500">From</p>
-                  <p className="font-semibold">{selectedEmail.from}</p>
+                  <p className="font-semibold text-sm">{selectedEmail.from}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Operation #</p>
@@ -524,13 +577,13 @@ export default function EmailsPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Beneficiary</p>
-                  <p className="font-semibold">
+                  <p className="font-semibold text-sm">
                     {selectedEmail.parsed.nombreBenef}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Account/Phone</p>
-                  <p className="font-semibold">
+                  <p className="font-semibold text-sm">
                     {selectedEmail.parsed.cuentaBenef}
                   </p>
                 </div>
@@ -549,13 +602,27 @@ export default function EmailsPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">From Account</p>
-                  <p className="font-semibold">{selectedEmail.parsed.origen}</p>
+                  <p className="font-semibold text-sm">
+                    {selectedEmail.parsed.origen}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Name</p>
-                  <p className="font-semibold">{selectedEmail.parsed.yapero}</p>
+                  <p className="font-semibold text-sm">
+                    {selectedEmail.parsed.yapero}
+                  </p>
                 </div>
               </div>
+
+              {/* Debug info (opcional) */}
+              <details className="mt-4 text-xs">
+                <summary className="cursor-pointer text-gray-500 hover:text-gray-700">
+                  Raw Email Data
+                </summary>
+                <pre className="mt-2 p-2 bg-gray-50 rounded overflow-auto max-h-40 text-xs">
+                  {JSON.stringify(selectedEmail.parsed, null, 2)}
+                </pre>
+              </details>
             </CardContent>
           </Card>
         </div>

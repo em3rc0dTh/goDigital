@@ -34,12 +34,13 @@ export default function AccountsView() {
         setError("No authentication token");
         return;
       }
-
+      const tenantDetailId = Cookies.get("tenantDetailId");
       // ⭐ El backend ahora extrae tenantId del JWT automáticamente
       const res = await fetch("http://localhost:4000/api/accounts", {
         cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,
+          "x-tenant-detail-id": tenantDetailId || "",
         },
         credentials: "include",
       });

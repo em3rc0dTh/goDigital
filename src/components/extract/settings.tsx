@@ -6,7 +6,11 @@ import { AccountsTab } from "../settings/AccountsSettings";
 import { EmailTab } from "../settings/EmailsSettings";
 import Cookies from "js-cookie";
 
-export default function SettingsView() {
+interface SettingsViewProps {
+  activeDatabase: string;
+}
+
+export default function SettingsView({ activeDatabase }: SettingsViewProps) {
   const [activeTab, setActiveTab] = useState<"accounts" | "email" | "imap">(
     "accounts"
   );
@@ -15,6 +19,9 @@ export default function SettingsView() {
   const [emailSetups, setEmailSetups] = useState<any[]>([]);
   const [imapConfig, setImapConfig] = useState<any>(null);
   const [statusMessage, setStatusMessage] = useState("");
+
+  // 🆕 Estado para el dbName del tenant activo
+  const [tenantDbName, setTenantDbName] = useState<string>("");
 
   const bankAlias = useRef<any>(null);
   const bankHolder = useRef<any>(null);
@@ -39,21 +46,78 @@ export default function SettingsView() {
   const serviceTypeEmail = useRef<any>(null);
   const bankEmailSender = useRef<any>(null);
 
+  // 🆕 Cargar dbName del tenant activo
   useEffect(() => {
-    loadAccountsFromDB();
-    loadEmailSetups();
-    loadImapConfig();
+    loadTenantDbName();
   }, []);
+
+  useEffect(() => {
+    if (tenantDbName) {
+      loadAccountsFromDB();
+      loadEmailSetups();
+      loadImapConfig();
+    }
+  }, [activeDatabase, tenantDbName]);
+
+  async function loadTenantDbName() {
+    try {
+      const token = Cookies.get("session_token");
+      const tenantId = Cookies.get("tenantId");
+      const tenantDetailId = Cookies.get("tenantDetailId");
+
+      if (!tenantId || !tenantDetailId) {
+        console.error("Missing tenantId or tenantDetailId in cookies");
+        showStatus("❌ Missing tenant information", "error");
+        return;
+      }
+
+      const res = await fetch(
+        `http://localhost:4000/api/tenants/details/${tenantId}`,
+        {
+          cache: "no-store",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to load tenant details");
+      }
+
+      const data = await res.json();
+
+      // Buscar el detail que coincide con tenantDetailId
+      const activeDetail = data.details.find(
+        (d: any) => d.detailId === tenantDetailId
+      );
+
+      if (activeDetail?.dbName) {
+        setTenantDbName(activeDetail.dbName);
+        console.log("✅ Loaded tenant DB name:", activeDetail.dbName);
+      } else {
+        console.error("No dbName found for active tenant detail");
+        showStatus("❌ Could not load database name", "error");
+      }
+    } catch (error) {
+      console.error("Error loading tenant DB name:", error);
+      showStatus("❌ Error loading tenant information", "error");
+    }
+  }
 
   async function loadAccountsFromDB() {
     try {
       const token = Cookies.get("session_token");
+      const tenantDetailId = Cookies.get("tenantDetailId");
       const res = await fetch("http://localhost:4000/api/accounts", {
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
+          "x-tenant-detail-id": tenantDetailId || "",
+          "Content-Type": "application/json",
         },
         credentials: "include",
-      })
+      });
       const data = await res.json();
       setAccountsState(data);
 
@@ -69,26 +133,48 @@ export default function SettingsView() {
   }
 
   async function loadEmailSetups() {
+    if (!tenantDbName) {
+      console.warn("No tenantDbName available, skipping email setups load");
+      return;
+    }
+
     try {
-      const res = await fetch("http://localhost:8000/email/setup");
+      const res = await fetch("http://localhost:8000/email/setup", {
+        headers: {
+          "X-Database-Name": tenantDbName,
+        },
+      });
+
       if (res.ok) {
         const data = await res.json();
         setEmailSetups(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error("Error loading email setups:", error);
+      showStatus("❌ Error loading email setups", "error");
     }
   }
 
   async function loadImapConfig() {
+    if (!tenantDbName) {
+      console.warn("No tenantDbName available, skipping IMAP config load");
+      return;
+    }
+
     try {
-      const res = await fetch("http://localhost:8000/imap/config");
+      const res = await fetch("http://localhost:8000/imap/config", {
+        headers: {
+          "X-Database-Name": tenantDbName,
+        },
+      });
+
       if (res.ok) {
         const data = await res.json();
         setImapConfig(data);
       }
     } catch (error) {
       console.error("Error loading IMAP config:", error);
+      showStatus("❌ Error loading IMAP config", "error");
     }
   }
 
@@ -128,12 +214,12 @@ export default function SettingsView() {
     event.preventDefault();
 
     const alias = bankAlias.current?.value.trim() || "";
-    const bank_name = bankName; // ✅ viene del useState (string)
+    const bank_name = bankName;
     const account_holder = bankHolder.current?.value.trim() || "";
     const account_number = bankNumber.current?.value.trim() || "";
-    const currency = bankCurrency; // ✅ string
+    const currency = bankCurrency;
     const account_type = bankType.current?.value.trim() || "";
-    const bank_account_type = bankAccountType; // ✅ string
+    const bank_account_type = bankAccountType;
 
     if (!bank_name || !account_holder || !account_number) {
       showStatus(
@@ -154,16 +240,15 @@ export default function SettingsView() {
       tenantId: Cookies.get("tenantId"),
     };
 
-    console.log("✅ Payload limpio:", payload);
-
     try {
       const token = Cookies.get("session_token");
-      console.log("✅ Token:", token);
+      const tenantDetailId = Cookies.get("tenantDetailId");
       const res = await fetch("http://localhost:4000/api/accounts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          "x-tenant-detail-id": tenantDetailId || "",
         },
         credentials: "include",
         body: JSON.stringify(payload),
@@ -209,11 +294,13 @@ export default function SettingsView() {
 
     try {
       const token = Cookies.get("session_token");
+      const tenantDetailId = Cookies.get("tenantDetailId");
       await fetch(`http://localhost:4000/api/accounts/${activeAccount}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
+          "x-tenant-detail-id": tenantDetailId || "",
         },
         body: JSON.stringify({
           alias,
@@ -256,13 +343,14 @@ export default function SettingsView() {
         showStatus("❌ No authentication token", "error");
         return;
       }
-
+      const tenantDetailId = Cookies.get("tenantDetailId");
       const res = await fetch(
         `http://localhost:4000/api/accounts/${activeAccount}`,
         {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
+            "x-tenant-detail-id": tenantDetailId || "",
           },
           credentials: "include",
         }
@@ -300,6 +388,11 @@ export default function SettingsView() {
   async function addEmailConfig(event: any) {
     event.preventDefault();
 
+    if (!tenantDbName) {
+      showStatus("❌ Database name not loaded", "error");
+      return;
+    }
+
     const email = emailUser.current?.value.trim() || "";
     const pass = emailPass.current?.value.trim() || "";
 
@@ -311,7 +404,10 @@ export default function SettingsView() {
     try {
       const res = await fetch("http://localhost:8000/imap/config", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Database-Name": tenantDbName,
+        },
         body: JSON.stringify({ user: email, password: pass }),
       });
 
@@ -331,11 +427,23 @@ export default function SettingsView() {
   async function addSetupToEmail(event: any) {
     event.preventDefault();
 
+    if (!tenantDbName) {
+      showStatus("❌ Database name not loaded", "error");
+      return;
+    }
+
+    const tenantId = Cookies.get("tenantId");
+    const tenantDetailId = Cookies.get("tenantDetailId");
+
     const payload = {
       alias: aliasEmail.current?.value.trim() || "",
       bank_name: bankNameEmail.current?.value.trim() || "",
       service_type: serviceTypeEmail.current?.value.trim() || "",
       bank_sender: bankEmailSender.current?.value.trim() || "",
+      tenant_id: tenantId,
+      tenant_detail_id: tenantDetailId,
+      account_id: activeAccount || undefined, // Cuenta activa seleccionada
+      db_name: tenantDbName,
     };
 
     if (!payload.bank_name || !payload.service_type || !payload.bank_sender) {
@@ -349,7 +457,10 @@ export default function SettingsView() {
     try {
       const res = await fetch("http://localhost:8000/email/setup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Database-Name": tenantDbName,
+        },
         body: JSON.stringify(payload),
       });
 
@@ -369,10 +480,18 @@ export default function SettingsView() {
   }
 
   async function updateImapConfig(user: string, password: string) {
+    if (!tenantDbName) {
+      showStatus("❌ Database name not loaded", "error");
+      return;
+    }
+
     try {
       const res = await fetch(`http://localhost:8000/imap/config`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Database-Name": tenantDbName,
+        },
         body: JSON.stringify({ user, password }),
       });
       if (!res.ok) throw new Error("Update failed");
@@ -385,6 +504,11 @@ export default function SettingsView() {
   }
 
   async function deleteImapConfig() {
+    if (!tenantDbName) {
+      showStatus("❌ Database name not loaded", "error");
+      return;
+    }
+
     const ok = confirm(
       "Are you sure you want to delete the IMAP configuration?"
     );
@@ -393,6 +517,9 @@ export default function SettingsView() {
     try {
       const res = await fetch(`http://localhost:8000/imap/config`, {
         method: "DELETE",
+        headers: {
+          "X-Database-Name": tenantDbName,
+        },
       });
       if (!res.ok) throw new Error("Delete failed");
       setImapConfig(null);
@@ -403,11 +530,19 @@ export default function SettingsView() {
     }
   }
 
-  async function updateEmailSetup(idx: number, updated: any) {
+  async function updateEmailSetup(id: string, updated: any) {
+    if (!tenantDbName) {
+      showStatus("❌ Database name not loaded", "error");
+      return;
+    }
+
     try {
-      const res = await fetch(`http://localhost:8000/email/setup/${idx}`, {
+      const res = await fetch(`http://localhost:8000/email/setup/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Database-Name": tenantDbName,
+        },
         body: JSON.stringify(updated),
       });
       if (!res.ok) throw new Error("Update failed");
@@ -419,13 +554,21 @@ export default function SettingsView() {
     }
   }
 
-  async function deleteEmailSetup(idx: number) {
+  async function deleteEmailSetup(id: string) {
+    if (!tenantDbName) {
+      showStatus("❌ Database name not loaded", "error");
+      return;
+    }
+
     const ok = confirm("Are you sure you want to delete this email setup?");
     if (!ok) return;
 
     try {
-      const res = await fetch(`http://localhost:8000/email/setup/${idx}`, {
+      const res = await fetch(`http://localhost:8000/email/setup/${id}`, {
         method: "DELETE",
+        headers: {
+          "X-Database-Name": tenantDbName,
+        },
       });
       if (!res.ok) throw new Error("Delete failed");
       await loadEmailSetups();

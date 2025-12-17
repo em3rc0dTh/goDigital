@@ -17,8 +17,11 @@ import { GenericTable } from "../table/common-table";
 import { BusinessTable, PersonalTable } from "../table/transactionTable";
 import Cookies from "js-cookie";
 import crypto from "crypto";
-
-export default function Transactions() {
+// O si recibes activeDatabase como prop:
+interface TransactionsProps {
+  activeDatabase: string;
+}
+export default function Transactions({ activeDatabase }: TransactionsProps) {
   const [accountsState, setAccountsState] = useState<any[]>([]);
   const [activeAccount, setActiveAccount] = useState<string | null>(null);
   const [storedTransactions, setStoredTransactions] = useState<any[]>([]);
@@ -36,7 +39,7 @@ export default function Transactions() {
   const clearEndDateRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     loadAccountsFromDB();
-  }, []);
+  }, [activeDatabase]);
 
   useEffect(() => {
     const saved = localStorage.getItem("activeAccountId");
@@ -59,11 +62,12 @@ export default function Transactions() {
   async function loadAccountsFromDB() {
     try {
       const token = Cookies.get("session_token");
-
+      const tenantDetailId = Cookies.get("tenantDetailId");
       const res = await fetch("http://localhost:4000/api/accounts", {
         cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,
+          "x-tenant-detail-id": tenantDetailId || "",
         },
         credentials: "include",
       });
@@ -80,10 +84,12 @@ export default function Transactions() {
     try {
       setIsLoading(true);
       const token = Cookies.get("session_token");
+      const tenantDetailId = Cookies.get("tenantDetailId");
       const res = await fetch(`http://localhost:4000/api/accounts/${accountId}/transactions`, {
         cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,
+          "x-tenant-detail-id": tenantDetailId || "",
         },
         credentials: "include",
       });
@@ -137,10 +143,10 @@ export default function Transactions() {
       }));
       console.log("Payload: ", normalized);
       const token = Cookies.get("session_token");
-      console.log("✅ Token:", token);
+      const tenantDetailId = Cookies.get("tenantDetailId");
       const res = await fetch(`http://localhost:4000/api/accounts/${accountId}/transactions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-tenant-detail-id": tenantDetailId || "", },
         credentials: "include",
         body: JSON.stringify({ transactions: normalized }),
       });
@@ -815,7 +821,7 @@ export default function Transactions() {
             </Card>
           )}
 
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle>Management</CardTitle>
             </CardHeader>
@@ -878,7 +884,7 @@ export default function Transactions() {
                 Delete All Transactions
               </Button>
             </CardContent>
-          </Card>
+          </Card> */}
         </>
       )}
     </div>

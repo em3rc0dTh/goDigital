@@ -10,6 +10,8 @@ import {
   Activity,
   Users,
   Coins,
+  Rocket,
+  TowerControl,
   CreditCard,
   Settings,
   Landmark,
@@ -46,7 +48,8 @@ export default function Sidebar() {
       link: "/",
       active: true,
     },
-    { icon: Brain, label: "Getting Started", link: "/getting-started" },
+    { icon: Rocket, label: "Launch Pad", link: "/getting-started" },
+    { icon: TowerControl, label: "Mission Control", link: "/management" },
     { icon: Folder, label: "Projects", link: "/projects" },
     { icon: Activity, label: "Activity", link: "/activity" },
     { icon: Users, label: "Team", link: "/team" },
@@ -57,11 +60,12 @@ export default function Sidebar() {
   ];
 
   const bottomItems = [
-    { icon: FileText, label: "Docs" },
-    { icon: MessageCircle, label: "Community" },
-    { icon: Share2, label: "Share Secret" },
-    { icon: HelpCircle, label: "Support" },
-    { icon: Signal, label: "Status" },
+    // { icon: FileText, label: "Docs" },
+    // { icon: MessageCircle, label: "Community" },
+    // { icon: Share2, label: "Share Secret" },
+    // { icon: HelpCircle, label: "Support" },
+    // { icon: Signal, label: "Status" },
+    { icon: Settings, label: "Settings" },
     { icon: LogOut, label: "Log Out" },
   ];
 

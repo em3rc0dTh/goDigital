@@ -33,7 +33,7 @@ export default function GettingStarted() {
 
   const [businessEntity, setBusinessEntity] = useState({
     country: "PE",
-    type: "natural",
+    entityType: "natural",
     taxId: "",
     businessEmail: "",
     domain: "",
@@ -50,11 +50,10 @@ export default function GettingStarted() {
       alert("Tax ID and Email are required.");
       return;
     }
-
+    console.log("Business Entity", businessEntity);
     try {
       const tenantId = Cookies.get("tenantId");
       const token = Cookies.get("session_token");
-      console.log(token)
       const res = await fetch(`http://localhost:4000/api/tenants/${tenantId}/provision`, {
         method: "POST",
         credentials: "include",
@@ -82,36 +81,40 @@ export default function GettingStarted() {
       const tenantId = Cookies.get("tenantId");
       const token = Cookies.get("session_token");
 
-      const res = await fetch(`http://localhost:4000/api/tenants/${tenantId}`, {
-        headers: { "Authorization": `Bearer ${token}` },
-        credentials: "include",
-      });
+      try {
+        const res = await fetch(`http://localhost:4000/api/tenants/${tenantId}`, {
+          headers: { "Authorization": `Bearer ${token}` },
+          credentials: "include",
+        });
 
-      const tenant = await res.json();
+        if (!res.ok) throw new Error(await res.text());
 
-      const alreadyFilled =
-        tenant.country &&
-        tenant.taxId &&
-        tenant.businessEmail &&
-        tenant.domain !== undefined &&
-        tenant.dbName;
+        const tenant = await res.json();
 
-      if (alreadyFilled) {
-        setCompletedTasks(prev => ({ ...prev, businessEntity: true }));
+        // Verifica si ya hay al menos un business entity
+        const hasBusinessEntities = tenant.databases && tenant.databases.length > 0;
+
+        if (hasBusinessEntities) {
+          setCompletedTasks(prev => ({ ...prev, businessEntity: true }));
+
+          // Prellenar formulario con el último Business Entity si quieres
+          const lastEntity = tenant.databases[tenant.databases.length - 1];
+          setBusinessEntity({
+            country: lastEntity.country ?? "PE",
+            entityType: lastEntity.entityType ?? "natural",
+            taxId: lastEntity.taxId ?? "",
+            businessEmail: lastEntity.businessEmail ?? "",
+            domain: lastEntity.domain ?? "",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading tenant:", error);
       }
-
-      // Prellenar estado si lo deseas:
-      setBusinessEntity({
-        country: tenant.country ?? "PE",
-        type: tenant.entityType ?? "natural",
-        taxId: tenant.taxId ?? "",
-        businessEmail: tenant.businessEmail ?? "",
-        domain: tenant.domain ?? "",
-      });
     }
 
     loadTenant();
   }, []);
+
   const toggleTask = (task: keyof typeof completedTasks) => {
     setCompletedTasks({ ...completedTasks, [task]: !completedTasks[task] });
   };
@@ -153,7 +156,7 @@ export default function GettingStarted() {
 
       {/* Getting Started Content */}
       <div className="p-8">
-        <h1 className="text-3xl font-bold mb-8">Getting Started</h1>
+        <h1 className="text-3xl font-bold mb-8">Launch Pad</h1>
 
         <div className="flex gap-8">
           <div className="flex-1 max-w-2xl">
@@ -218,14 +221,14 @@ export default function GettingStarted() {
                       {completedTasks.businessEntity ? (
                         <div className="mt-4 pl-9 space-y-4 bg-purple-50 p-4 rounded-lg border border-purple-200">
                           <p className="text-sm text-gray-700">
-                            Ya existe un Business Entity configurado para este tenant.
+                            Ya existe al menos un Business Entity configurado para este workspace.
                           </p>
                           <Button
                             onClick={() => {
                               setCompletedTasks(prev => ({ ...prev, businessEntity: false }));
                               setBusinessEntity({
                                 country: "PE",
-                                type: "natural",
+                                entityType: "natural",
                                 taxId: "",
                                 businessEmail: "",
                                 domain: "",
@@ -277,9 +280,9 @@ export default function GettingStarted() {
                             <label className="text-sm font-medium">Type</label>
                             <select
                               className="w-full border rounded-md p-2 bg-white cursor-pointer hover:border-purple-300 transition-colors"
-                              value={businessEntity.type}
+                              value={businessEntity.entityType}
                               onChange={(e) =>
-                                setBusinessEntity({ ...businessEntity, type: e.target.value })
+                                setBusinessEntity({ ...businessEntity, entityType: e.target.value })
                               }
                             >
                               <option value="natural">Natural Person</option>

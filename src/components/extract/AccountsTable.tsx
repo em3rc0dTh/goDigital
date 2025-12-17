@@ -14,9 +14,10 @@ export async function fetchAccounts() {
 }
 
 export async function createAccount(data: any) {
+  const tenantDetailId = Cookies.get("tenantDetailId");
   const res = await fetch(BASE, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-tenant-detail-id": tenantDetailId || "", },
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Failed creating account");
@@ -25,9 +26,10 @@ export async function createAccount(data: any) {
 
 export async function updateAccount(id: string, data: any) {
   const token = Cookies.get("session_token");
+  const tenantDetailId = Cookies.get("tenantDetailId");
   const res = await fetch(`${BASE}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-tenant-detail-id": tenantDetailId || "", },
     body: JSON.stringify(data),
     credentials: "include",
   });

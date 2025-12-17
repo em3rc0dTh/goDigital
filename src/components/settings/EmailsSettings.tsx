@@ -13,10 +13,15 @@ import {
 import React, { RefObject, useState } from "react";
 
 interface EmailSetup {
+  id?: string;
   alias: string;
   bank_name: string;
   service_type: string;
   bank_sender: string;
+  tenant_id?: string;
+  tenant_detail_id?: string;
+  account_id?: string;
+  db_name?: string;
 }
 
 interface EmailTabProps {
@@ -32,8 +37,8 @@ interface EmailTabProps {
   addSetupToEmail: (event: React.FormEvent<HTMLFormElement>) => void;
   updateImapConfig: (user: string, password: string) => void;
   deleteImapConfig: () => void;
-  updateEmailSetup: (idx: number, updated: EmailSetup) => void;
-  deleteEmailSetup: (idx: number) => void;
+  updateEmailSetup: (id: string, updated: EmailSetup) => void;
+  deleteEmailSetup: (id: string) => void;
 }
 
 export function EmailTab({
@@ -52,24 +57,28 @@ export function EmailTab({
   updateEmailSetup,
   deleteEmailSetup,
 }: EmailTabProps) {
-  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
   const [editData, setEditData] = useState<EmailSetup | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   const [imapModalOpen, setImapModalOpen] = useState(false);
   const [newImapPass, setNewImapPass] = useState("");
 
-  const openEditModal = (idx: number) => {
-    setEditIdx(idx);
-    setEditData({ ...emailSetups[idx] });
+  const openEditModal = (setup: EmailSetup) => {
+    if (!setup.id) {
+      console.error("Setup missing ID");
+      return;
+    }
+    setEditId(setup.id);
+    setEditData({ ...setup });
     setModalOpen(true);
   };
 
   const handleSaveEdit = () => {
-    if (editIdx !== null && editData) {
-      updateEmailSetup(editIdx, editData);
+    if (editId !== null && editData) {
+      updateEmailSetup(editId, editData);
       setModalOpen(false);
-      setEditIdx(null);
+      setEditId(null);
       setEditData(null);
     }
   };
@@ -173,10 +182,10 @@ export function EmailTab({
         <CardContent className="space-y-4">
           <form onSubmit={addSetupToEmail} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Input ref={aliasEmail} placeholder="Alias" />
-              <Input ref={bankNameEmail} placeholder="Bank Name" />
-              <Input ref={serviceTypeEmail} placeholder="Service Type" />
-              <Input ref={bankEmailSender} placeholder="Email Sender" />
+              <Input ref={aliasEmail} placeholder="Alias (optional)" />
+              <Input ref={bankNameEmail} placeholder="Bank Name" required />
+              <Input ref={serviceTypeEmail} placeholder="Service Type (e.g., email)" required />
+              <Input ref={bankEmailSender} placeholder="Email Sender (e.g., noreply@bank.com)" required />
             </div>
             <Button type="submit" className="w-full">
               Add Email Setup
@@ -185,25 +194,37 @@ export function EmailTab({
 
           {emailSetups.length > 0 && (
             <div className="mt-4 space-y-2">
-              {emailSetups.map((setup, idx) => (
+              <h4 className="font-semibold text-sm">Configured Email Setups</h4>
+              {emailSetups.map((setup) => (
                 <div
-                  key={idx}
-                  className="p-3 bg-blue-50 rounded border border-blue-200 flex justify-between items-center text-sm"
+                  key={setup.id}
+                  className="p-3 bg-blue-50 rounded border border-blue-200 flex justify-between items-start text-sm"
                 >
-                  <div>
+                  <div className="flex-1">
                     <p className="font-medium">{setup.bank_name}</p>
+                    {setup.alias && (
+                      <p className="text-xs text-gray-500">Alias: {setup.alias}</p>
+                    )}
                     <p className="text-xs text-gray-600">
-                      From: {setup.bank_sender} • Type: {setup.service_type}
+                      From: <code className="bg-white px-1 rounded">{setup.bank_sender}</code>
                     </p>
+                    <p className="text-xs text-gray-600">
+                      Type: {setup.service_type}
+                    </p>
+                    {setup.account_id && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Account: {setup.account_id}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => openEditModal(idx)}>
-                      Update
+                  <div className="flex gap-2 ml-4">
+                    <Button size="sm" onClick={() => openEditModal(setup)}>
+                      Edit
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => deleteEmailSetup(idx)}
+                      onClick={() => setup.id && deleteEmailSetup(setup.id)}
                     >
                       Delete
                     </Button>
@@ -215,6 +236,7 @@ export function EmailTab({
         </CardContent>
       </Card>
 
+      {/* Modal para editar email setup */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -222,38 +244,53 @@ export function EmailTab({
           </DialogHeader>
           {editData && (
             <div className="space-y-4">
-              <Input
-                value={editData.alias}
-                onChange={(e) =>
-                  setEditData({ ...editData, alias: e.target.value })
-                }
-                placeholder="Alias"
-              />
-              <Input
-                value={editData.bank_name}
-                onChange={(e) =>
-                  setEditData({ ...editData, bank_name: e.target.value })
-                }
-                placeholder="Bank Name"
-              />
-              <Input
-                value={editData.service_type}
-                onChange={(e) =>
-                  setEditData({ ...editData, service_type: e.target.value })
-                }
-                placeholder="Service Type"
-              />
-              <Input
-                value={editData.bank_sender}
-                onChange={(e) =>
-                  setEditData({ ...editData, bank_sender: e.target.value })
-                }
-                placeholder="Email Sender"
-              />
+              <div>
+                <label className="text-sm font-medium">Alias</label>
+                <Input
+                  value={editData.alias}
+                  onChange={(e) =>
+                    setEditData({ ...editData, alias: e.target.value })
+                  }
+                  placeholder="Optional alias"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Bank Name</label>
+                <Input
+                  value={editData.bank_name}
+                  onChange={(e) =>
+                    setEditData({ ...editData, bank_name: e.target.value })
+                  }
+                  placeholder="Bank Name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Service Type</label>
+                <Input
+                  value={editData.service_type}
+                  onChange={(e) =>
+                    setEditData({ ...editData, service_type: e.target.value })
+                  }
+                  placeholder="Service Type"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Bank Email Sender</label>
+                <Input
+                  value={editData.bank_sender}
+                  onChange={(e) =>
+                    setEditData({ ...editData, bank_sender: e.target.value })
+                  }
+                  placeholder="noreply@bank.com"
+                  required
+                />
+              </div>
               <DialogFooter className="flex gap-2">
-                <Button onClick={handleSaveEdit}>Save</Button>
+                <Button onClick={handleSaveEdit}>Save Changes</Button>
                 <Button
-                  variant="destructive"
+                  variant="outline"
                   onClick={() => setModalOpen(false)}
                 >
                   Cancel
@@ -264,22 +301,34 @@ export function EmailTab({
         </DialogContent>
       </Dialog>
 
+      {/* Modal para actualizar password IMAP */}
       <Dialog open={imapModalOpen} onOpenChange={setImapModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update IMAP Password</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input
-              type="password"
-              placeholder="New Password"
-              value={newImapPass}
-              onChange={(e) => setNewImapPass(e.target.value)}
-            />
+            <div>
+              <label className="text-sm font-medium">Current Email</label>
+              <Input
+                value={imapConfig?.user || ""}
+                disabled
+                className="bg-gray-100"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">New Password</label>
+              <Input
+                type="password"
+                placeholder="New app password"
+                value={newImapPass}
+                onChange={(e) => setNewImapPass(e.target.value)}
+              />
+            </div>
             <DialogFooter className="flex gap-2">
-              <Button onClick={handleSaveImapPass}>Save</Button>
+              <Button onClick={handleSaveImapPass}>Save Password</Button>
               <Button
-                variant="destructive"
+                variant="outline"
                 onClick={() => setImapModalOpen(false)}
               >
                 Cancel
