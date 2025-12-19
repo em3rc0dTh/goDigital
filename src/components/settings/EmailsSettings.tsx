@@ -10,7 +10,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import React, { RefObject, useState } from "react";
+import React, { RefObject, useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface EmailSetup {
   id?: string;
@@ -26,6 +33,7 @@ interface EmailSetup {
 
 interface EmailTabProps {
   imapConfig: any;
+  accounts: any[];
   emailSetups: EmailSetup[];
   emailUser: RefObject<HTMLInputElement>;
   emailPass: RefObject<HTMLInputElement>;
@@ -33,6 +41,7 @@ interface EmailTabProps {
   bankNameEmail: RefObject<HTMLInputElement>;
   serviceTypeEmail: RefObject<HTMLInputElement>;
   bankEmailSender: RefObject<HTMLInputElement>;
+  account: RefObject<HTMLSelectElement>;
   addEmailConfig: (event: React.FormEvent<HTMLFormElement>) => void;
   addSetupToEmail: (event: React.FormEvent<HTMLFormElement>) => void;
   updateImapConfig: (user: string, password: string) => void;
@@ -43,6 +52,7 @@ interface EmailTabProps {
 
 export function EmailTab({
   imapConfig,
+  accounts,
   emailSetups,
   emailUser,
   emailPass,
@@ -50,6 +60,7 @@ export function EmailTab({
   bankNameEmail,
   serviceTypeEmail,
   bankEmailSender,
+  account,
   addEmailConfig,
   addSetupToEmail,
   updateImapConfig,
@@ -60,7 +71,7 @@ export function EmailTab({
   const [editId, setEditId] = useState<string | null>(null);
   const [editData, setEditData] = useState<EmailSetup | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-
+  const [selectedAccount, setSelectedAccount] = useState<string>("");
   const [imapModalOpen, setImapModalOpen] = useState(false);
   const [newImapPass, setNewImapPass] = useState("");
 
@@ -82,6 +93,12 @@ export function EmailTab({
       setEditData(null);
     }
   };
+
+  useEffect(() => {
+    if (account.current) {
+      account.current.value = selectedAccount;
+    }
+  }, [selectedAccount]);
 
   const handleSaveImapPass = () => {
     if (newImapPass.trim() && imapConfig?.user) {
@@ -180,12 +197,39 @@ export function EmailTab({
           <CardTitle>Email Connector Setup</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form onSubmit={addSetupToEmail} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              addSetupToEmail(e);
+              setSelectedAccount(""); // o ""
+            }}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-2 gap-4">
               <Input ref={aliasEmail} placeholder="Alias (optional)" />
               <Input ref={bankNameEmail} placeholder="Bank Name" required />
               <Input ref={serviceTypeEmail} placeholder="Service Type (e.g., email)" required />
               <Input ref={bankEmailSender} placeholder="Email Sender (e.g., noreply@bank.com)" required />
+              <div>
+                <Select
+                  value={selectedAccount}
+                  onValueChange={setSelectedAccount}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select an account" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {accounts.map((acc) => (
+                      <SelectItem key={acc.id} value={acc.id}>
+                        {acc.bank_name} · {acc.account_number}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+              </div>
+
+
             </div>
             <Button type="submit" className="w-full">
               Add Email Setup

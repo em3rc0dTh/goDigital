@@ -19,9 +19,12 @@ export default function RootLayout({
   const showSidebar = pathname !== "/setup";
 
   return (
-    <div className="flex">
+    <div className="flex w-screen min-h-screen">
       {showSidebar && <Sidebar />}
-      <main className="flex-1 min-h-screen">{children}</main>
+      <main className="flex-1 w-full overflow-x-hidden">
+        {children}
+      </main>
     </div>
   );
+
 }

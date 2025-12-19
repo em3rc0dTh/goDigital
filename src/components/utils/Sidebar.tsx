@@ -23,7 +23,7 @@ import {
   LogOut,
   Menu,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -38,6 +38,7 @@ import {
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname(); // ← Obtener la ruta actual
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -45,8 +46,7 @@ export default function Sidebar() {
     {
       icon: Sparkles,
       label: "Home",
-      link: "/",
-      active: true,
+      link: "/home",
     },
     { icon: Rocket, label: "Launch Pad", link: "/getting-started" },
     { icon: TowerControl, label: "Mission Control", link: "/management" },
@@ -55,16 +55,10 @@ export default function Sidebar() {
     { icon: Users, label: "Team", link: "/team" },
     { icon: Coins, label: "Tokens", link: "/tokens" },
     { icon: CreditCard, label: "Billing", link: "/billing" },
-    // { icon: Settings, label: "Settings", link: "/settings" },
     { icon: Landmark, label: "Bank Extract", link: "/extract" },
   ];
 
   const bottomItems = [
-    // { icon: FileText, label: "Docs" },
-    // { icon: MessageCircle, label: "Community" },
-    // { icon: Share2, label: "Share Secret" },
-    // { icon: HelpCircle, label: "Support" },
-    // { icon: Signal, label: "Status" },
     { icon: Settings, label: "Settings" },
     { icon: LogOut, label: "Log Out" },
   ];
@@ -91,6 +85,7 @@ export default function Sidebar() {
               menuItems={menuItems}
               bottomItems={bottomItems}
               router={router}
+              pathname={pathname}
               closeMobileMenu={() => setOpen(false)}
             />
           </SheetContent>
@@ -108,6 +103,7 @@ export default function Sidebar() {
           menuItems={menuItems}
           bottomItems={bottomItems}
           router={router}
+          pathname={pathname}
         />
       </aside>
     </>
@@ -120,6 +116,7 @@ function SidebarContent({
   menuItems,
   bottomItems,
   router,
+  pathname,
   closeMobileMenu,
 }: any) {
   return (
@@ -149,21 +146,29 @@ function SidebarContent({
       </div>
 
       <ScrollArea className="flex-1 px-2 py-3">
-        {menuItems.map((item: any, index: number) => (
-          <Button
-            key={index}
-            variant={item.active ? "secondary" : "ghost"}
-            className={`w-full justify-start gap-3 mb-1 ${collapsed ? "px-2" : "px-3"
-              }`}
-            onClick={() => {
-              router.push(item.link);
-              if (closeMobileMenu) closeMobileMenu();
-            }}
-          >
-            <item.icon className="w-5 h-5" />
-            {!collapsed && item.label}
-          </Button>
-        ))}
+        {menuItems.map((item: any, index: number) => {
+          // Para home (/), solo activo si pathname es exactamente "/"
+          // Para otras rutas, activo si pathname empieza con el link
+          const isActive = item.link === "/"
+            ? pathname === "/"
+            : pathname.startsWith(item.link);
+
+          return (
+            <Button
+              key={index}
+              variant={isActive ? "secondary" : "ghost"}
+              className={`w-full justify-start gap-3 mb-1 ${collapsed ? "px-2" : "px-3"
+                }`}
+              onClick={() => {
+                router.push(item.link);
+                if (closeMobileMenu) closeMobileMenu();
+              }}
+            >
+              <item.icon className="w-5 h-5" />
+              {!collapsed && item.label}
+            </Button>
+          );
+        })}
       </ScrollArea>
 
       <Separator />

@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mail, Database } from "lucide-react";
+import { Mail, Database, Forward } from "lucide-react";
 import { AccountsTab } from "../settings/AccountsSettings";
 import { EmailTab } from "../settings/EmailsSettings";
 import Cookies from "js-cookie";
+import { ForwardingTab } from "../settings/ForwardingSettings";
 
 interface SettingsViewProps {
   activeDatabase: string;
 }
 
 export default function SettingsView({ activeDatabase }: SettingsViewProps) {
-  const [activeTab, setActiveTab] = useState<"accounts" | "email" | "imap">(
+  const [activeTab, setActiveTab] = useState<"accounts" | "email" | "imap" | "forward">(
     "accounts"
   );
   const [accountsState, setAccountsState] = useState<any[]>([]);
@@ -45,6 +46,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
   const bankNameEmail = useRef<any>(null);
   const serviceTypeEmail = useRef<any>(null);
   const bankEmailSender = useRef<any>(null);
+  const account = useRef<any>(null);
 
   // 🆕 Cargar dbName del tenant activo
   useEffect(() => {
@@ -582,6 +584,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
   const tabs = [
     { id: "accounts", label: "Accounts", icon: Database },
     { id: "email", label: "Email Setup", icon: Mail },
+    { id: "forward", label: "Forwarding Setup", icon: Forward },
   ] as const;
 
   return (
@@ -658,15 +661,24 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
           emailUser={emailUser}
           emailPass={emailPass}
           aliasEmail={aliasEmail}
+          accounts={accountsState}
           bankNameEmail={bankNameEmail}
           serviceTypeEmail={serviceTypeEmail}
           bankEmailSender={bankEmailSender}
+          account={account}
           addEmailConfig={addEmailConfig}
           addSetupToEmail={addSetupToEmail}
           updateImapConfig={updateImapConfig}
           deleteImapConfig={deleteImapConfig}
           updateEmailSetup={updateEmailSetup}
           deleteEmailSetup={deleteEmailSetup}
+        />
+      )}
+
+      {activeTab === "forward" && (
+        <ForwardingTab
+          accounts={accountsState}
+          showStatus={showStatus}
         />
       )}
     </div>

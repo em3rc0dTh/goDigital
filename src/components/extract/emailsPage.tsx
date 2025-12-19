@@ -4,30 +4,21 @@ import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, RefreshCw } from "lucide-react";
+import { Eye, Mail, RefreshCw } from "lucide-react";
 import Cookies from "js-cookie";
 
 // ============================================================================
-// PARSING FUNCTIONS (sin cambios)
+// PARSING FUNCTIONS
 // ============================================================================
 
 function normalizarFecha(raw: any) {
   if (!raw || raw === "-") return "-";
 
   const meses: any = {
-    enero: "01",
-    febrero: "02",
-    marzo: "03",
-    abril: "04",
-    mayo: "05",
-    junio: "06",
-    julio: "07",
-    agosto: "08",
-    septiembre: "09",
-    setiembre: "09",
-    octubre: "10",
-    noviembre: "11",
-    diciembre: "12",
+    enero: "01", febrero: "02", marzo: "03", abril: "04",
+    mayo: "05", junio: "06", julio: "07", agosto: "08",
+    septiembre: "09", setiembre: "09", octubre: "10",
+    noviembre: "11", diciembre: "12",
   };
 
   let f = raw
@@ -174,15 +165,8 @@ function parseEmailText(body: any) {
   }
 
   return {
-    monto,
-    yapero,
-    origen,
-    fecha,
-    nombreBenef,
-    cuentaBenef,
-    nroOperacion,
-    celularBenef,
-    tipo_moneda,
+    monto, yapero, origen, fecha, nombreBenef,
+    cuentaBenef, nroOperacion, celularBenef, tipo_moneda,
   };
 }
 
@@ -270,15 +254,8 @@ function parseEmailBody(body: any) {
   ]);
 
   return {
-    monto,
-    yapero,
-    origen,
-    fecha,
-    nombreBenef,
-    cuentaBenef,
-    nroOperacion,
-    celularBenef,
-    tipo_moneda,
+    monto, yapero, origen, fecha, nombreBenef,
+    cuentaBenef, nroOperacion, celularBenef, tipo_moneda,
   };
 }
 
@@ -295,32 +272,34 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<any>(null);
-
-  // 🆕 Estado para tenant DB name
+  const [forwardingConfig, setForwardingConfig] = useState<any>(null);
   const [tenantDbName, setTenantDbName] = useState<string>("");
+  const [tenantDetailId, setTenantDetailId] = useState<string>("");
+  const [showSourceColumn, setShowSourceColumn] = useState(false);
 
-  // 🆕 Cargar dbName del tenant activo
   useEffect(() => {
-    loadTenantDbName();
+    loadTenantInfo();
   }, []);
 
   useEffect(() => {
-    if (tenantDbName) {
+    if (tenantDbName && tenantDetailId) {
       loadEmails();
     }
-  }, [activeDatabase, tenantDbName]);
+  }, [activeDatabase, tenantDbName, tenantDetailId]);
 
-  async function loadTenantDbName() {
+  async function loadTenantInfo() {
     try {
       const token = Cookies.get("session_token");
       const tenantId = Cookies.get("tenantId");
-      const tenantDetailId = Cookies.get("tenantDetailId");
+      const detailId = Cookies.get("tenantDetailId");
 
-      if (!tenantId || !tenantDetailId) {
+      if (!tenantId || !detailId) {
         console.error("Missing tenantId or tenantDetailId in cookies");
         setStatus("❌ Missing tenant information");
         return;
       }
+
+      setTenantDetailId(detailId);
 
       const res = await fetch(
         `http://localhost:4000/api/tenants/details/${tenantId}`,
@@ -338,49 +317,84 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       }
 
       const data = await res.json();
-
-      // Buscar el detail activo
       const activeDetail = data.details.find(
-        (d: any) => d.detailId === tenantDetailId
+        (d: any) => d.detailId === detailId
       );
 
       if (activeDetail?.dbName) {
         setTenantDbName(activeDetail.dbName);
-        console.log("✅ Loaded tenant DB name for emails:", activeDetail.dbName);
+        console.log("✅ Loaded tenant info:", {
+          dbName: activeDetail.dbName,
+          detailId: detailId
+        });
       } else {
         console.error("No dbName found for active tenant detail");
         setStatus("❌ Could not load database name");
       }
     } catch (error) {
-      console.error("Error loading tenant DB name:", error);
+      console.error("Error loading tenant info:", error);
       setStatus("❌ Error loading tenant information");
     }
   }
 
   const loadEmails = async () => {
-    if (!tenantDbName) {
-      console.warn("No tenantDbName available, skipping email load");
-      setStatus("⚠️ Database name not loaded yet");
+    if (!tenantDbName || !tenantDetailId) {
+      console.warn("Missing tenant info, skipping email load");
+      setStatus("⚠️ Tenant information not loaded yet");
       return;
     }
 
     try {
       setIsLoading(true);
-      setStatus("⏳ Loading emails...");
+      setStatus("⏳ Loading emails from both sources...");
 
-      const res = await fetch("http://localhost:8000/emails", {
-        headers: {
-          "X-Database-Name": tenantDbName,
-        },
-      });
+      // 🔥 Cargar emails de IMAP (puerto 8000)
+      let imapEmails: any[] = [];
+      try {
+        const imapRes = await fetch("http://localhost:8000/emails", {
+          headers: {
+            "X-Database-Name": tenantDbName,
+          },
+        });
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
+        if (imapRes.ok) {
+          imapEmails = await imapRes.json();
+          console.log(`✅ Loaded ${imapEmails.length} emails from IMAP`);
+        } else {
+          console.warn("IMAP endpoint failed, continuing with Gmail only");
+        }
+      } catch (imapError) {
+        console.warn("IMAP fetch error:", imapError);
       }
 
-      const data = await res.json();
+      // 🔥 Cargar emails de Gmail (puerto 4000)
+      let gmailEmails: any[] = [];
+      try {
+        const gmailRes = await fetch(
+          `http://localhost:4000/api/gmail/emails-list/${tenantDetailId}`
+        );
 
-      const normalized = data.map((mail: any) => {
+        if (gmailRes.ok) {
+          const gmailData = await gmailRes.json();
+          gmailEmails = gmailData.emails || [];
+          console.log(`✅ Loaded ${gmailEmails.length} emails from Gmail`);
+        } else {
+          console.warn("Gmail endpoint failed");
+        }
+      } catch (gmailError) {
+        console.warn("Gmail fetch error:", gmailError);
+      }
+
+      // 🔥 Combinar emails
+      const allEmails = [...imapEmails, ...gmailEmails];
+
+      // 🔥 Decidir si mostrar columna "Source"
+      const hasImapData = imapEmails.length > 0;
+      const hasGmailData = gmailEmails.length > 0;
+      setShowSourceColumn(hasImapData && hasGmailData);
+
+      // 🔥 Parsear emails
+      const normalized = allEmails.map((mail: any) => {
         let dataParsed;
 
         if (mail.body) dataParsed = parseEmailBody(mail.body);
@@ -390,8 +404,22 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
         return { ...mail, parsed: dataParsed };
       });
 
+      // 🔥 Ordenar por fecha (más reciente primero)
+      normalized.sort((a, b) => {
+        const dateA = new Date(a.date || a.receivedAt || 0);
+        const dateB = new Date(b.date || b.receivedAt || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
+
       setEmails(normalized);
-      setStatus(normalized.length > 0 ? "" : "ℹ️ No emails found");
+
+      if (normalized.length === 0) {
+        setStatus("ℹ️ No emails found in either source");
+      } else {
+        setStatus(
+          `✅ Loaded ${normalized.length} emails (IMAP: ${imapEmails.length}, Gmail: ${gmailEmails.length})`
+        );
+      }
     } catch (error) {
       console.error("Error loading emails:", error);
       setEmails([]);
@@ -422,13 +450,71 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       }
 
       const data = await res.json();
-      setStatus(`✅ Processed: ${data.count} emails`);
-
-      // Recargar emails después de ingest
+      setStatus(`✅ IMAP processed: ${data.summary?.processed || 0} emails`);
       await loadEmails();
     } catch (error) {
-      console.error("Error running ingest:", error);
-      setStatus("❌ Error connecting to server");
+      console.error("Error running IMAP ingest:", error);
+      setStatus("❌ Error connecting to IMAP server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadForwardingConfig = async () => {
+    try {
+      if (!tenantDetailId) throw new Error("tenantDetailId not found");
+
+      const res = await fetch(`http://localhost:4000/api/gmail/${tenantDetailId}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      setForwardingConfig(data.config);
+      return data.config;
+    } catch (err) {
+      console.error("Error loading forwarding config:", err);
+      setStatus("❌ Error loading forwarding config");
+      return null;
+    }
+  };
+
+  const runIngestGmail = async () => {
+    if (!tenantDetailId) {
+      setStatus("❌ Tenant detail ID not loaded");
+      return;
+    }
+
+    setStatus("⏳ Processing emails from Gmail API...");
+    setIsLoading(true);
+
+    try {
+      const config = forwardingConfig ?? await loadForwardingConfig();
+
+      if (!config?.id) {
+        throw new Error("Forwarding config ID not available");
+      }
+
+      const res = await fetch("http://localhost:4000/api/gmail/fetch-emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          idFetching: config.id,
+          routing: {
+            entityId: config.entityId,
+            account: config.forwardingData[0].accounts[0],
+          },
+        }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      setStatus(`✅ Gmail processed: ${data.count || 0} emails`);
+      await loadEmails();
+    } catch (error) {
+      console.error("Error running Gmail ingest:", error);
+      setStatus("❌ Error connecting to Gmail API");
     } finally {
       setIsLoading(false);
     }
@@ -439,48 +525,62 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       {/* HEADER */}
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-4xl font-bold">Emails</h1>
+          <h1 className="text-4xl font-bold">Emails Capture</h1>
           <p className="text-muted-foreground">
-            Parsed bank transaction emails from IMAP
+            Bank transaction emails from IMAP and Gmail API
           </p>
         </div>
-        <Button onClick={runIngest} disabled={isLoading || !tenantDbName}>
-          <RefreshCw
-            className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
-          />
-          {isLoading ? "Processing..." : "Ingest IMAP"}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={runIngest} disabled={isLoading || !tenantDbName}>
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
+            {isLoading ? "Processing..." : "Ingest IMAP"}
+          </Button>
+
+          <Button onClick={runIngestGmail} disabled={isLoading || !tenantDetailId}>
+            <Mail
+              className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
+            {isLoading ? "Processing..." : "Ingest Gmail"}
+          </Button>
+        </div>
       </div>
 
-      {/* STATUS */}
-      {status && (
-        <div
-          className={`p-4 rounded text-sm ${status.includes("✅")
-            ? "bg-green-100 text-green-800"
-            : status.includes("⏳")
-              ? "bg-blue-100 text-blue-800"
-              : status.includes("⚠️")
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-red-100 text-red-800"
-            }`}
-        >
-          {status}
-        </div>
-      )}
-
-      {/* EMAILS TABLE */}
       <Card>
-        <CardHeader>
-          <CardTitle>Processed Emails ({emails.length})</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            Emails
+            <span className="text-muted-foreground text-sm">
+              ({emails.length})
+            </span>
+          </CardTitle>
+
+          {status && (
+            <span
+              className={`text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap
+        ${status.includes("✅")
+                  ? "bg-green-50 text-green-700"
+                  : status.includes("⏳")
+                    ? "bg-blue-50 text-blue-700"
+                    : status.includes("⚠️")
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "bg-red-50 text-red-700"
+                }`}
+            >
+              {status.replace(/[✅⏳⚠️❌]/g, "").trim()}
+            </span>
+          )}
         </CardHeader>
+
 
         <CardContent>
           {emails.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>No emails found. Click "Ingest IMAP" to load emails.</p>
-              {!tenantDbName && (
+              <p>No emails found. Use the ingest buttons above to load emails.</p>
+              {(!tenantDbName || !tenantDetailId) && (
                 <p className="text-xs text-red-500 mt-2">
-                  ⚠️ Database name not loaded. Please refresh the page.
+                  ⚠️ Tenant information not loaded. Please refresh the page.
                 </p>
               )}
             </div>
@@ -490,6 +590,9 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
                 <thead className="bg-gray-100 sticky top-0">
                   <tr>
                     <th className="px-4 py-2 text-left">#</th>
+                    {showSourceColumn && (
+                      <th className="px-4 py-2 text-left">Source</th>
+                    )}
                     <th className="px-4 py-2 text-left">From</th>
                     <th className="px-4 py-2 text-left">Operation</th>
                     <th className="px-4 py-2 text-left">Beneficiary</th>
@@ -503,9 +606,19 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
                 <tbody>
                   {emails.map((email, idx) => {
                     const fromName = email.from?.split(" ")[0] || "Unknown";
+                    const emailDate = email.date || email.receivedAt;
                     return (
                       <tr key={email._id || idx} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
+                        {showSourceColumn && (
+                          <td className="px-4 py-2">
+                            <Badge
+                              variant={email.source === "gmail" ? "default" : "secondary"}
+                            >
+                              {email.source?.toUpperCase() || "UNKNOWN"}
+                            </Badge>
+                          </td>
+                        )}
                         <td className="px-4 py-2 text-sm font-medium truncate">
                           {fromName}
                         </td>
@@ -521,7 +634,11 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
                           {email.subject}
                         </td>
                         <td className="px-4 py-2 text-xs text-gray-600 whitespace-nowrap">
-                          {email.parsed.fecha}
+                          {email.parsed.fecha !== "-"
+                            ? email.parsed.fecha
+                            : emailDate
+                              ? new Date(emailDate).toLocaleString()
+                              : "-"}
                         </td>
                         <td className="px-4 py-2 text-center">
                           <Badge variant="outline" className="text-xs">
@@ -565,6 +682,14 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500">Source</p>
+                  <Badge
+                    variant={selectedEmail.source === "gmail" ? "default" : "secondary"}
+                  >
+                    {selectedEmail.source?.toUpperCase() || "UNKNOWN"}
+                  </Badge>
+                </div>
                 <div>
                   <p className="text-xs text-gray-500">From</p>
                   <p className="font-semibold text-sm">{selectedEmail.from}</p>
@@ -614,13 +739,13 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
                 </div>
               </div>
 
-              {/* Debug info (opcional) */}
+              {/* Debug info */}
               <details className="mt-4 text-xs">
                 <summary className="cursor-pointer text-gray-500 hover:text-gray-700">
                   Raw Email Data
                 </summary>
                 <pre className="mt-2 p-2 bg-gray-50 rounded overflow-auto max-h-40 text-xs">
-                  {JSON.stringify(selectedEmail.parsed, null, 2)}
+                  {JSON.stringify(selectedEmail, null, 2)}
                 </pre>
               </details>
             </CardContent>

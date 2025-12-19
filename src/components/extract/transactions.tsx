@@ -640,16 +640,18 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
     accountsState.find((a) => a.id === activeAccount)?.currency || "???";
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6 pb-10">
-      <div className="space-y-2">
-        <h1 className="text-4xl font-bold">Transactions</h1>
-        <p className="text-muted-foreground">
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 space-y-6 pb-10">
+      <div className="space-y-1 sm:space-y-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
+          Web Capture
+        </h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Manage and parse bank transactions
         </p>
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle>Select Account</CardTitle>
         </CardHeader>
         <CardContent>
@@ -663,7 +665,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
 
       {!activeAccount && (
         <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 text-sm sm:text-base">
             <p className="text-blue-900">
               👆 Select a bank account to get started
             </p>
@@ -675,13 +677,13 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
         <>
           <Card>
             <CardHeader>
-              <CardTitle className="flex justify-between items-center">
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <span>Parse Transactions</span>
-                <span className="text-sm font-normal text-muted-foreground">
+                <span className="text-xs sm:text-sm font-normal text-muted-foreground">
                   {isLoading && "Loading..."}
                 </span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 Paste your bank statement text below
               </CardDescription>
             </CardHeader>
@@ -690,10 +692,10 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
               <Textarea
                 ref={inputTextRef}
                 placeholder="Paste transaction text here..."
-                className="min-h-[200px] font-mono text-sm"
+                className="min-h-[160px] sm:min-h-[200px] font-mono text-xs sm:text-sm"
               />
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2">
                 <Button
                   onClick={() => {
                     const selectedAccount = accountsState.find(
@@ -701,7 +703,9 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
                     );
 
                     const type =
-                      selectedAccount.bank_account_type.toLowerCase().trim() === "business"
+                      selectedAccount.bank_account_type
+                        .toLowerCase()
+                        .trim() === "business"
                         ? "business"
                         : "personal";
                     parseText(type);
@@ -716,7 +720,8 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    if (inputTextRef.current) inputTextRef.current.value = "";
+                    if (inputTextRef.current)
+                      inputTextRef.current.value = "";
                   }}
                 >
                   Clear
@@ -724,7 +729,9 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
 
                 <Button
                   variant="ghost"
-                  onClick={() => setDebugPanelVisible(!debugPanelVisible)}
+                  onClick={() =>
+                    setDebugPanelVisible(!debugPanelVisible)
+                  }
                 >
                   ⚙️ Debug
                 </Button>
@@ -732,7 +739,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
 
               {saveStatus && (
                 <div
-                  className={`p-3 rounded text-sm ${saveStatus.includes("✅")
+                  className={`p-3 rounded text-xs sm:text-sm ${saveStatus.includes("✅")
                     ? "bg-green-100 text-green-800"
                     : saveStatus.includes("⚠️")
                       ? "bg-yellow-100 text-yellow-800"
@@ -744,7 +751,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
               )}
 
               {debugPanelVisible && parsedBatchData.length > 0 && (
-                <div className="p-4 bg-gray-900 rounded text-green-400 text-xs font-mono max-h-48 overflow-auto">
+                <div className="p-4 bg-gray-900 rounded text-green-400 text-[10px] sm:text-xs font-mono max-h-48 overflow-auto">
                   <pre>{JSON.stringify(parsedBatchData, null, 2)}</pre>
                 </div>
               )}
@@ -754,31 +761,35 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
           {sessionDuplicates.length > 0 && (
             <Card className="border-yellow-300 bg-yellow-50">
               <CardHeader>
-                <CardTitle className="text-yellow-900">
+                <CardTitle className="text-yellow-900 text-sm sm:text-base">
                   ⚠️ Duplicates ({sessionDuplicates.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 max-h-48 overflow-auto">
+                <div className="space-y-2 max-h-48 overflow-auto text-sm">
                   {sessionDuplicates.map((dup, idx) => (
                     <div
                       key={idx}
                       className="p-3 bg-white rounded border border-yellow-200 text-sm"
                     >
-                      <p className="font-semibold">{dup.descripcion}</p>
+                      <p className="font-semibold">
+                        {dup.descripcion}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {dup.fecha_hora_raw} • {dup.monto} {dup.currency_raw}
+                        {dup.fecha_hora_raw} • {dup.monto}{" "}
+                        {dup.currency_raw}
                       </p>
                     </div>
                   ))}
                 </div>
                 <Button
                   variant="outline"
-                  className="mt-4 w-full"
+                  className="mt-4 w-full text-sm"
                   onClick={() =>
                     downloadTransactions(
                       sessionDuplicates,
-                      `duplicates_${new Date().toISOString().split("T")[0]}.json`
+                      `duplicates_${new Date().toISOString().split("T")[0]
+                      }.json`
                     )
                   }
                 >
@@ -791,17 +802,21 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
 
           {storedTransactions.length > 0 && (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <CardTitle>Stored Transactions</CardTitle>
-                  <CardDescription className="mt-2">
+                  <CardDescription className="mt-1 text-sm">
                     Total: {transactionSummary.count} transactions | Net:{" "}
-                    {transactionSummary.net.toFixed(2)} {currencySymbol}
+                    {transactionSummary.net.toFixed(2)}{" "}
+                    {currencySymbol}
                   </CardDescription>
                 </div>
                 <Button
                   variant="ghost"
-                  onClick={() => setShowTransactions(!showTransactions)}
+                  className="self-end sm:self-auto"
+                  onClick={() =>
+                    setShowTransactions(!showTransactions)
+                  }
                 >
                   {showTransactions ? (
                     <Eye className="w-4 h-4" />
@@ -813,78 +828,20 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
 
               {showTransactions && (
                 <CardContent>
-                  {parsedType === "personal" && <PersonalTable storedTransactions={storedTransactions} />}
-                  {parsedType === "business" && <BusinessTable storedTransactions={storedTransactions} />}
+                  {parsedType === "personal" && (
+                    <PersonalTable
+                      storedTransactions={storedTransactions}
+                    />
+                  )}
+                  {parsedType === "business" && (
+                    <BusinessTable
+                      storedTransactions={storedTransactions}
+                    />
+                  )}
                 </CardContent>
               )}
-
             </Card>
           )}
-
-          {/* <Card>
-            <CardHeader>
-              <CardTitle>Management</CardTitle>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium mb-2">
-                    Clear by Date Range
-                  </p>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Input
-                        ref={clearStartDateRef}
-                        type="date"
-                        placeholder="Start"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <Input
-                        ref={clearEndDateRef}
-                        type="date"
-                        placeholder="End"
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="mt-2 w-full"
-                    onClick={clearTransactionsByDateRange}
-                  >
-                    Clear Range
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Quick Actions</p>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() =>
-                      downloadTransactions(
-                        storedTransactions,
-                        `transactions_${new Date().toISOString().split("T")[0]}.json`
-                      )
-                    }
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export All
-                  </Button>
-                </div>
-              </div>
-
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={clearAllTransactionsForAccount}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete All Transactions
-              </Button>
-            </CardContent>
-          </Card> */}
         </>
       )}
     </div>
