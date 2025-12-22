@@ -276,7 +276,10 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
   const [tenantDbName, setTenantDbName] = useState<string>("");
   const [tenantDetailId, setTenantDetailId] = useState<string>("");
   const [showSourceColumn, setShowSourceColumn] = useState(false);
-
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
+  const IMAP_BASE =
+    process.env.IMAP_PUBLIC_API_BASE || "http://localhost:8000";
   useEffect(() => {
     loadTenantInfo();
   }, []);
@@ -302,7 +305,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       setTenantDetailId(detailId);
 
       const res = await fetch(
-        `http://localhost:4000/api/tenants/details/${tenantId}`,
+        `${API_BASE}/tenants/details/${tenantId}`,
         {
           cache: "no-store",
           headers: {
@@ -351,7 +354,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       // 🔥 Cargar emails de IMAP (puerto 8000)
       let imapEmails: any[] = [];
       try {
-        const imapRes = await fetch("http://localhost:8000/emails", {
+        const imapRes = await fetch(`${IMAP_BASE}/emails`, {
           headers: {
             "X-Database-Name": tenantDbName,
           },
@@ -371,7 +374,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       let gmailEmails: any[] = [];
       try {
         const gmailRes = await fetch(
-          `http://localhost:4000/api/gmail/emails-list/${tenantDetailId}`
+          `${API_BASE}/gmail/emails-list/${tenantDetailId}`
         );
 
         if (gmailRes.ok) {
@@ -439,7 +442,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/ingest?limit=50", {
+      const res = await fetch(`${IMAP_BASE}/ingest?limit=50`, {
         headers: {
           "X-Database-Name": tenantDbName,
         },
@@ -464,7 +467,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
     try {
       if (!tenantDetailId) throw new Error("tenantDetailId not found");
 
-      const res = await fetch(`http://localhost:4000/api/gmail/${tenantDetailId}`);
+      const res = await fetch(`${API_BASE}/gmail/${tenantDetailId}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
@@ -493,7 +496,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
         throw new Error("Forwarding config ID not available");
       }
 
-      const res = await fetch("http://localhost:4000/api/gmail/fetch-emails", {
+      const res = await fetch(`${API_BASE}/gmail/fetch-emails`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -27,7 +27,8 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
     const [configExists, setConfigExists] = useState(false);
     const [isActive, setIsActive] = useState(false);
     const [configId, setConfigId] = useState<string>("");
-
+    const API_BASE =
+        process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
     useEffect(() => {
         loadForwardingConfig();
     }, []);
@@ -42,7 +43,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                 return;
             }
 
-            const res = await fetch(`http://localhost:4000/api/gmail/${tenantDetailId}`, {
+            const res = await fetch(`${API_BASE}/gmail/${tenantDetailId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -100,7 +101,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
 
             setLoading(true);
 
-            const res = await fetch("http://localhost:4000/api/gmail/", {
+            const res = await fetch(`${API_BASE}/gmail/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -152,7 +153,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
             setLoading(true);
 
             const res = await fetch(
-                `http://localhost:4000/api/gmail/${tenantDetailId}/toggle`,
+                `${API_BASE}/gmail/${tenantDetailId}/toggle`,
                 {
                     method: "PATCH",
                     headers: {
@@ -200,7 +201,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
             setLoading(true);
 
             const res = await fetch(
-                `http://localhost:4000/api/gmail/${tenantDetailId}`,
+                `${API_BASE}/gmail/${tenantDetailId}`,
                 {
                     method: "DELETE",
                     headers: {

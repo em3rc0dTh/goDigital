@@ -29,11 +29,14 @@ export default function EmailsView() {
   const [emailSetups, setEmailSetups] = useState<EmailSetup[]>([]);
   const [imapConfig, setImapConfig] = useState<ImapConfig | null>(null);
 
+  const IMAP_BASE =
+    process.env.IMAP_PUBLIC_API_BASE || "http://localhost:8000";
+
   // -----------------------------
   // CARGA SETUPS
   // -----------------------------
   const loadEmailSetups = async () => {
-    const res = await fetch("http://localhost:8000/email/setup");
+    const res = await fetch(`${IMAP_BASE}/email/setup`);
     const data = await res.json();
     setSetup(data);
   };
@@ -42,7 +45,7 @@ export default function EmailsView() {
   // CARGA IMAP CONFIG
   // -----------------------------
   const loadImapConfig = async () => {
-    const res = await fetch("http://localhost:8000/imap/config");
+    const res = await fetch(`${IMAP_BASE}/imap/config`);
     const data = await res.json();
     setImap(data);
   };

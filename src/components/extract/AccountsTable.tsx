@@ -5,7 +5,7 @@ import { loadTransactionsForAccount } from "./transaction";
 import { format } from "date-fns";
 import Cookies from "js-cookie";
 // const BASE = "/api/back/account";
-const BASE = "http://localhost:4000/api/accounts";
+const BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
 export async function fetchAccounts() {
   const res = await fetch(BASE, { cache: "no-store" });

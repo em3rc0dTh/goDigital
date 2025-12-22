@@ -18,7 +18,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [workspaceName, setWorkspaceName] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
   const hasRedirected = useRef(false);
   const isLoadingDatabases = useRef(false);
 
@@ -65,7 +66,7 @@ export default function Home() {
     try {
       const token = Cookies.get("session_token");
       const tenantId = Cookies.get("tenantId");
-      const res = await fetch(`http://localhost:4000/api/tenants/details/${tenantId}`, {
+      const res = await fetch(`${API_BASE}/tenants/details/${tenantId}`, {
         cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -126,7 +127,7 @@ export default function Home() {
 
     try {
       const token = Cookies.get("session_token");
-      const res = await fetch("http://localhost:4000/api/accounts", {
+      const res = await fetch(`${API_BASE}/accounts`, {
         cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -175,7 +176,7 @@ export default function Home() {
       setIsLoading(true);
       const token = Cookies.get("session_token");
       const res = await fetch(
-        `http://localhost:4000/api/accounts/${accountId}/transactions`,
+        `${API_BASE}/accounts/${accountId}/transactions`,
         {
           cache: "no-store",
           headers: {

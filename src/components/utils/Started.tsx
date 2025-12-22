@@ -31,6 +31,9 @@ export default function GettingStarted() {
     bankAccount: false,
   });
 
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
+
   const [businessEntity, setBusinessEntity] = useState({
     country: "PE",
     entityType: "natural",
@@ -54,7 +57,7 @@ export default function GettingStarted() {
     try {
       const tenantId = Cookies.get("tenantId");
       const token = Cookies.get("session_token");
-      const res = await fetch(`http://localhost:4000/api/tenants/${tenantId}/provision`, {
+      const res = await fetch(`${API_BASE}/tenants/${tenantId}/provision`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
@@ -82,7 +85,7 @@ export default function GettingStarted() {
       const token = Cookies.get("session_token");
 
       try {
-        const res = await fetch(`http://localhost:4000/api/tenants/${tenantId}`, {
+        const res = await fetch(`${API_BASE}/tenants/${tenantId}`, {
           headers: { "Authorization": `Bearer ${token}` },
           credentials: "include",
         });

@@ -30,6 +30,8 @@ export function LoginForm() {
   const [fullName, setFullName] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
   // ⭐ NUEVO: Estado para selector de workspace
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -45,7 +47,7 @@ export function LoginForm() {
     try {
       const action = tab === "login" ? "login" : "signup";
 
-      const res = await fetch("http://localhost:4000/api/users", {
+      const res = await fetch(`${API_BASE}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

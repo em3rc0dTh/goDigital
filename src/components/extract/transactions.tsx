@@ -37,6 +37,8 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
   const inputTextRef = useRef<HTMLTextAreaElement>(null);
   const clearStartDateRef = useRef<HTMLInputElement>(null);
   const clearEndDateRef = useRef<HTMLInputElement>(null);
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
   useEffect(() => {
     loadAccountsFromDB();
   }, [activeDatabase]);
@@ -63,7 +65,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
     try {
       const token = Cookies.get("session_token");
       const tenantDetailId = Cookies.get("tenantDetailId");
-      const res = await fetch("http://localhost:4000/api/accounts", {
+      const res = await fetch(`${API_BASE}/accounts`, {
         cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -85,7 +87,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
       setIsLoading(true);
       const token = Cookies.get("session_token");
       const tenantDetailId = Cookies.get("tenantDetailId");
-      const res = await fetch(`http://localhost:4000/api/accounts/${accountId}/transactions`, {
+      const res = await fetch(`${API_BASE}/accounts/${accountId}/transactions`, {
         cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -144,7 +146,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
       console.log("Payload: ", normalized);
       const token = Cookies.get("session_token");
       const tenantDetailId = Cookies.get("tenantDetailId");
-      const res = await fetch(`http://localhost:4000/api/accounts/${accountId}/transactions`, {
+      const res = await fetch(`${API_BASE}/accounts/${accountId}/transactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-tenant-detail-id": tenantDetailId || "", },
         credentials: "include",

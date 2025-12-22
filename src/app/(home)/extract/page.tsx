@@ -17,8 +17,10 @@ export default function Extract() {
   const [activeView, setActiveView] = useState<"transactions" | "emails" | "settings">("transactions");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
   useEffect(() => {
+
     loadDatabases();
   }, []);
 
@@ -29,7 +31,7 @@ export default function Extract() {
     try {
       const token = Cookies.get("session_token");
       const tenantId = Cookies.get("tenantId");
-      const res = await fetch(`http://localhost:4000/api/tenants/details/${tenantId}`, {
+      const res = await fetch(`${API_BASE}/tenants/details/${tenantId}`, {
         cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,

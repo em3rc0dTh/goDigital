@@ -21,7 +21,8 @@ export default function AccountsView() {
   const [activeAccount, setActiveAccount] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
   // ⭐ ACTUALIZADO: Ya no necesitas pasar tenantId en URL
   async function fetchAccounts() {
     try {
@@ -36,7 +37,7 @@ export default function AccountsView() {
       }
       const tenantDetailId = Cookies.get("tenantDetailId");
       // ⭐ El backend ahora extrae tenantId del JWT automáticamente
-      const res = await fetch("http://localhost:4000/api/accounts", {
+      const res = await fetch(`${API_BASE}/accounts`, {
         cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,

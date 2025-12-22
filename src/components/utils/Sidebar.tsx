@@ -41,7 +41,8 @@ export default function Sidebar() {
   const pathname = usePathname(); // ← Obtener la ruta actual
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
-
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
   const menuItems = [
     {
       icon: Sparkles,
@@ -119,6 +120,8 @@ function SidebarContent({
   pathname,
   closeMobileMenu,
 }: any) {
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
   return (
     <>
       <div className="flex items-center justify-between p-3 py-4">
@@ -178,7 +181,7 @@ function SidebarContent({
           const handleClick =
             item.label === "Log Out"
               ? async () => {
-                await fetch("http://localhost:4000/api/logout", {
+                await fetch(`${API_BASE}/logout`, {
                   method: "POST",
                   credentials: "include",
                 });

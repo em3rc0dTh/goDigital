@@ -47,7 +47,11 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
   const serviceTypeEmail = useRef<any>(null);
   const bankEmailSender = useRef<any>(null);
   const account = useRef<any>(null);
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
+  const IMAP_BASE =
+    process.env.IMAP_PUBLIC_API_BASE || "http://localhost:8000";
   // 🆕 Cargar dbName del tenant activo
   useEffect(() => {
     loadTenantDbName();
@@ -74,7 +78,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       }
 
       const res = await fetch(
-        `http://localhost:4000/api/tenants/details/${tenantId}`,
+        `${API_BASE}/tenants/details/${tenantId}`,
         {
           cache: "no-store",
           headers: {
@@ -112,7 +116,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     try {
       const token = Cookies.get("session_token");
       const tenantDetailId = Cookies.get("tenantDetailId");
-      const res = await fetch("http://localhost:4000/api/accounts", {
+      const res = await fetch(`${API_BASE}/accounts`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "x-tenant-detail-id": tenantDetailId || "",
@@ -141,7 +145,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/email/setup", {
+      const res = await fetch(`${IMAP_BASE}/email/setup`, {
         headers: {
           "X-Database-Name": tenantDbName,
         },
@@ -164,7 +168,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/imap/config", {
+      const res = await fetch(`${IMAP_BASE}/imap/config`, {
         headers: {
           "X-Database-Name": tenantDbName,
         },
@@ -245,7 +249,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     try {
       const token = Cookies.get("session_token");
       const tenantDetailId = Cookies.get("tenantDetailId");
-      const res = await fetch("http://localhost:4000/api/accounts", {
+      const res = await fetch(`${API_BASE}/accounts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -297,7 +301,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     try {
       const token = Cookies.get("session_token");
       const tenantDetailId = Cookies.get("tenantDetailId");
-      await fetch(`http://localhost:4000/api/accounts/${activeAccount}`, {
+      await fetch(`${API_BASE}/accounts/${activeAccount}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -346,16 +350,14 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
         return;
       }
       const tenantDetailId = Cookies.get("tenantDetailId");
-      const res = await fetch(
-        `http://localhost:4000/api/accounts/${activeAccount}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "x-tenant-detail-id": tenantDetailId || "",
-          },
-          credentials: "include",
-        }
+      const res = await fetch(`${API_BASE}/accounts/${activeAccount}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "x-tenant-detail-id": tenantDetailId || "",
+        },
+        credentials: "include",
+      }
       );
 
       if (!res.ok) {
@@ -404,7 +406,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/imap/config", {
+      const res = await fetch(`${IMAP_BASE}/imap/config`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -457,7 +459,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/email/setup", {
+      const res = await fetch(`${IMAP_BASE}/email/setup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -488,7 +490,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     }
 
     try {
-      const res = await fetch(`http://localhost:8000/imap/config`, {
+      const res = await fetch(`${IMAP_BASE}/imap/config`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -517,7 +519,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     if (!ok) return;
 
     try {
-      const res = await fetch(`http://localhost:8000/imap/config`, {
+      const res = await fetch(`${IMAP_BASE}/imap/config`, {
         method: "DELETE",
         headers: {
           "X-Database-Name": tenantDbName,
@@ -539,7 +541,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     }
 
     try {
-      const res = await fetch(`http://localhost:8000/email/setup/${id}`, {
+      const res = await fetch(`${IMAP_BASE}/email/setup/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -566,7 +568,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     if (!ok) return;
 
     try {
-      const res = await fetch(`http://localhost:8000/email/setup/${id}`, {
+      const res = await fetch(`${IMAP_BASE}/email/setup/${id}`, {
         method: "DELETE",
         headers: {
           "X-Database-Name": tenantDbName,
