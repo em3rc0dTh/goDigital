@@ -2,12 +2,15 @@ version: "3.9"
 
 services:
   frontend:
+    container_name: godigital-front
     build:
-      context: ./src
+      context: .
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
-      - ./src:/app
-    working_dir: /app
-    command: ["npm", "run", "dev"]
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    command: npm run dev
