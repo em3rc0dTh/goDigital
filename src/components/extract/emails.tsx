@@ -30,7 +30,7 @@ export default function EmailsView() {
   const [imapConfig, setImapConfig] = useState<ImapConfig | null>(null);
 
   const IMAP_BASE =
-    process.env.IMAP_PUBLIC_API_BASE || "http://localhost:8000";
+    process.env.NEXT_PUBLIC_IMAP_API_BASE || "http://localhost:8000";
 
   // -----------------------------
   // CARGA SETUPS
