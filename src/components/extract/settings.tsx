@@ -51,7 +51,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
   const IMAP_BASE =
-    process.env.NEXT_PUBLIC_IMAP_API_BASE || "http://localhost:8000";
+    process.env.NEXT_PUBLIC_IMAP_API_BASE || "/imap";
   // 🆕 Cargar dbName del tenant activo
   useEffect(() => {
     loadTenantDbName();

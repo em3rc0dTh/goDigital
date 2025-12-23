@@ -279,7 +279,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
   const IMAP_BASE =
-    process.env.NEXT_PUBLIC_IMAP_API_BASE || "http://localhost:8000";
+    process.env.NEXT_PUBLIC_IMAP_API_BASE || "/imap";
   useEffect(() => {
     loadTenantInfo();
   }, []);
