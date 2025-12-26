@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Mail, RefreshCw } from "lucide-react";
 import Cookies from "js-cookie";
-
+import { format } from 'date-fns';
+import { createPortal } from "react-dom";
 // ============================================================================
 // PARSING FUNCTIONS
 // ============================================================================
@@ -276,6 +277,11 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
   const [tenantDbName, setTenantDbName] = useState<string>("");
   const [tenantDetailId, setTenantDetailId] = useState<string>("");
   const [showSourceColumn, setShowSourceColumn] = useState(false);
+  const [selectedHtml, setSelectedHtml] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+
+
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
   const IMAP_BASE =
@@ -413,6 +419,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
         const dateB = new Date(b.date || b.receivedAt || 0);
         return dateB.getTime() - dateA.getTime();
       });
+      setCurrentPage(1);
 
       setEmails(normalized);
 
@@ -523,12 +530,19 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
     }
   };
 
+  const totalPages = Math.ceil(emails.length / pageSize);
+
+  const paginatedEmails = emails.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   return (
     <div className="w-full space-y-6 pb-10">
       {/* HEADER */}
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-4xl font-bold">Emails Capture</h1>
+          <h1 className="text-4xl font-bold">Email Capture</h1>
           <p className="text-muted-foreground">
             Bank transaction emails from IMAP and Gmail API
           </p>
@@ -551,7 +565,8 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          {/* IZQUIERDA */}
           <CardTitle className="flex items-center gap-2">
             Emails
             <span className="text-muted-foreground text-sm">
@@ -559,22 +574,45 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
             </span>
           </CardTitle>
 
-          {status && (
-            <span
-              className={`text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap
-        ${status.includes("✅")
-                  ? "bg-green-50 text-green-700"
-                  : status.includes("⏳")
-                    ? "bg-blue-50 text-blue-700"
-                    : status.includes("⚠️")
-                      ? "bg-yellow-50 text-yellow-700"
-                      : "bg-red-50 text-red-700"
-                }`}
-            >
-              {status.replace(/[✅⏳⚠️❌]/g, "").trim()}
-            </span>
-          )}
+          {/* DERECHA */}
+          <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+            {/* STATUS */}
+            {status && (
+              <span
+                className={`text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap
+          ${status.includes("✅")
+                    ? "bg-green-50 text-green-700"
+                    : status.includes("⏳")
+                      ? "bg-blue-50 text-blue-700"
+                      : status.includes("⚠️")
+                        ? "bg-yellow-50 text-yellow-700"
+                        : "bg-red-50 text-red-700"
+                  }`}
+              >
+                {status.replace(/[✅⏳⚠️❌]/g, "").trim()}
+              </span>
+            )}
+
+            {/* SELECTOR FILAS */}
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-muted-foreground">Rows:</span>
+              {[15, 30, 50].map(size => (
+                <Button
+                  key={size}
+                  size="sm"
+                  variant={pageSize === size ? "default" : "outline"}
+                  onClick={() => {
+                    setPageSize(size);
+                    setCurrentPage(1);
+                  }}
+                >
+                  {size}
+                </Button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
+
 
 
         <CardContent>
@@ -599,20 +637,32 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
                     <th className="px-4 py-2 text-left">From</th>
                     <th className="px-4 py-2 text-left">Operation</th>
                     <th className="px-4 py-2 text-left">Beneficiary</th>
-                    <th className="px-4 py-2 text-left">Subject</th>
+                    {/* <th className="px-4 py-2 text-left">Subject</th> */}
                     <th className="px-4 py-2 text-left">Date</th>
                     <th className="px-4 py-2 text-center">Currency</th>
                     <th className="px-4 py-2 text-right">Amount</th>
-                    <th className="px-4 py-2 text-center">Actions</th>
+                    {/* <th className="px-4 py-2 text-center">Actions</th> */}
                   </tr>
                 </thead>
                 <tbody>
-                  {emails.map((email, idx) => {
+                  {paginatedEmails.map((email, idx) => {
+                    const globalIndex = (currentPage - 1) * pageSize + idx;
+
                     const fromName = email.from?.split(" ")[0] || "Unknown";
                     const emailDate = email.date || email.receivedAt;
                     return (
                       <tr key={email._id || idx} className="border-b hover:bg-gray-50">
-                        <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
+                        <td className="px-4 py-2 text-gray-500">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="p-0 m-0"
+                            onClick={() => setSelectedHtml(email.html_body)}
+                          >
+                            {globalIndex + 1}
+                          </Button>
+                        </td>
+
                         {showSourceColumn && (
                           <td className="px-4 py-2">
                             <Badge
@@ -623,52 +673,121 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
                           </td>
                         )}
                         <td className="px-4 py-2 text-sm font-medium truncate">
-                          {fromName}
+                          {fromName.length > 10 ? fromName.slice(0, 10) + "..." : fromName}
                         </td>
                         <td className="px-4 py-2 text-xs font-mono">
-                          {email.parsed.nroOperacion !== "-"
-                            ? email.parsed.nroOperacion.slice(-6)
-                            : "-"}
+                          {email.transactionVariables?.operationNumber ? email.transactionVariables.operationNumber
+                            : email.parsed.nroOperacion}
                         </td>
                         <td className="px-4 py-2 text-sm truncate max-w-xs">
-                          {email.parsed.nombreBenef}
+                          {email.transactionVariables?.destinationAccount ? email.transactionVariables.destinationAccount : (email.parsed.nombreBenef.slice(0, 15))}
                         </td>
-                        <td className="px-4 py-2 text-sm truncate max-w-sm">
+                        {/* <td className="px-4 py-2 text-sm truncate max-w-sm">
                           {email.subject}
-                        </td>
+                        </td> */}
                         <td className="px-4 py-2 text-xs text-gray-600 whitespace-nowrap">
-                          {email.parsed.fecha !== "-"
-                            ? email.parsed.fecha
-                            : emailDate
-                              ? new Date(emailDate).toLocaleString()
-                              : "-"}
+                          {email.transactionVariables?.operationDate
+                            ? format(
+                              new Date(email.transactionVariables.operationDate),
+                              "dd/MM/yyyy HH:mm"
+                            )
+                            : format(new Date(emailDate), "dd/MM/yyyy HH:mm")}
                         </td>
+
                         <td className="px-4 py-2 text-center">
                           <Badge variant="outline" className="text-xs">
-                            {email.parsed.tipo_moneda}
+                            {email.transactionVariables?.currency ? email.transactionVariables.currency : email.parsed.tipo_moneda}
                           </Badge>
                         </td>
                         <td className="px-4 py-2 text-right font-semibold">
-                          {email.parsed.monto}
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          <button
-                            onClick={() => setSelectedEmail(email)}
-                            className="hover:bg-gray-200 p-1 rounded transition"
-                            title="View details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                          {email.transactionVariables?.amount != null
+                            ? Number(email.transactionVariables.amount).toFixed(2)
+                            : email.parsed?.monto}
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
+              <div className="flex justify-center items-center gap-1 mt-4 flex-wrap">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                >
+                  ‹
+                </Button>
+
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const page = i + 1;
+                  const isActive = page === currentPage;
+
+                  // mostrar solo páginas cercanas
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    Math.abs(page - currentPage) <= 2
+                  ) {
+                    return (
+                      <Button
+                        key={page}
+                        size="sm"
+                        variant={isActive ? "default" : "outline"}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    );
+                  }
+
+                  // puntos suspensivos
+                  if (
+                    page === currentPage - 3 ||
+                    page === currentPage + 3
+                  ) {
+                    return <span key={page} className="px-2 text-gray-400">…</span>;
+                  }
+
+                  return null;
+                })}
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                >
+                  ›
+                </Button>
+              </div>
+
+
             </div>
           )}
         </CardContent>
       </Card>
+      {selectedHtml &&
+        createPortal(
+          <div className="fixed top-0 left-0 w-screen h-screen z-[9999] bg-black/50 flex items-center justify-center">
+            <div className="bg-white w-[90%] max-w-4xl max-h-[90vh] overflow-auto rounded-lg p-4">
+
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="font-semibold text-sm">Contenido del correo</h2>
+                <Button size="sm" variant="ghost" onClick={() => setSelectedHtml(null)}>
+                  Cerrar
+                </Button>
+              </div>
+
+              <div
+                className="border p-3 text-sm"
+                dangerouslySetInnerHTML={{ __html: selectedHtml }}
+              />
+            </div>
+          </div>,
+          document.body
+        )
+      }
 
       {/* EMAIL DETAILS MODAL */}
       {selectedEmail && (

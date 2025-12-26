@@ -27,7 +27,6 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
   const [storedTransactions, setStoredTransactions] = useState<any[]>([]);
   const [sessionDuplicates, setSessionDuplicates] = useState<any[]>([]);
   const [parsedBatchData, setParsedBatchData] = useState<any[]>([]);
-  const [debugPanelVisible, setDebugPanelVisible] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showTransactions, setShowTransactions] = useState(true);
@@ -728,15 +727,6 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
                 >
                   Clear
                 </Button>
-
-                <Button
-                  variant="ghost"
-                  onClick={() =>
-                    setDebugPanelVisible(!debugPanelVisible)
-                  }
-                >
-                  ⚙️ Debug
-                </Button>
               </div>
 
               {saveStatus && (
@@ -749,12 +739,6 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
                     }`}
                 >
                   {saveStatus}
-                </div>
-              )}
-
-              {debugPanelVisible && parsedBatchData.length > 0 && (
-                <div className="p-4 bg-gray-900 rounded text-green-400 text-[10px] sm:text-xs font-mono max-h-48 overflow-auto">
-                  <pre>{JSON.stringify(parsedBatchData, null, 2)}</pre>
                 </div>
               )}
             </CardContent>

@@ -27,7 +27,7 @@ export async function createAccount(data: any) {
 export async function updateAccount(id: string, data: any) {
   const token = Cookies.get("session_token");
   const tenantDetailId = Cookies.get("tenantDetailId");
-  const res = await fetch(`${BASE}/${id}`, {
+  const res = await fetch(`${BASE}/accounts/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-tenant-detail-id": tenantDetailId || "", },
     body: JSON.stringify(data),
@@ -128,52 +128,55 @@ export function AccountsTable({
   const headersToShow = columns || allColumns;
 
   return (
-    <table className="w-full border rounded-md text-sm">
-      <thead className="bg-muted">
-        <tr>
-          {headersToShow.map((col) => (
-            <Th key={col}>{col}</Th>
-          ))}
-        </tr>
-      </thead>
+    <div className="w-full overflow-x-auto">
+      <table className="min-w-[900px] w-full border rounded-md text-sm">
 
-      <tbody>
-        {accounts.map((acc, idx) => {
-          const stats = getAccountStats(acc);
+        <thead className="bg-muted">
+          <tr>
+            {headersToShow.map((col) => (
+              <Th key={col}>{col}</Th>
+            ))}
+          </tr>
+        </thead>
 
-          return (
-            <tr
-              key={acc.id}
-              className={cn(
-                "cursor-pointer hover:bg-accent transition",
-                acc.id === activeId && "bg-primary/10"
-              )}
-              onClick={() => onSelect(acc.id)}
-            >
-              {headersToShow.includes("#") && <Td>{idx + 1}</Td>}
-              {headersToShow.includes("Alias") && <Td>{acc.alias || "—"}</Td>}
-              {headersToShow.includes("Bank Name") && <Td>{acc.bank_name}</Td>}
-              {headersToShow.includes("Account Holder") && (
-                <Td>{acc.account_holder}</Td>
-              )}
-              {headersToShow.includes("Account Number") && (
-                <Td>
-                  <strong>{acc.account_number}</strong>
-                </Td>
-              )}
-              {headersToShow.includes("Bank Account Type") && (
-                <Td>{acc.bank_account_type}</Td>
-              )}
-              {headersToShow.includes("Currency") && <Td>{acc.currency}</Td>}
-              {headersToShow.includes("Type") && <Td>{acc.account_type}</Td>}
-              {headersToShow.includes("Tx Count") && <Td>{acc.tx_count}</Td>}
-              {headersToShow.includes("Oldest") && <Td>{fmt(acc.oldest)}</Td>}
-              {headersToShow.includes("Newest") && <Td>{fmt(acc.newest)}</Td>}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+        <tbody>
+          {accounts.map((acc, idx) => {
+            const stats = getAccountStats(acc);
+
+            return (
+              <tr
+                key={acc.id}
+                className={cn(
+                  "cursor-pointer hover:bg-accent transition",
+                  acc.id === activeId && "bg-primary/10"
+                )}
+                onClick={() => onSelect(acc.id)}
+              >
+                {headersToShow.includes("#") && <Td>{idx + 1}</Td>}
+                {headersToShow.includes("Alias") && <Td>{acc.alias || "—"}</Td>}
+                {headersToShow.includes("Bank Name") && <Td>{acc.bank_name}</Td>}
+                {headersToShow.includes("Account Holder") && (
+                  <Td>{acc.account_holder}</Td>
+                )}
+                {headersToShow.includes("Account Number") && (
+                  <Td>
+                    <strong>{acc.account_number}</strong>
+                  </Td>
+                )}
+                {headersToShow.includes("Bank Account Type") && (
+                  <Td>{acc.bank_account_type}</Td>
+                )}
+                {headersToShow.includes("Currency") && <Td>{acc.currency}</Td>}
+                {headersToShow.includes("Type") && <Td>{acc.account_type}</Td>}
+                {headersToShow.includes("Tx Count") && <Td>{acc.tx_count}</Td>}
+                {headersToShow.includes("Oldest") && <Td>{fmt(acc.oldest)}</Td>}
+                {headersToShow.includes("Newest") && <Td>{fmt(acc.newest)}</Td>}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
