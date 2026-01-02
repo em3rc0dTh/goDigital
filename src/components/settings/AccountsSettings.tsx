@@ -4,7 +4,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
-import React, { RefObject } from "react";
+import React, { RefObject, useState } from "react";
 import { AccountsTable } from "../extract/AccountsTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
@@ -72,6 +72,7 @@ export function AccountsTab({
     { value: "USD", label: "USD" },
     { value: "EUR", label: "EUR" },
   ];
+  const [formKey, setFormKey] = useState(0);
 
   return (
     <div className="space-y-6">
@@ -96,7 +97,15 @@ export function AccountsTab({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={addAccount} className="space-y-4">
+          <form
+            key={formKey}
+            onSubmit={(e) => {
+              e.preventDefault();
+              addAccount(e);
+              setFormKey(formKey + 1);
+            }}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-2 gap-4">
               <Input ref={bankAlias} placeholder="Alias (e.g., Main)" />
               <Select value={bankName ?? undefined} onValueChange={setBankName}>
