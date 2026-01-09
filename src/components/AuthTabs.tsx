@@ -48,15 +48,6 @@ export function AuthTabs({
             Log in with Google
           </Button>
 
-          <Button
-            variant="outline"
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 border-neutral-600 text-white bg-[#0f0f17] hover:bg-neutral-800 py-5"
-          >
-            <Image src="/github.png" alt="Github" width={18} height={18} />
-            Log in with GitHub
-          </Button>
-
           <div className="text-center text-neutral-500 text-sm my-4">or</div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -117,17 +108,6 @@ export function AuthTabs({
                 <Image src="/google.png" alt="Google" width={18} height={18} />
                 Sign up with Google
               </Button>
-
-              <Button
-                variant="outline"
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 border-neutral-600 text-white bg-[#0f0f17] hover:bg-neutral-800 py-5"
-              >
-                <Image src="/github.png" alt="Github" width={18} height={18} />
-                Sign up with GitHub
-              </Button>
-
-              <div className="text-center text-neutral-500 text-sm">or</div>
 
               <Button
                 type="button"

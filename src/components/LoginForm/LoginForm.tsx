@@ -16,6 +16,7 @@ import {
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
+import { Mail } from "lucide-react";
 
 interface Workspace {
   tenantId: string;
@@ -33,9 +34,13 @@ export function LoginForm() {
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
-  // ⭐ NUEVO: Estado para selector de workspace
+  // Estados para workspaces
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [showWorkspaceSelector, setShowWorkspaceSelector] = useState(false);
+
+  // 🆕 Estados para verificación de email
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState("");
 
   const router = useRouter();
 
@@ -45,24 +50,55 @@ export function LoginForm() {
     setErrorMessage(null);
 
     try {
-      const action = tab === "login" ? "login" : "signup";
+      const isSignup = tab === "signUp";
+      const endpoint = isSignup ? `${API_BASE}/auth/signup` : `${API_BASE}/auth/login`;
 
-      const res = await fetch(`${API_BASE}/users`, {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ action, email, password, fullName }),
+        body: JSON.stringify(
+          isSignup
+            ? { email, password, fullName }
+            : { email, password }
+        ),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        // 🆕 Manejo especial para email no verificado
+        if (data.code === "EMAIL_NOT_VERIFIED" || data.error?.toLowerCase().includes("verify")) {
+          toast.error("Email Not Verified", {
+            description: "Please check your inbox and verify your email address",
+          });
+          setPendingVerificationEmail(data.email || email);
+          setShowEmailVerification(true);
+          return;
+        }
+
         toast.error("Authentication Failed", {
           description: data.error || "An error occurred",
         });
         return;
       }
 
+      // 🆕 Signup exitoso - mostrar mensaje de verificación
+      if (isSignup) {
+        setPendingVerificationEmail(data.email || email);
+        setShowEmailVerification(true);
+        toast.success("Account Created!", {
+          description: "Please check your email to verify your account",
+        });
+
+        setEmail("");
+        setPassword("");
+        setFullName("");
+        setIsLoading(false);
+        return;
+      }
+
+      // Login exitoso - manejo de workspaces
       if (data.workspaces && data.workspaces.length > 1) {
         setWorkspaces(data.workspaces);
         setShowWorkspaceSelector(true);
@@ -138,6 +174,32 @@ export function LoginForm() {
     }
   };
 
+  // 🆕 Función para reenviar email de verificación
+  const resendVerificationEmail = async () => {
+    try {
+      toast.info("Resending verification email...");
+
+      const res = await fetch(`${API_BASE}/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingVerificationEmail }),
+      });
+
+      if (res.ok) {
+        toast.success("Email Sent!", {
+          description: "Please check your inbox",
+        });
+      } else {
+        toast.error("Failed to resend email");
+      }
+    } catch (error) {
+      console.error("Resend error:", error);
+      toast.error("Error", {
+        description: "Failed to resend verification email",
+      });
+    }
+  };
+
   return (
     <div className="max-h-screen bg-transparent flex items-center justify-center">
       <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-10 px-6 py-10">
@@ -165,7 +227,59 @@ export function LoginForm() {
         )}
       </div>
 
-      {/* ⭐ NUEVO: Selector de Workspace */}
+      {/* 🆕 Modal de Verificación de Email */}
+      <Dialog open={showEmailVerification} onOpenChange={setShowEmailVerification}>
+        <DialogContent className="bg-white border border-gray-200 rounded-lg max-w-md">
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <Mail className="h-8 w-8 text-blue-600" />
+              </div>
+            </div>
+            <DialogTitle className="text-gray-900 text-center">
+              Verify Your Email
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 text-center">
+              We've sent a verification link to
+            </DialogDescription>
+            <p className="font-semibold text-gray-900 text-center mt-2">
+              {pendingVerificationEmail}
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-gray-700">
+                Please check your inbox and click the verification link to activate your account.
+              </p>
+            </div>
+
+            <div className="text-center text-sm text-gray-600">
+              Didn't receive the email?
+            </div>
+
+            <Button
+              onClick={resendVerificationEmail}
+              variant="outline"
+              className="w-full"
+            >
+              Resend Verification Email
+            </Button>
+
+            <Button
+              onClick={() => {
+                setShowEmailVerification(false);
+                setTab("login");
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Go to Login
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Selector de Workspace */}
       <Dialog open={showWorkspaceSelector} onOpenChange={setShowWorkspaceSelector}>
         <DialogContent className="bg-white border border-gray-200 rounded-lg max-w-md">
           <DialogHeader>

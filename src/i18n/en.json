@@ -1,0 +1,23 @@
+{
+    "Login": {
+        "error": {
+            "title": "Error",
+            "generic": "An error occurred"
+        },
+        "success": {
+            "title": "Login successful",
+            "selectWorkspace": "Please select your workspace"
+        }
+    },
+    "Workspace": {
+        "select": {
+            "title": "Select Workspace",
+            "description": "You have access to multiple workspaces. Choose one to continue."
+        },
+        "role": "Role: {role}"
+    },
+    "Common": {
+        "cancel": "Cancel",
+        "close": "Close"
+    }
+}

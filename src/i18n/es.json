@@ -1,0 +1,23 @@
+{
+    "Login": {
+        "error": {
+            "title": "Error",
+            "generic": "Ocurrió un error"
+        },
+        "success": {
+            "title": "Inicio de sesión exitoso",
+            "selectWorkspace": "Selecciona un workspace"
+        }
+    },
+    "Workspace": {
+        "select": {
+            "title": "Seleccionar Workspace",
+            "description": "Tienes acceso a múltiples workspaces. Elige uno para continuar."
+        },
+        "role": "Rol: {role}"
+    },
+    "Common": {
+        "cancel": "Cancelar",
+        "close": "Cerrar"
+    }
+}
