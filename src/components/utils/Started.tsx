@@ -343,7 +343,7 @@ export default function GettingStarted() {
                             onClick={handleBusinessEntitySubmit}
                             className="bg-purple-600 hover:bg-purple-700 text-white w-full mt-2"
                           >
-                            Complete Business Entity →
+                            Create Business Entity →
                           </Button>
 
                         </div>

@@ -4,7 +4,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
-import React, { RefObject, useState } from "react";
+import React, { RefObject, useState, useEffect } from "react";
 import { AccountsTable } from "../extract/AccountsTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
@@ -25,12 +25,18 @@ interface AccountsTabProps {
   bankCurrency: string | null;
   setBankCurrency: (v: string) => void;
   bankType: RefObject<HTMLInputElement>;
-  settingsAlias: RefObject<HTMLInputElement>;
-  settingsBankName: RefObject<HTMLInputElement>;
-  settingsHolder: RefObject<HTMLInputElement>;
-  settingsNumber: RefObject<HTMLInputElement>;
-  settingsCurrency: RefObject<HTMLInputElement>;
-  settingsType: RefObject<HTMLInputElement>;
+  // Update form state
+  updateBankName: string | null;
+  setUpdateBankName: (v: string) => void;
+  updateCurrency: string | null;
+  setUpdateCurrency: (v: string) => void;
+  updateAccountType: string | null;
+  setUpdateAccountType: (v: string) => void;
+  updateAlias: string;
+  setUpdateAlias: (v: string) => void;
+  updateHolder: string;
+  setUpdateHolder: (v: string) => void;
+  updateNumber: string;
 }
 
 export function AccountsTab({
@@ -50,12 +56,17 @@ export function AccountsTab({
   bankCurrency,
   setBankCurrency,
   bankType,
-  settingsAlias,
-  settingsBankName,
-  settingsHolder,
-  settingsNumber,
-  settingsCurrency,
-  settingsType,
+  updateBankName,
+  setUpdateBankName,
+  updateCurrency,
+  setUpdateCurrency,
+  updateAccountType,
+  setUpdateAccountType,
+  updateAlias,
+  setUpdateAlias,
+  updateHolder,
+  setUpdateHolder,
+  updateNumber,
 }: AccountsTabProps) {
   const BANKS = [
     "BCP",
@@ -73,6 +84,10 @@ export function AccountsTab({
     { value: "EUR", label: "EUR" },
   ];
   const [formKey, setFormKey] = useState(0);
+
+  useEffect(() => {
+    console.log('[AccountsSettings] Update values changed:', { updateBankName, updateCurrency, updateAccountType });
+  }, [updateBankName, updateCurrency, updateAccountType]);
 
   return (
     <div className="space-y-6">
@@ -169,10 +184,16 @@ export function AccountsTab({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Input ref={settingsAlias} placeholder="Alias" />
+              <Input
+                value={updateAlias}
+                onChange={(e) => setUpdateAlias(e.target.value)}
+                placeholder="Alias"
+              />
               <Select
+                key={`bank-${activeAccount}`}
+                value={updateBankName ?? undefined}
                 onValueChange={(v) => {
-                  if (settingsBankName.current) settingsBankName.current.value = v;
+                  setUpdateBankName(v);
                 }}
               >
                 <SelectTrigger>
@@ -186,16 +207,22 @@ export function AccountsTab({
                   ))}
                 </SelectContent>
               </Select>
-              <Input ref={settingsHolder} placeholder="Account Holder" />
               <Input
-                ref={settingsNumber}
+                value={updateHolder}
+                onChange={(e) => setUpdateHolder(e.target.value)}
+                placeholder="Account Holder"
+              />
+              <Input
+                value={updateNumber}
                 placeholder="Account Number"
                 readOnly
                 className="bg-gray-100"
               />
               <Select
+                key={`currency-${activeAccount}`}
+                value={updateCurrency ?? undefined}
                 onValueChange={(v) => {
-                  if (settingsCurrency.current) settingsCurrency.current.value = v;
+                  setUpdateCurrency(v);
                 }}
               >
                 <SelectTrigger>
@@ -209,7 +236,11 @@ export function AccountsTab({
                   ))}
                 </SelectContent>
               </Select>
-              <Input ref={settingsType} placeholder="Account Type" />
+              <Input
+                value={updateAccountType || ""}
+                onChange={(e) => setUpdateAccountType(e.target.value)}
+                placeholder="Account Type"
+              />
             </div>
             <Button onClick={saveAccountUpdates}>Save Changes</Button>
           </CardContent>

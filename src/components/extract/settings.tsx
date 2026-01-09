@@ -6,6 +6,7 @@ import { AccountsTab } from "../settings/AccountsSettings";
 import { EmailTab } from "../settings/EmailsSettings";
 import Cookies from "js-cookie";
 import { ForwardingTab } from "../settings/ForwardingSettings";
+import Swal from "sweetalert2";
 
 interface SettingsViewProps {
   activeDatabase: string;
@@ -32,12 +33,15 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
   const [bankCurrency, setBankCurrency] = useState<string | null>(null);
   const [bankAccountType, setBankAccountType] = useState<string | null>(null);
 
-  const settingsAlias = useRef<any>(null);
-  const settingsBankName = useRef<any>(null);
-  const settingsHolder = useRef<any>(null);
-  const settingsNumber = useRef<any>(null);
-  const settingsCurrency = useRef<any>(null);
-  const settingsType = useRef<any>(null);
+  // State for update form
+  const [updateBankName, setUpdateBankName] = useState<string | null>(null);
+  const [updateCurrency, setUpdateCurrency] = useState<string | null>(null);
+  const [updateAccountType, setUpdateAccountType] = useState<string | null>(null);
+  const [updateAlias, setUpdateAlias] = useState("");
+  const [updateHolder, setUpdateHolder] = useState("");
+  const [updateNumber, setUpdateNumber] = useState("");
+
+
 
   const emailUser = useRef<any>(null);
   const emailPass = useRef<any>(null);
@@ -196,18 +200,13 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     const account = accounts.find((a) => a.id === accountId);
     if (!account) return;
 
-    if (settingsAlias.current)
-      settingsAlias.current.value = account.alias || "";
-    if (settingsBankName.current)
-      settingsBankName.current.value = account.bank_name || "";
-    if (settingsHolder.current)
-      settingsHolder.current.value = account.account_holder || "";
-    if (settingsNumber.current)
-      settingsNumber.current.value = account.account_number || "";
-    if (settingsCurrency.current)
-      settingsCurrency.current.value = account.currency || "";
-    if (settingsType.current)
-      settingsType.current.value = account.account_type || "";
+    // Use state instead of refs for reliable initial load
+    setUpdateAlias(account.alias || "");
+    setUpdateBankName(account.bank_name || null);
+    setUpdateHolder(account.account_holder || "");
+    setUpdateNumber(account.account_number || "");
+    setUpdateCurrency(account.currency || null);
+    setUpdateAccountType(account.account_type || null);
   }
 
   const selectAccount = (id: string) => {
@@ -228,10 +227,12 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     const bank_account_type = bankAccountType;
 
     if (!bank_name || !account_holder || !account_number) {
-      showStatus(
-        "❌ Please fill Bank Name, Holder Name and Account Number",
-        "error"
-      );
+      Swal.fire({
+        title: "Attention!",
+        text: "Please fill in the bank name, holder name, and account number.",
+        icon: "warning",
+        confirmButtonColor: "#3b82f6",
+      });
       return;
     }
 
@@ -245,7 +246,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       bank_account_type,
       tenantId: Cookies.get("tenantId"),
     };
-
+    console.log(payload)
     try {
       const token = Cookies.get("session_token");
       const tenantDetailId = Cookies.get("tenantDetailId");
@@ -253,7 +254,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
           "x-tenant-detail-id": tenantDetailId || "",
         },
         credentials: "include",
@@ -274,30 +275,41 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
 
       await loadAccountsFromDB();
       selectAccount(saved.id);
-      showStatus("✅ Account added successfully", "success");
+      Swal.fire({
+        title: "Account Added!",
+        text: "The account has been successfully registered.",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (error) {
       console.error("Error adding account:", error);
-      showStatus("❌ Error adding account", "error");
+      Swal.fire({
+        title: "Error",
+        text: "Could not add the account. Please try again.",
+        icon: "error",
+      });
     }
   }
 
   async function saveAccountUpdates() {
     if (!activeAccount) {
-      showStatus("❌ No account selected", "error");
+      Swal.fire({
+        title: "Error",
+        text: "No account selected for update.",
+        icon: "error",
+      });
       return;
     }
+    const payload = {
+      alias: updateAlias.trim() || "",
+      bank_name: updateBankName || "",              // ✅ DESDE STATE DE UPDATE
+      account_holder: updateHolder.trim() || "",
+      currency: updateCurrency || "",     // ✅ DESDE STATE DE UPDATE
+      account_type: updateAccountType || "",
+    };
 
-    const alias = settingsAlias.current.value.trim();
-    const bank_name = settingsBankName.current;
-    const account_holder = settingsHolder.current.value.trim();
-    const currency = settingsCurrency.current;
-    const account_type = settingsType.current.value.trim();
-
-    if (!bank_name || !account_holder) {
-      showStatus("❌ Bank Name and Holder are required", "error");
-      return;
-    }
-
+    console.log("Payload:", payload);
     try {
       const token = Cookies.get("session_token");
       const tenantDetailId = Cookies.get("tenantDetailId");
@@ -305,55 +317,73 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
           "x-tenant-detail-id": tenantDetailId || "",
         },
-        body: JSON.stringify({
-          alias,
-          bank_name,
-          account_holder,
-          currency,
-          account_type,
-        }),
+        credentials: "include",
+        body: JSON.stringify(payload),
       });
 
       await loadAccountsFromDB();
-      showStatus("✅ Account updated successfully", "success");
+      Swal.fire({
+        title: "Updated!",
+        text: "Account details have been successfully updated.",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (error) {
       console.error("Error updating account:", error);
-      showStatus("❌ Error updating account", "error");
+      Swal.fire({
+        title: "Error",
+        text: "Could not update the account. Please try again.",
+        icon: "error",
+      });
     }
   }
 
   async function deleteSelectedAccount() {
     if (!activeAccount) {
-      showStatus("❌ No account selected", "error");
+      Swal.fire({
+        title: "Error",
+        text: "No account selected.",
+        icon: "error",
+      });
       return;
     }
 
     const account = accountsState.find((a) => a.id === activeAccount);
     if (!account) {
-      showStatus("❌ Account not found", "error");
+      Swal.fire({
+        title: "Error",
+        text: "Account not found.",
+        icon: "error",
+      });
       return;
     }
 
-    const ok = confirm(
-      `Delete "${account.bank_name} ${account.account_number}"? This will also delete all transactions.`
-    );
-    if (!ok) return;
+    const result = await Swal.fire({
+      title: 'Delete account?',
+      html: `<p>Are you sure you want to delete <strong>${account.bank_name} ${account.account_number}</strong>?</p><p class="text-sm text-red-600 mt-2">This action will also delete all associated transactions.</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      focusCancel: true,
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const token = Cookies.get("session_token");
-
-      if (!token) {
-        showStatus("❌ No authentication token", "error");
-        return;
-      }
       const tenantDetailId = Cookies.get("tenantDetailId");
       const res = await fetch(`${API_BASE}/accounts/${activeAccount}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
           "x-tenant-detail-id": tenantDetailId || "",
         },
         credentials: "include",
@@ -374,12 +404,12 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       setActiveAccount(null);
       localStorage.removeItem("activeAccountId");
 
-      if (settingsAlias.current) settingsAlias.current.value = "";
-      if (settingsBankName.current) settingsBankName.current.value = "";
-      if (settingsHolder.current) settingsHolder.current.value = "";
-      if (settingsNumber.current) settingsNumber.current.value = "";
-      if (settingsCurrency.current) settingsCurrency.current.value = "";
-      if (settingsType.current) settingsType.current.value = "";
+      setUpdateAlias("");
+      setUpdateBankName(null);
+      setUpdateHolder("");
+      setUpdateNumber("");
+      setUpdateCurrency(null);
+      setUpdateAccountType(null);
 
       await loadAccountsFromDB();
       showStatus("🗑️ Account deleted successfully", "success");
@@ -513,10 +543,20 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       return;
     }
 
-    const ok = confirm(
-      "Are you sure you want to delete the IMAP configuration?"
-    );
-    if (!ok) return;
+    const result = await Swal.fire({
+      title: 'Delete IMAP configuration?',
+      text: 'Are you sure you want to delete the IMAP configuration?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      focusCancel: true,
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`${IMAP_BASE}/imap/config`, {
@@ -564,8 +604,20 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       return;
     }
 
-    const ok = confirm("Are you sure you want to delete this email setup?");
-    if (!ok) return;
+    const result = await Swal.fire({
+      title: 'Delete email configuration?',
+      text: 'Are you sure you want to delete this email configuration?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      focusCancel: true,
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`${IMAP_BASE}/email/setup/${id}`, {
@@ -647,12 +699,17 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
           bankCurrency={bankCurrency}
           setBankCurrency={setBankCurrency}
           bankType={bankType}
-          settingsAlias={settingsAlias}
-          settingsBankName={settingsBankName}
-          settingsHolder={settingsHolder}
-          settingsNumber={settingsNumber}
-          settingsCurrency={settingsCurrency}
-          settingsType={settingsType}
+          updateBankName={updateBankName}
+          setUpdateBankName={setUpdateBankName}
+          updateCurrency={updateCurrency}
+          setUpdateCurrency={setUpdateCurrency}
+          updateAccountType={updateAccountType}
+          setUpdateAccountType={setUpdateAccountType}
+          updateAlias={updateAlias}
+          setUpdateAlias={setUpdateAlias}
+          updateHolder={updateHolder}
+          setUpdateHolder={setUpdateHolder}
+          updateNumber={updateNumber}
         />
       )}
 
