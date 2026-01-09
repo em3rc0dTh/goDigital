@@ -195,32 +195,38 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
     return map[upper] || upper;
   }
 
-  function normalizeDateTime(fechaRaw: string): string {
-    const parts = fechaRaw.split("/");
-    if (parts.length === 3) {
-      const [dd, mm, yyyy] = parts.map((p) => parseInt(p, 10));
-      if (!isNaN(dd) && !isNaN(mm) && !isNaN(yyyy)) {
-        return `${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(
-          2,
-          "0"
-        )}T00:00:00`;
-      }
+  function normalizeDateTime(fechaRaw: string): string | null {
+    if (!fechaRaw) return null;
+
+    const monthMap: Record<string, number> = {
+      ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5,
+      jul: 6, ago: 7, sep: 8, oct: 9, nov: 10, dic: 11,
+    };
+
+    // ej: "lun. 05 ene 11:29"
+    const match = fechaRaw
+      .toLowerCase()
+      .match(/(\d{1,2})\s+(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)\s+(\d{2}):(\d{2})/);
+
+    if (!match) return null;
+
+    const [, dd, mon, hh, mm] = match;
+    const day = Number(dd);
+    const month = monthMap[mon];
+
+    const now = new Date();
+    let year = now.getFullYear();
+
+    // 🔑 regla clave: enero con contexto bancario → puede ser año siguiente
+    if (month === 0 && now.getMonth() === 11) {
+      year += 1;
     }
 
-    const currentYear = new Date().getFullYear();
-    const withYear = `${fechaRaw} ${currentYear}`;
+    const date = new Date(year, month, day, Number(hh), Number(mm), 0);
 
-    const parsed = new Date(withYear);
-    if (!isNaN(parsed.getTime())) {
-      const yyyy = parsed.getFullYear();
-      const mm = String(parsed.getMonth() + 1).padStart(2, "0");
-      const dd = String(parsed.getDate()).padStart(2, "0");
-      const hh = String(parsed.getHours()).padStart(2, "0");
-      const min = String(parsed.getMinutes()).padStart(2, "0");
-      return `${yyyy}-${mm}-${dd}T${hh}:${min}:00`;
-    }
+    if (isNaN(date.getTime())) return null;
 
-    return fechaRaw;
+    return date.toISOString();
   }
 
   const selectAccount = (id: string) => {
