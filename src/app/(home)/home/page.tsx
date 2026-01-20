@@ -176,7 +176,7 @@ export default function Home() {
       setIsLoading(true);
       const token = Cookies.get("session_token");
       const res = await fetch(
-        `${API_BASE}/accounts/${accountId}/transactions`,
+        `${API_BASE}/accounts/${accountId}/transactions?n=5`,
         {
           cache: "no-store",
           headers: {
@@ -446,15 +446,7 @@ export default function Home() {
                         </span>
                       ) : (
                         <span>
-                          Showing{" "}
-                          <span className="font-semibold text-gray-900">
-                            {Math.min(5, transactionSummary.count)}
-                          </span>{" "}
-                          of{" "}
-                          <span className="font-semibold text-gray-900">
-                            {transactionSummary.count}
-                          </span>{" "}
-                          transaction{transactionSummary.count !== 1 ? "s" : ""}
+                          Showing {storedTransactions.length} last transactions
                         </span>
                       )}
                     </p>

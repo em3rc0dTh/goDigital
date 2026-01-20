@@ -449,7 +449,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${IMAP_BASE}/ingest?limit=50`, {
+      const res = await fetch(`${IMAP_BASE}/ingest`, {
         headers: {
           "X-Database-Name": tenantDbName,
         },
@@ -475,6 +475,10 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       if (!tenantDetailId) throw new Error("tenantDetailId not found");
 
       const res = await fetch(`${API_BASE}/gmail/${tenantDetailId}`);
+      if (res.status === 404) {
+        console.warn("Forwarding config not found (404)");
+        return null;
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
@@ -482,7 +486,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       return data.config;
     } catch (err) {
       console.error("Error loading forwarding config:", err);
-      setStatus("❌ Error loading forwarding config");
+      // setStatus("❌ Error loading forwarding config"); // Don't show error to user, just log it
       return null;
     }
   };
@@ -499,8 +503,10 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
     try {
       const config = forwardingConfig ?? await loadForwardingConfig();
 
-      if (!config?.id) {
-        throw new Error("Forwarding config ID not available");
+      if (!config || !config.id) {
+        setStatus("⚠️ Please configure 'Email Setup' in Settings first");
+        setIsLoading(false);
+        return;
       }
 
       const res = await fetch(`${API_BASE}/gmail/fetch-emails`, {

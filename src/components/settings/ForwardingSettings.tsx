@@ -256,8 +256,114 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
         setForwardingRules(updated);
     }
 
+    // 🆕 GMAIL LOGIC
+    const [gmailStatus, setGmailStatus] = useState<any>(null);
+    const [loadingGmail, setLoadingGmail] = useState(false);
+
+    useEffect(() => {
+        checkGmailStatus();
+    }, []);
+
+    async function checkGmailStatus() {
+        const tenantDetailId = Cookies.get("tenantDetailId");
+        if (!tenantDetailId) return;
+        try {
+            setLoadingGmail(true);
+            const res = await fetch(`${API_BASE}/gmail/status/${tenantDetailId}`);
+            if (res.ok) {
+                const data = await res.json();
+                setGmailStatus(data);
+            }
+        } catch (error) {
+            console.error("Error checking Gmail status:", error);
+        } finally {
+            setLoadingGmail(false);
+        }
+    }
+
+    async function handleConnectGmail() {
+        const tenantDetailId = Cookies.get("tenantDetailId");
+        if (!tenantDetailId) return;
+        try {
+            const res = await fetch(
+                `${API_BASE}/gmail/auth?tenantDetailId=${tenantDetailId}`
+            );
+            const data = await res.json();
+            if (data.authUrl) {
+                window.location.href = data.authUrl;
+            }
+        } catch (error) {
+            console.error("Error connecting Gmail:", error);
+        }
+    }
+
+    async function handleDisconnectGmail() {
+        const tenantDetailId = Cookies.get("tenantDetailId");
+        if (!tenantDetailId) return;
+        try {
+            await fetch(`${API_BASE}/gmail/disconnect/${tenantDetailId}`, {
+                method: "DELETE",
+            });
+            checkGmailStatus();
+        } catch (error) {
+            console.error("Error disconnecting Gmail:", error);
+        }
+    }
+
     return (
         <div className="space-y-6">
+            {/* 🆕 GMAIL CARD (Moved from EmailsSettings) */}
+            <div className="bg-blue-50/50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="text-blue-900 font-semibold flex items-center gap-2">
+                            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor" role="img">
+                                <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" />
+                            </svg>
+                            Gmail Integration
+                        </h3>
+                        {loadingGmail ? (
+                            <p className="text-sm text-gray-500 mt-1">Checking status...</p>
+                        ) : gmailStatus?.connected ? (
+                            <div className="mt-1">
+                                <p className="font-medium text-green-700 text-sm flex items-center gap-2">
+                                    ✅ Connected as {gmailStatus.email}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    Expires: {new Date(gmailStatus.expiration).toLocaleDateString()}
+                                </p>
+                            </div>
+                        ) : (
+                            <p className="text-sm text-blue-700 mt-1">
+                                Connect your business Gmail account to enable automatic email ingestion.
+                            </p>
+                        )}
+                    </div>
+                    {/* ACTION BUTTON */}
+                    <div>
+                        {loadingGmail ? (
+                            <button disabled className="px-4 py-2 bg-gray-100 text-gray-400 rounded-lg text-sm">
+                                ...
+                            </button>
+                        ) : gmailStatus?.connected ? (
+                            <button
+                                onClick={handleDisconnectGmail}
+                                className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium border border-transparent hover:border-red-200 transition"
+                            >
+                                Disconnect
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleConnectGmail}
+                                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm font-medium transition shadow-sm"
+                            >
+                                Connect Gmail
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             {/* Header con información */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start justify-between">
