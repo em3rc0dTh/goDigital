@@ -647,7 +647,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
     accountsState.find((a) => a.id === activeAccount)?.currency || "???";
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 space-y-6 pb-10">
+    <div className="w-full mx-auto space-y-6 pb-10">
       <div className="space-y-1 sm:space-y-2">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
           Web Capture

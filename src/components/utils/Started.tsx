@@ -125,7 +125,7 @@ export default function GettingStarted() {
   return (
     <main className="flex-1 overflow-y-auto min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-8 py-4">
+      <header className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex-1 max-w-xl">
             <div className="relative">
@@ -158,7 +158,7 @@ export default function GettingStarted() {
       </header>
 
       {/* Getting Started Content */}
-      <div className="p-8">
+      <div className="px-2 sm:px-4 py-6 sm:py-8 w-full max-w-[98%] mx-auto">
         <h1 className="text-3xl font-bold mb-8">Launch Pad</h1>
 
         <div className="flex gap-8">
@@ -224,7 +224,7 @@ export default function GettingStarted() {
                       {completedTasks.businessEntity ? (
                         <div className="mt-4 pl-9 space-y-4 bg-purple-50 p-4 rounded-lg border border-purple-200">
                           <p className="text-sm text-gray-700">
-                            Ya existe al menos un Business Entity configurado para este workspace.
+                            At least one Business Entity is already configured for this workspace.
                           </p>
                           <Button
                             onClick={() => {
@@ -239,7 +239,7 @@ export default function GettingStarted() {
                             }}
                             className="bg-purple-600 hover:bg-purple-700 text-white"
                           >
-                            Crear otro Business Entity
+                            Create another Business Entity
                           </Button>
                         </div>
                       ) : (

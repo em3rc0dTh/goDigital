@@ -238,7 +238,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="px-6 py-8 md:px-12 max-w-7xl mx-auto">
+      <div className="px-2 sm:px-4 py-6 sm:py-8 w-full max-w-[98%] mx-auto">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">Dashboard</h1>
