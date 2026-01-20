@@ -8,6 +8,7 @@ import { Eye, Mail, RefreshCw } from "lucide-react";
 import Cookies from "js-cookie";
 import { format } from 'date-fns';
 import { createPortal } from "react-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // ============================================================================
 // PARSING FUNCTIONS
 // ============================================================================
@@ -280,6 +281,8 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
   const [selectedHtml, setSelectedHtml] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
+  const [activeSourceTab, setActiveSourceTab] = useState("all");
+  const [availableSources, setAvailableSources] = useState<string[]>([]);
 
 
   const API_BASE =
@@ -361,6 +364,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       let imapEmails: any[] = [];
       try {
         const imapRes = await fetch(`${IMAP_BASE}/emails`, {
+          cache: "no-store",
           headers: {
             "X-Database-Name": tenantDbName,
           },
@@ -380,7 +384,8 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       let gmailEmails: any[] = [];
       try {
         const gmailRes = await fetch(
-          `${API_BASE}/gmail/emails-list/${tenantDetailId}`
+          `${API_BASE}/gmail/emails-list/${tenantDetailId}`,
+          { cache: "no-store" }
         );
 
         if (gmailRes.ok) {
@@ -394,8 +399,17 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
         console.warn("Gmail fetch error:", gmailError);
       }
 
-      // 🔥 Combinar emails
-      const allEmails = [...imapEmails, ...gmailEmails];
+      // 🔥 Combinar emails (asegurando el campo source)
+      const taggedImap = imapEmails.map((e: any) => ({ ...e, source: "imap" }));
+      const taggedGmail = gmailEmails.map((e: any) => ({ ...e, source: "gmail" }));
+      const allEmails = [...taggedImap, ...taggedGmail];
+
+      // 🔥 Decidir si mostrar Tabs
+      const uniqueSources = Array.from(new Set(allEmails.map((e: any) => e.source)));
+      setAvailableSources(uniqueSources);
+      if (uniqueSources.length <= 1) {
+        setActiveSourceTab("all");
+      }
 
       // 🔥 Decidir si mostrar columna "Source"
       const hasImapData = imapEmails.length > 0;
@@ -536,9 +550,13 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
     }
   };
 
-  const totalPages = Math.ceil(emails.length / pageSize);
+  const filteredEmails = activeSourceTab === "all"
+    ? emails
+    : emails.filter((e) => e.source === activeSourceTab);
 
-  const paginatedEmails = emails.slice(
+  const totalPages = Math.ceil(filteredEmails.length / pageSize);
+
+  const paginatedEmails = filteredEmails.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -546,26 +564,33 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
   return (
     <div className="w-full space-y-6 pb-10">
       {/* HEADER */}
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div>
-          <h1 className="text-4xl font-bold">Email Capture</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-4xl font-bold">Email Capture</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Bank transaction emails from IMAP and Gmail API
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={runIngest} disabled={isLoading || !tenantDbName}>
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <Button onClick={runIngest} disabled={isLoading || !tenantDbName} className="flex-1 md:flex-none">
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
             {isLoading ? "Processing..." : "Ingest IMAP"}
           </Button>
 
-          <Button onClick={runIngestGmail} disabled={isLoading || !tenantDetailId}>
+          <Button onClick={runIngestGmail} disabled={isLoading || !tenantDetailId} className="flex-1 md:flex-none">
             <Mail
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
             {isLoading ? "Processing..." : "Ingest Gmail"}
+          </Button>
+
+          <Button onClick={() => loadEmails()} disabled={isLoading} variant="outline" className="flex-1 md:flex-none">
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
+            Refresh
           </Button>
         </div>
       </div>
@@ -619,9 +644,23 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
           </div>
         </CardHeader>
 
-
-
         <CardContent>
+          {/* TABS SI HAY MAS DE 1 FUENTE */}
+          {availableSources.length > 1 && (
+            <div className="mb-4">
+              <Tabs value={activeSourceTab} onValueChange={(val) => {
+                setActiveSourceTab(val);
+                setCurrentPage(1);
+              }}>
+                <TabsList>
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  {availableSources.includes("imap") && <TabsTrigger value="imap">IMAP</TabsTrigger>}
+                  {availableSources.includes("gmail") && <TabsTrigger value="gmail">Gmail</TabsTrigger>}
+                </TabsList>
+              </Tabs>
+            </div>
+          )}
+
           {emails.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>No emails found. Use the ingest buttons above to load emails.</p>

@@ -103,7 +103,7 @@ export default function Extract() {
   return (
     <>
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+        <div className="max-w-7xl mx-auto px-1">
           <Tabs value={showView} onValueChange={(v) => setShowView(v as any)} className="w-full">
             <TabsList className="h-auto p-0 bg-transparent border-0 w-full justify-start">
               <TabsTrigger
@@ -125,7 +125,7 @@ export default function Extract() {
         </div>
       </div>
       {showView === "consolidated" && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
+        <div className="max-w-7xl mx-auto px-1 py-6 sm:py-8">
           <Card className="border border-gray-200 shadow-sm overflow-hidden">
             {/* Card Header */}
             <div className="border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5">
@@ -170,7 +170,7 @@ export default function Extract() {
       )}
       {showView === "extract" && (
         <div className="min-h-screen bg-white pb-16 lg:pb-0">
-          <div className="px-4 sm:px-6 lg:px-12 py-6 sm:py-8 max-w-7xl mx-auto">
+          <div className="px-2 sm:px-4 py-6 sm:py-8 w-full max-w-[98%] mx-auto">
             {/* Header Card */}
             <Card className="mb-6 border border-gray-200 shadow-sm overflow-hidden">
               <div className="border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5">

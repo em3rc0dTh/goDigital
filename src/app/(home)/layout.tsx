@@ -20,11 +20,7 @@ export default function RootLayout({
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      {showSidebar && (
-        <aside className="w-[260px] shrink-0">
-          <Sidebar />
-        </aside>
-      )}
+      {showSidebar && <Sidebar />}
 
       {/* SOLO ESTE SCROLLEA */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden">
