@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, CheckCircle2, XCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Cookies from "js-cookie";
+import { useI18n } from "@/i18n/I18nProvider";
 
 type VerificationState = "loading" | "success" | "error" | "invalid";
 
@@ -23,13 +24,14 @@ export default function VerifyEmailClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const token = searchParams.get("token");
+    const { t } = useI18n();
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
     useEffect(() => {
         if (!token) {
             setState("invalid");
-            setMessage("No verification token provided");
+            setMessage(t("Auth.VerifyEmail.messages.noToken"));
             return;
         }
 
@@ -49,7 +51,7 @@ export default function VerifyEmailClient() {
 
             if (res.ok) {
                 setState("success");
-                setMessage("Your email has been verified successfully!");
+                setMessage(t("Auth.VerifyEmail.messages.success"));
 
                 // Guardar token y workspaces
                 if (data.user?.token) {
@@ -75,12 +77,12 @@ export default function VerifyEmailClient() {
                 }, 3000);
             } else {
                 setState("error");
-                setMessage(data.error || "Verification failed");
+                setMessage(data.error || t("Auth.VerifyEmail.messages.failed"));
             }
         } catch (error) {
             console.error("Verification error:", error);
             setState("error");
-            setMessage("An error occurred during verification");
+            setMessage(t("Auth.VerifyEmail.messages.error"));
         }
     };
 
@@ -114,10 +116,10 @@ export default function VerifyEmailClient() {
                             </div>
                         </div>
                         <h1 className="text-2xl font-bold text-gray-900">
-                            Verifying Your Email
+                            {t("Auth.VerifyEmail.title")}
                         </h1>
                         <p className="text-gray-600">
-                            Please wait while we verify your email address...
+                            {t("Auth.VerifyEmail.verifying")}
                         </p>
                     </div>
                 );
@@ -132,7 +134,7 @@ export default function VerifyEmailClient() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                                Email Verified!
+                                {t("Auth.VerifyEmail.successTitle")}
                             </h1>
                             <p className="text-gray-600">{message}</p>
                         </div>
@@ -141,7 +143,7 @@ export default function VerifyEmailClient() {
                             <div className="space-y-4 pt-4">
                                 <div className="text-left">
                                     <p className="text-sm font-medium text-gray-700 mb-2">
-                                        Select your workspace:
+                                        {t("Auth.VerifyEmail.selectWorkspace")}
                                     </p>
                                     <div className="space-y-2">
                                         {workspaces.map((workspace) => (
@@ -159,7 +161,7 @@ export default function VerifyEmailClient() {
                                                             {workspace.name}
                                                         </p>
                                                         <p className="text-sm text-gray-600 mt-1">
-                                                            Role: <span className="font-medium">{workspace.role}</span>
+                                                            {t("Workspace.role", { role: workspace.role })}
                                                         </p>
                                                     </div>
                                                     {selectedWorkspace?.tenantId === workspace.tenantId && (
@@ -176,14 +178,14 @@ export default function VerifyEmailClient() {
                                     className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
                                     disabled={!selectedWorkspace}
                                 >
-                                    Continue to Workspace
+                                    {t("Auth.VerifyEmail.continueToWorkspace")}
                                 </Button>
                             </div>
                         )}
 
                         {workspaces.length === 0 && (
                             <div className="text-sm text-gray-500">
-                                Redirecting to your workspace in a few seconds...
+                                {t("Auth.VerifyEmail.redirecting")}
                             </div>
                         )}
                     </div>
@@ -199,7 +201,7 @@ export default function VerifyEmailClient() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                                Verification Failed
+                                {t("Auth.VerifyEmail.failedTitle")}
                             </h1>
                             <p className="text-gray-600">{message}</p>
                         </div>
@@ -208,14 +210,14 @@ export default function VerifyEmailClient() {
                                 onClick={() => router.push("/login")}
                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
                             >
-                                Go to Login
+                                {t("Auth.VerifyEmail.goToLogin")}
                             </Button>
                             <Button
                                 onClick={() => window.location.reload()}
                                 variant="outline"
                                 className="w-full h-12"
                             >
-                                Try Again
+                                {t("Auth.VerifyEmail.tryAgain")}
                             </Button>
                         </div>
                     </div>
@@ -231,7 +233,7 @@ export default function VerifyEmailClient() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                                Invalid Link
+                                {t("Auth.VerifyEmail.invalidLinkTitle")}
                             </h1>
                             <p className="text-gray-600">{message}</p>
                         </div>
@@ -239,7 +241,7 @@ export default function VerifyEmailClient() {
                             onClick={() => router.push("/login")}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
                         >
-                            Go to Login
+                            {t("Auth.VerifyEmail.goToLogin")}
                         </Button>
                     </div>
                 );
@@ -255,12 +257,12 @@ export default function VerifyEmailClient() {
 
                 <div className="text-center mt-6">
                     <p className="text-sm text-gray-600">
-                        Need help?{" "}
+                        {t("Auth.VerifyEmail.needHelp")}{" "}
                         <a
                             href="mailto:support@godigital.com"
                             className="text-blue-600 hover:underline font-medium"
                         >
-                            Contact Support
+                            {t("Auth.VerifyEmail.contactSupport")}
                         </a>
                     </p>
                 </div>

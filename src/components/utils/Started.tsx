@@ -20,6 +20,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import Cookies from "js-cookie";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function GettingStarted() {
   const [expandedSection, setExpandedSection] = useState("businessEntity");
@@ -31,6 +32,7 @@ export default function GettingStarted() {
     bankAccount: false,
   });
 
+  const { t } = useI18n(); // Hook usage
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
@@ -131,7 +133,7 @@ export default function GettingStarted() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
-                placeholder="Search for Shortcuts, Projects, Secrets, etc."
+                placeholder={t("GettingStarted.searchPlaceholder")}
                 className="pl-10 bg-gray-50 border-gray-200"
               />
               <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 font-mono">
@@ -159,7 +161,7 @@ export default function GettingStarted() {
 
       {/* Getting Started Content */}
       <div className="px-2 sm:px-4 py-6 sm:py-8 w-full max-w-[98%] mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Launch Pad</h1>
+        <h1 className="text-3xl font-bold mb-8">{t("GettingStarted.title")}</h1>
 
         <div className="flex gap-8">
           <div className="flex-1 max-w-2xl">
@@ -167,7 +169,7 @@ export default function GettingStarted() {
             <Card className="mb-6">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Set up your Business Workspace</CardTitle>
+                  <CardTitle>{t("GettingStarted.setupWorkspace")}</CardTitle>
                   <span className="text-sm font-semibold text-purple-600">
                     {workspaceProgress}%
                   </span>
@@ -209,7 +211,7 @@ export default function GettingStarted() {
                         )}
                       </div>
                       <span className="font-medium">
-                        Create Business Entity
+                        {t("GettingStarted.createEntity")}
                       </span>
                     </div>
                     {expandedSection === "businessEntity" ? (
@@ -224,7 +226,7 @@ export default function GettingStarted() {
                       {completedTasks.businessEntity ? (
                         <div className="mt-4 pl-9 space-y-4 bg-purple-50 p-4 rounded-lg border border-purple-200">
                           <p className="text-sm text-gray-700">
-                            At least one Business Entity is already configured for this workspace.
+                            {t("GettingStarted.entityConfigured")}
                           </p>
                           <Button
                             onClick={() => {
@@ -239,7 +241,7 @@ export default function GettingStarted() {
                             }}
                             className="bg-purple-600 hover:bg-purple-700 text-white"
                           >
-                            Create another Business Entity
+                            {t("GettingStarted.createAnother")}
                           </Button>
                         </div>
                       ) : (
@@ -247,7 +249,7 @@ export default function GettingStarted() {
 
                           {/* Country */}
                           <div className="flex flex-col space-y-1">
-                            <label className="text-sm font-medium">Country</label>
+                            <label className="text-sm font-medium">{t("GettingStarted.form.country")}</label>
                             <div className="relative">
                               <select
                                 className="w-full border rounded-md p-2 pl-10 bg-white appearance-none cursor-pointer hover:border-purple-300 transition-colors"
@@ -280,7 +282,7 @@ export default function GettingStarted() {
 
                           {/* Type */}
                           <div className="flex flex-col space-y-1">
-                            <label className="text-sm font-medium">Type</label>
+                            <label className="text-sm font-medium">{t("GettingStarted.form.type")}</label>
                             <select
                               className="w-full border rounded-md p-2 bg-white cursor-pointer hover:border-purple-300 transition-colors"
                               value={businessEntity.entityType}
@@ -288,19 +290,19 @@ export default function GettingStarted() {
                                 setBusinessEntity({ ...businessEntity, entityType: e.target.value })
                               }
                             >
-                              <option value="natural">Natural Person</option>
-                              <option value="legal">Legal Person</option>
+                              <option value="natural">{t("GettingStarted.form.natural")}</option>
+                              <option value="legal">{t("GettingStarted.form.legal")}</option>
                             </select>
                           </div>
 
                           <div className="flex flex-col space-y-1">
                             <label className="text-sm font-medium">
-                              Tax ID / RUC <span className="text-red-500">*</span>
+                              {t("GettingStarted.form.taxId")} <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
                               className="w-full border rounded-md p-2"
-                              placeholder="RUC or business identifier"
+                              placeholder={t("GettingStarted.form.placeholderTaxId")}
                               value={businessEntity.taxId}
                               onChange={(e) =>
                                 setBusinessEntity({ ...businessEntity, taxId: e.target.value })
@@ -311,7 +313,7 @@ export default function GettingStarted() {
                           {/* Business Email */}
                           <div className="flex flex-col space-y-1">
                             <label className="text-sm font-medium">
-                              Business Email <span className="text-red-500">*</span>
+                              {t("GettingStarted.form.email")} <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="email"
@@ -326,7 +328,7 @@ export default function GettingStarted() {
 
                           {/* Domain */}
                           <div className="flex flex-col space-y-1">
-                            <label className="text-sm font-medium">Domain (optional)</label>
+                            <label className="text-sm font-medium">{t("GettingStarted.form.domain")}</label>
                             <input
                               type="text"
                               className="w-full border rounded-md p-2"
@@ -343,7 +345,7 @@ export default function GettingStarted() {
                             onClick={handleBusinessEntitySubmit}
                             className="bg-purple-600 hover:bg-purple-700 text-white w-full mt-2"
                           >
-                            Create Business Entity →
+                            {t("GettingStarted.form.submit")}
                           </Button>
 
                         </div>
@@ -389,7 +391,7 @@ export default function GettingStarted() {
                         )}
                       </div>
                       <span className="font-medium">
-                        Set up your first project
+                        {t("GettingStarted.setupProject")}
                       </span>
                     </div>
                     {expandedSection === "project" ? (
@@ -402,25 +404,21 @@ export default function GettingStarted() {
                   {expandedSection === "project" && (
                     <div className="mt-4 pl-9 space-y-3">
                       <p className="text-sm text-gray-600">
-                        Projects are where you define configurations and manage
-                        secrets for a single service or application.
+                        {t("GettingStarted.projectDesc")}
                       </p>
                       <ul className="text-sm text-gray-600 space-y-2 list-disc list-inside">
                         <li>
-                          Projects start with three default environments, each
-                          with a root config: Development, Staging and
-                          Production
+                          {t("GettingStarted.defaultEnv")}
                         </li>
                         <li>
-                          You can branch configs to allow overrides from the
-                          root configs
+                          {t("GettingStarted.branchConfigs")}
                         </li>
                       </ul>
                       <Button
                         onClick={() => toggleTask("project")}
                         className="bg-purple-600 hover:bg-purple-700 text-white"
                       >
-                        Go to Projects →
+                        {t("GettingStarted.goToProjects")}
                       </Button>
                     </div>
                   )}
@@ -455,7 +453,7 @@ export default function GettingStarted() {
                       )}
                     </div>
                     <span className="font-medium">
-                      Set up your first integration
+                      {t("GettingStarted.setupIntegration")}
                     </span>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -489,7 +487,7 @@ export default function GettingStarted() {
                         </svg>
                       )}
                     </div>
-                    <span className="font-medium">Invite teammates</span>
+                    <span className="font-medium">{t("GettingStarted.inviteTeammates")}</span>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
                 </button>
@@ -500,7 +498,7 @@ export default function GettingStarted() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Set up your account</CardTitle>
+                  <CardTitle>{t("GettingStarted.setupAccount")}</CardTitle>
                   <span className="text-sm font-semibold text-purple-600">
                     {accountProgress}%
                   </span>
@@ -536,7 +534,7 @@ export default function GettingStarted() {
                         </svg>
                       )}
                     </div>
-                    <span className="font-medium">Set up your bank account</span>
+                    <span className="font-medium">{t("GettingStarted.setupBankAccount")}</span>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
                 </button>
@@ -549,29 +547,21 @@ export default function GettingStarted() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">
-                  Joining your team's workplace? Some of the items may already
-                  be completed.
+                  {t("GettingStarted.sidebar.joining")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-2">
-                  If you want to test all of these capabilities Doppler has to
-                  offer,{" "}
-                  <a href="#" className="text-purple-600 hover:underline">
-                    create a new personal workplace
-                  </a>{" "}
-                  to go through Getting Started. You can use your personal
-                  workplace as a sandbox or delete it at any time. Your progress
-                  will be saved from workplace to workplace.
+                  {t("GettingStarted.sidebar.joiningDesc")}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Need more help?</CardTitle>
+                <CardTitle className="text-base">{t("GettingStarted.sidebar.help")}</CardTitle>
                 <CardDescription>
-                  Check out these relevant Doppler Docs for more information.
+                  {t("GettingStarted.sidebar.docs")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -606,16 +596,14 @@ export default function GettingStarted() {
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <span className="text-purple-600 text-xs font-semibold uppercase">
-                    💡 Pro Tip
+                    💡 {t("GettingStarted.sidebar.proTip")}
                   </span>
                 </div>
-                <CardTitle className="text-base">Project Naming</CardTitle>
+                <CardTitle className="text-base">{t("GettingStarted.sidebar.projectNaming")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-700">
-                  A project should be considered an encapsulated application
-                  service. Rather than naming a project after your application,
-                  we suggest naming it after the specific service or component.
+                  {t("GettingStarted.sidebar.projectNamingDesc")}
                 </p>
               </CardContent>
             </Card>

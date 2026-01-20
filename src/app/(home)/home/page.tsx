@@ -4,6 +4,7 @@ import { Eye, EyeOff, Database, BarChart3, List } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function Home() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [workspaceName, setWorkspaceName] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const { t } = useI18n();
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
   const hasRedirected = useRef(false);
@@ -43,18 +45,7 @@ export default function Home() {
 
   const currentAccount = accountsState.find((a) => a.id === activeAccount);
 
-  const transactionSummary = {
-    count: storedTransactions.length,
-    net: storedTransactions.reduce((sum, t) => sum + (t.monto || 0), 0),
-    positive: storedTransactions
-      .filter((t) => t.monto > 0)
-      .reduce((sum, t) => sum + t.monto, 0),
-    negative: Math.abs(
-      storedTransactions
-        .filter((t) => t.monto < 0)
-        .reduce((sum, t) => sum + t.monto, 0)
-    ),
-  };
+  // const transactionSummary = { ... } // Not used in render here, kept if needed logic
 
   async function loadDatabases() {
     if (isLoadingDatabases.current) return;
@@ -112,7 +103,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error loading databases:", error);
-      setError("Failed to load databases. Please try again.");
+      setError(t("Home.errors.loadDatabases"));
     } finally {
       setIsLoading(false);
       isLoadingDatabases.current = false;
@@ -163,7 +154,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error loading accounts:", error);
-      setError("Failed to load accounts. Please try again.");
+      setError(t("Home.errors.loadAccounts"));
     } finally {
       setIsLoading(false);
     }
@@ -230,7 +221,7 @@ export default function Home() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-600">Loading your workspace...</p>
+          <p className="text-gray-600">{t("Home.loadingWorkspace")}</p>
         </div>
       </div>
     );
@@ -241,13 +232,13 @@ export default function Home() {
       <div className="px-2 sm:px-4 py-6 sm:py-8 w-full max-w-[98%] mx-auto">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-3xl font-bold">{t("Home.title")}</h1>
           <div className="text-right">
             <p className="text-sm font-medium text-gray-900">
               {workspaceName ?? "Workspace"}
             </p>
             <p className="text-xs text-gray-600">
-              Role: {userRole?.toUpperCase() || "USER"}
+              {t("Home.role", { role: userRole?.toUpperCase() || "USER" })}
             </p>
           </div>
         </div>
@@ -264,7 +255,7 @@ export default function Home() {
               }}
               className="mt-2 text-red-600 hover:text-red-800 text-sm font-medium"
             >
-              Try again
+              {t("Home.tryAgain")}
             </button>
           </div>
         )}
@@ -281,7 +272,7 @@ export default function Home() {
                   }`}
               >
                 <BarChart3 size={18} />
-                <span>Summary</span>
+                <span>{t("Home.tabs.summary")}</span>
               </button>
               <button
                 onClick={() => setActiveView("detailed")}
@@ -291,7 +282,7 @@ export default function Home() {
                   }`}
               >
                 <List size={18} />
-                <span>Detailed</span>
+                <span>{t("Home.tabs.detailed")}</span>
               </button>
             </div>
           </div>
@@ -302,7 +293,7 @@ export default function Home() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Database size={18} className="text-gray-600" />
-              <h2 className="text-sm font-semibold text-gray-700">Repositories</h2>
+              <h2 className="text-sm font-semibold text-gray-700">{t("Home.repositories")}</h2>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2">
               {databases.map((db) => (
@@ -328,7 +319,7 @@ export default function Home() {
         {databases.length === 0 && !isLoading && (
           <div className="mb-6 p-6 rounded-lg border-2 border-gray-200 bg-gray-50">
             <p className="text-gray-600 text-center">
-              No databases provisioned. Please complete the getting started flow.
+              {t("Home.noDatabases")}
             </p>
           </div>
         )}
@@ -339,11 +330,10 @@ export default function Home() {
             <div className="text-center p-8">
               <BarChart3 size={48} className="mx-auto mb-4 text-gray-400" />
               <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                Summary View
+                {t("Home.summaryView.title")}
               </h3>
               <p className="text-sm text-gray-500 max-w-md mb-4">
-                This view aggregates data from all {databases.length} repositories.
-                Add summary analytics, cross-repository insights, and summaries here.
+                {t("Home.summaryView.description", { count: databases.length.toString() })}
               </p>
               <div className="flex flex-wrap justify-center gap-2 mt-4">
                 {databases.map((db) => (
@@ -412,7 +402,7 @@ export default function Home() {
               ) : accountsState.length === 0 && !isLoading ? (
                 <div className="p-6 rounded-lg border-2 border-gray-200 bg-gray-50">
                   <p className="text-gray-600 text-center">
-                    No accounts found in this database. Create one in Settings.
+                    {t("Home.detailedView.noAccounts")}
                   </p>
                 </div>
               ) : null}
@@ -425,7 +415,7 @@ export default function Home() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
                       <h2 className="text-lg font-semibold text-gray-900">
-                        Latest Transactions
+                        {t("Home.detailedView.latestTransactions")}
                       </h2>
                       {currentAccount && (
                         <div className="flex items-center gap-2 px-3 py-1">
@@ -442,11 +432,11 @@ export default function Home() {
                       {isLoading ? (
                         <span className="flex items-center gap-1">
                           <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
-                          Loading...
+                          {t("Home.detailedView.loading")}
                         </span>
                       ) : (
                         <span>
-                          Showing {storedTransactions.length} last transactions
+                          {t("Home.detailedView.showingTransactions", { count: storedTransactions.length.toString() })}
                         </span>
                       )}
                     </p>
@@ -472,7 +462,7 @@ export default function Home() {
                 ) : (
                   <div className="flex flex-col justify-center items-center px-6 py-16 text-gray-600">
                     <EyeOff size={32} className="mb-3 text-gray-300" />
-                    <p className="text-sm">Transactions hidden</p>
+                    <p className="text-sm">{t("Home.detailedView.transactionsHidden")}</p>
                   </div>
                 )}
               </div>

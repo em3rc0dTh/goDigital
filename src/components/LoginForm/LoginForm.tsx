@@ -17,6 +17,7 @@ import { Button } from "../ui/button";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
 import { Mail } from "lucide-react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface Workspace {
   tenantId: string;
@@ -32,6 +33,7 @@ export function LoginForm() {
   const [fullName, setFullName] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useI18n();
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
@@ -60,8 +62,8 @@ export function LoginForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error("Google Login Failed", {
-          description: data.error || "An error occurred",
+        toast.error(t("Auth.Messages.googleLoginFailed"), {
+          description: data.error || t("Auth.Dialogs.Error.generic"),
         });
         setIsLoading(false);
         return;
@@ -72,14 +74,14 @@ export function LoginForm() {
         setWorkspaces(data.workspaces);
         setShowWorkspaceSelector(true);
         Cookies.set("temp_token", data.user.token, { expires: 1 / 24, sameSite: "lax" });
-        toast.success("Login Successful", { description: "Please select your workspace" });
+        toast.success(t("Auth.Messages.loginSuccessful"), { description: t("Auth.Messages.selectWorkspace") });
       } else {
         await loginToWorkspace(data.workspaces[0], data.user.token);
       }
 
     } catch (error) {
       console.error(error);
-      toast.error("Error", { description: "An unexpected error occurred" });
+      toast.error(t("Auth.Dialogs.Error.title"), { description: t("Auth.Dialogs.Error.generic") });
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +94,7 @@ export function LoginForm() {
 
     // 🆕 Check passwords match for signup
     if (tab === "signUp" && password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error(t("Auth.Messages.passwordsDoNotMatch"));
       setIsLoading(false);
       return;
     }
@@ -117,16 +119,16 @@ export function LoginForm() {
       if (!res.ok) {
         // 🆕 Manejo especial para email no verificado
         if (data.code === "EMAIL_NOT_VERIFIED" || data.error?.toLowerCase().includes("verify")) {
-          toast.error("Email Not Verified", {
-            description: "Please check your inbox and verify your email address",
+          toast.error(t("Auth.Messages.emailNotVerified"), {
+            description: t("Auth.Messages.checkInbox"),
           });
           setPendingVerificationEmail(data.email || email);
           setShowEmailVerification(true);
           return;
         }
 
-        toast.error("Authentication Failed", {
-          description: data.error || "An error occurred",
+        toast.error(t("Auth.Messages.authFailed"), {
+          description: data.error || t("Auth.Dialogs.Error.generic"),
         });
         return;
       }
@@ -135,8 +137,8 @@ export function LoginForm() {
       if (isSignup) {
         setPendingVerificationEmail(data.email || email);
         setShowEmailVerification(true);
-        toast.success("Account Created!", {
-          description: "Please check your email to verify your account",
+        toast.success(t("Auth.Messages.accountCreated"), {
+          description: t("Auth.Messages.checkEmailVerify"),
         });
 
         setEmail("");
@@ -157,8 +159,8 @@ export function LoginForm() {
           sameSite: "lax",
         });
 
-        toast.success("Login Successful", {
-          description: "Please select your workspace",
+        toast.success(t("Auth.Messages.loginSuccessful"), {
+          description: t("Auth.Messages.selectWorkspace"),
         });
       } else {
         await loginToWorkspace(data.workspaces[0], data.user.token);
@@ -171,8 +173,8 @@ export function LoginForm() {
 
     } catch (error) {
       console.error(error);
-      toast.error("Error", {
-        description: "An unexpected error occurred",
+      toast.error(t("Auth.Dialogs.Error.title"), {
+        description: t("Auth.Dialogs.Error.generic"),
       });
     } finally {
       setIsLoading(false);
@@ -212,7 +214,7 @@ export function LoginForm() {
       Cookies.remove("temp_token");
 
       toast.success(`Welcome to ${workspace.name}!`, {
-        description: `Role: ${workspace.role}`,
+        description: `${t("Workspace.role", { role: workspace.role })}`,
       });
 
       router.push("/home");
@@ -227,7 +229,7 @@ export function LoginForm() {
   // 🆕 Función para reenviar email de verificación
   const resendVerificationEmail = async () => {
     try {
-      toast.info("Resending verification email...");
+      toast.info(t("Auth.Messages.resendingEmail"));
 
       const res = await fetch(`${API_BASE}/auth/resend-verification`, {
         method: "POST",
@@ -236,16 +238,16 @@ export function LoginForm() {
       });
 
       if (res.ok) {
-        toast.success("Email Sent!", {
-          description: "Please check your inbox",
+        toast.success(t("Auth.Messages.emailSent"), {
+          description: t("Auth.Messages.pleaseCheckInbox"),
         });
       } else {
-        toast.error("Failed to resend email");
+        toast.error(t("Auth.Messages.failedResend"));
       }
     } catch (error) {
       console.error("Resend error:", error);
-      toast.error("Error", {
-        description: "Failed to resend verification email",
+      toast.error(t("Auth.Dialogs.Error.title"), {
+        description: t("Auth.Messages.failedResendDesc"),
       });
     }
   };
@@ -290,10 +292,10 @@ export function LoginForm() {
               </div>
             </div>
             <DialogTitle className="text-gray-900 text-center">
-              Verify Your Email
+              {t("Auth.Dialogs.VerifyEmail.title")}
             </DialogTitle>
             <DialogDescription className="text-gray-600 text-center">
-              We've sent a verification link to
+              {t("Auth.Messages.weSentLink")}
             </DialogDescription>
             <p className="font-semibold text-gray-900 text-center mt-2">
               {pendingVerificationEmail}
@@ -303,12 +305,12 @@ export function LoginForm() {
           <div className="space-y-4 py-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-gray-700">
-                Please check your inbox and click the verification link to activate your account.
+                {t("Auth.Messages.checkInboxDetail")}
               </p>
             </div>
 
             <div className="text-center text-sm text-gray-600">
-              Didn't receive the email?
+              {t("Auth.Messages.didntReceive")}
             </div>
 
             <Button
@@ -316,7 +318,7 @@ export function LoginForm() {
               variant="outline"
               className="w-full"
             >
-              Resend Verification Email
+              {t("Auth.Buttons.resendVerification")}
             </Button>
 
             <Button
@@ -326,7 +328,7 @@ export function LoginForm() {
               }}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
             >
-              Go to Login
+              {t("Auth.Buttons.goToLogin")}
             </Button>
           </div>
         </DialogContent>
@@ -336,9 +338,9 @@ export function LoginForm() {
       <Dialog open={showWorkspaceSelector} onOpenChange={setShowWorkspaceSelector}>
         <DialogContent className="bg-white border border-gray-200 rounded-lg max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">Select Workspace</DialogTitle>
+            <DialogTitle className="text-gray-900">{t("Auth.Dialogs.SelectWorkspace.title")}</DialogTitle>
             <DialogDescription className="text-gray-600">
-              You have access to multiple workspaces. Choose one to continue.
+              {t("Auth.Dialogs.SelectWorkspace.description")}
             </DialogDescription>
           </DialogHeader>
 
@@ -356,7 +358,7 @@ export function LoginForm() {
                   <div>
                     <p className="font-semibold text-gray-900">{workspace.name}</p>
                     <p className="text-sm text-gray-600 mt-1">
-                      Role: <span className="font-medium">{workspace.role}</span>
+                      {t("Workspace.role", { role: workspace.role })}
                     </p>
                   </div>
                   <div className="text-blue-600">→</div>
@@ -373,7 +375,7 @@ export function LoginForm() {
             }}
             className="w-full"
           >
-            Cancel
+            {t("Auth.Buttons.cancel")}
           </Button>
         </DialogContent>
       </Dialog>
@@ -382,7 +384,7 @@ export function LoginForm() {
       <Dialog open={!!errorMessage} onOpenChange={() => setErrorMessage(null)}>
         <DialogContent className="bg-neutral-900 border border-neutral-700 rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-white">Error</DialogTitle>
+            <DialogTitle className="text-white">{t("Auth.Dialogs.Error.title")}</DialogTitle>
             <DialogDescription className="text-neutral-300">
               {errorMessage}
             </DialogDescription>
@@ -391,7 +393,7 @@ export function LoginForm() {
             className="bg-purple-600 hover:bg-purple-700 text-white"
             onClick={() => setErrorMessage(null)}
           >
-            Close
+            {t("Auth.Buttons.close")}
           </Button>
         </DialogContent>
       </Dialog>

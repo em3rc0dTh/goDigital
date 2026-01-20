@@ -6,6 +6,7 @@ import { Input } from "./ui/input";
 import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { Eye, EyeOff } from "lucide-react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export function AuthTabs({
   tab,
@@ -24,6 +25,7 @@ export function AuthTabs({
 }: any) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { t } = useI18n();
 
   return (
     <div className="bg-transparent border border-neutral-700 rounded-xl p-8 w-full max-w-md">
@@ -33,14 +35,14 @@ export function AuthTabs({
             value="login"
             className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-neutral-300"
           >
-            Login
+            {t("Auth.Tabs.login")}
           </TabsTrigger>
 
           <TabsTrigger
             value="signUp"
             className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-neutral-300"
           >
-            Sign up
+            {t("Auth.Tabs.signUp")}
           </TabsTrigger>
         </TabsList>
 
@@ -52,15 +54,16 @@ export function AuthTabs({
               theme="filled_black"
               shape="pill"
               width="300"
+              text="signin_with"
             />
           </div>
 
-          <div className="text-center text-neutral-500 text-sm my-4">or</div>
+          <div className="text-center text-neutral-500 text-sm my-4">{t("Auth.Messages.or")}</div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="flex flex-col gap-2">
               <Label className="text-neutral-300 text-sm">
-                Work Email Address
+                {t("Auth.Labels.workEmail")}
               </Label>
               <Input
                 type="email"
@@ -73,7 +76,7 @@ export function AuthTabs({
             </div>
 
             <div className="flex flex-col gap-2 relative">
-              <Label className="text-neutral-300 text-sm">Password</Label>
+              <Label className="text-neutral-300 text-sm">{t("Auth.Labels.password")}</Label>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
@@ -94,12 +97,12 @@ export function AuthTabs({
             </div>
 
             <p className="text-center text-xs text-neutral-400">
-              I may need to{" "}
+              {t("Auth.Messages.needReset")}
               <span
                 className="text-green-500 cursor-pointer hover:underline"
                 onClick={() => setTab("resetPassword")}
               >
-                reset my password.
+                {t("Auth.Buttons.resetPasswordLink")}
               </span>
             </p>
 
@@ -108,7 +111,7 @@ export function AuthTabs({
               disabled={isLoading}
               className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 text-md font-semibold disabled:opacity-50"
             >
-              {isLoading ? "Logging in..." : "Log In →"}
+              {isLoading ? t("Auth.Buttons.loggingIn") : t("Auth.Buttons.login")}
             </Button>
           </form>
         </TabsContent>
@@ -116,41 +119,41 @@ export function AuthTabs({
         <TabsContent value="signUp">
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="flex flex-col gap-2">
-              <Label className="text-neutral-300 text-sm">Full Name</Label>
+              <Label className="text-neutral-300 text-sm">{t("Auth.Labels.fullName")}</Label>
               <Input
                 type="text"
                 className="bg-neutral-900 border-neutral-700 text-white h-11"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Full Name"
+                placeholder={t("Auth.Placeholders.fullName")}
                 disabled={isLoading}
                 required
               />
             </div>
             <div className="flex flex-col gap-2">
               <Label className="text-neutral-300 text-sm">
-                Work Email Address
+                {t("Auth.Labels.workEmail")}
               </Label>
               <Input
                 type="email"
                 className="bg-neutral-900 border-neutral-700 text-white h-11"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Work Email Address"
+                placeholder={t("Auth.Placeholders.workEmail")}
                 disabled={isLoading}
                 required
               />
             </div>
 
             <div className="flex flex-col gap-2 relative">
-              <Label className="text-neutral-300 text-sm">Password</Label>
+              <Label className="text-neutral-300 text-sm">{t("Auth.Labels.password")}</Label>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
                   className="bg-neutral-900 border-neutral-700 text-white h-11 pr-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
+                  placeholder={t("Auth.Placeholders.password")}
                   disabled={isLoading}
                   required
                 />
@@ -165,14 +168,14 @@ export function AuthTabs({
             </div>
 
             <div className="flex flex-col gap-2 relative">
-              <Label className="text-neutral-300 text-sm">Confirm Password</Label>
+              <Label className="text-neutral-300 text-sm">{t("Auth.Labels.confirmPassword")}</Label>
               <div className="relative">
                 <Input
                   type={showConfirmPassword ? "text" : "password"}
                   className="bg-neutral-900 border-neutral-700 text-white h-11 pr-10"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Can repeat your password?"
+                  placeholder={t("Auth.Placeholders.confirmPassword")}
                   disabled={isLoading}
                   required
                 />
@@ -191,7 +194,7 @@ export function AuthTabs({
               disabled={isLoading}
               className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 text-md font-semibold disabled:opacity-50"
             >
-              {isLoading ? "Signing up..." : "Sign Up →"}
+              {isLoading ? t("Auth.Buttons.signingUp") : t("Auth.Buttons.signUp")}
             </Button>
           </form>
         </TabsContent>

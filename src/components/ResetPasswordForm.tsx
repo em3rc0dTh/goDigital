@@ -4,6 +4,7 @@ import { Input } from "./ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface ResetPasswordFormProps {
   email: string;
@@ -15,11 +16,13 @@ export function ResetPasswordForm({ email, setEmail, onBack }: ResetPasswordForm
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
+  const { t } = useI18n();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email || !email.includes('@')) {
-      setMessage({ type: 'error', text: 'Please enter a valid email address' });
+      setMessage({ type: 'error', text: t("Auth.Messages.validEmail") });
       return;
     }
 
@@ -40,20 +43,20 @@ export function ResetPasswordForm({ email, setEmail, onBack }: ResetPasswordForm
       if (response.ok) {
         setMessage({
           type: 'success',
-          text: 'If an account exists with this email, you will receive a password reset link shortly.'
+          text: t("Auth.Messages.resetLinkSent")
         });
         setEmail('');
       } else {
         setMessage({
           type: 'error',
-          text: data.error || 'Failed to send reset link. Please try again.'
+          text: data.error || t("Auth.Messages.resetLinkFailed")
         });
       }
     } catch (error) {
       console.error('Reset password error:', error);
       setMessage({
         type: 'error',
-        text: 'Network error. Please check your connection and try again.'
+        text: t("Auth.Messages.networkError")
       });
     } finally {
       setIsLoading(false);
@@ -68,13 +71,13 @@ export function ResetPasswordForm({ email, setEmail, onBack }: ResetPasswordForm
             value="reset"
             className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-neutral-300"
           >
-            Reset Password
+            {t("Auth.Tabs.reset")}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="reset" className="space-y-4">
           <div className="text-center text-neutral-400 text-sm mb-2">
-            Enter your email to receive a password reset link
+            {t("Auth.Messages.enterEmailReset")}
           </div>
 
           {message && (
@@ -99,7 +102,7 @@ export function ResetPasswordForm({ email, setEmail, onBack }: ResetPasswordForm
             <div className="flex flex-col gap-2">
               <Input
                 type="email"
-                placeholder="your.email@example.com"
+                placeholder={t("Auth.Placeholders.email")}
                 className="bg-neutral-900 border-neutral-700 text-white h-11 placeholder:text-neutral-500"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -116,20 +119,20 @@ export function ResetPasswordForm({ email, setEmail, onBack }: ResetPasswordForm
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
+                  {t("Auth.Buttons.sending")}
                 </>
               ) : (
-                'Send Reset Link'
+                t("Auth.Buttons.sendResetLink")
               )}
             </Button>
 
             <p className="text-center text-xs text-neutral-400">
-              Remember your password?{" "}
+              {t("Auth.Messages.rememberPassword")}{" "}
               <span
                 className="text-green-500 cursor-pointer hover:underline font-medium"
                 onClick={onBack}
               >
-                Back to login
+                {t("Auth.Buttons.backToLogin")}
               </span>
             </p>
           </form>

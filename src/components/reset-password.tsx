@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle2, AlertCircle, Lock, Eye, EyeOff } from "lucide-react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function ResetPasswordClient() {
     const [newPassword, setNewPassword] = useState("");
@@ -21,13 +22,14 @@ export default function ResetPasswordClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const token = searchParams.get("token");
+    const { t } = useI18n();
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
     useEffect(() => {
         if (!token) {
             setTokenValid(false);
-            setMessage({ type: 'error', text: 'Invalid or missing reset token' });
+            setMessage({ type: 'error', text: t("Auth.NewResetPassword.invalidToken") });
         } else {
             setTokenValid(true);
         }
@@ -35,17 +37,17 @@ export default function ResetPasswordClient() {
 
     const validatePassword = () => {
         if (!newPassword || !confirmPassword) {
-            setMessage({ type: 'error', text: 'Please fill in all fields' });
+            setMessage({ type: 'error', text: t("Auth.NewResetPassword.fillFields") });
             return false;
         }
 
         if (newPassword.length < 8) {
-            setMessage({ type: 'error', text: 'Password must be at least 8 characters long' });
+            setMessage({ type: 'error', text: t("Auth.NewResetPassword.passwordLength") });
             return false;
         }
 
         if (newPassword !== confirmPassword) {
-            setMessage({ type: 'error', text: 'Passwords do not match' });
+            setMessage({ type: 'error', text: t("Auth.NewResetPassword.passwordsDoNotMatch") });
             return false;
         }
 
@@ -74,7 +76,7 @@ export default function ResetPasswordClient() {
             if (response.ok) {
                 setMessage({
                     type: 'success',
-                    text: 'Password reset successfully! Redirecting to login...'
+                    text: t("Auth.NewResetPassword.successRedirect")
                 });
 
                 // Redirect to login after 2 seconds
@@ -84,14 +86,14 @@ export default function ResetPasswordClient() {
             } else {
                 setMessage({
                     type: 'error',
-                    text: data.error || 'Failed to reset password. The link may have expired.'
+                    text: data.error || t("Auth.NewResetPassword.failedExpired")
                 });
             }
         } catch (error) {
             console.error('Reset password error:', error);
             setMessage({
                 type: 'error',
-                text: 'Network error. Please check your connection and try again.'
+                text: t("Auth.NewResetPassword.networkError")
             });
         } finally {
             setIsLoading(false);
@@ -109,24 +111,24 @@ export default function ResetPasswordClient() {
                                     <AlertCircle className="h-12 w-12 text-red-600" />
                                 </div>
                             </div>
-                            <h1 className="text-2xl font-bold text-gray-900">Invalid Reset Link</h1>
+                            <h1 className="text-2xl font-bold text-gray-900">{t("Auth.NewResetPassword.invalidLinkTitle")}</h1>
                             <p className="text-gray-600">
-                                This password reset link is invalid or has expired.
+                                {message?.text || t("Auth.NewResetPassword.invalidLinkDesc")}
                             </p>
                             <div className="space-y-3 pt-4">
                                 <Button
                                     onClick={() => router.push('/login')}
                                     className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
                                 >
-                                    Back to Login
+                                    {t("Auth.NewResetPassword.backToLogin")}
                                 </Button>
                                 <p className="text-sm text-gray-600">
-                                    Need a new link?{" "}
+                                    {t("Auth.NewResetPassword.needNewLink")}{" "}
                                     <span
                                         onClick={() => router.push('/login')}
                                         className="text-blue-600 cursor-pointer hover:underline font-medium"
                                     >
-                                        Request another reset
+                                        {t("Auth.NewResetPassword.requestAnother")}
                                     </span>
                                 </p>
                             </div>
@@ -147,8 +149,8 @@ export default function ResetPasswordClient() {
                                 <Lock className="h-12 w-12 text-blue-600" />
                             </div>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900">Reset Your Password</h1>
-                        <p className="text-gray-600 mt-2">Enter your new password below</p>
+                        <h1 className="text-2xl font-bold text-gray-900">{t("Auth.NewResetPassword.title")}</h1>
+                        <p className="text-gray-600 mt-2">{t("Auth.NewResetPassword.enterNew")}</p>
                     </div>
 
                     {message && (
@@ -172,13 +174,13 @@ export default function ResetPasswordClient() {
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-2">
                             <Label htmlFor="newPassword" className="text-gray-700 font-medium">
-                                New Password
+                                {t("Auth.NewResetPassword.labelNew")}
                             </Label>
                             <div className="relative">
                                 <Input
                                     id="newPassword"
                                     type={showPassword ? "text" : "password"}
-                                    placeholder="Enter new password"
+                                    placeholder={t("Auth.NewResetPassword.placeholderNew")}
                                     className="bg-white border-gray-300 text-gray-900 h-11 pr-10"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
@@ -194,18 +196,18 @@ export default function ResetPasswordClient() {
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
                             </div>
-                            <p className="text-xs text-gray-500">Must be at least 8 characters</p>
+                            <p className="text-xs text-gray-500">{t("Auth.NewResetPassword.hintLength")}</p>
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
-                                Confirm Password
+                                {t("Auth.NewResetPassword.labelConfirm")}
                             </Label>
                             <div className="relative">
                                 <Input
                                     id="confirmPassword"
                                     type={showConfirmPassword ? "text" : "password"}
-                                    placeholder="Confirm new password"
+                                    placeholder={t("Auth.NewResetPassword.placeholderConfirm")}
                                     className="bg-white border-gray-300 text-gray-900 h-11 pr-10"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -230,20 +232,20 @@ export default function ResetPasswordClient() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Resetting Password...
+                                    {t("Auth.NewResetPassword.btnResetting")}
                                 </>
                             ) : (
-                                'Reset Password'
+                                t("Auth.NewResetPassword.btnReset")
                             )}
                         </Button>
 
                         <p className="text-center text-sm text-gray-600 mt-4">
-                            Remember your password?{" "}
+                            {t("Auth.NewResetPassword.remember")}{" "}
                             <span
                                 onClick={() => router.push('/login')}
                                 className="text-blue-600 cursor-pointer hover:underline font-medium"
                             >
-                                Back to Login
+                                {t("Auth.NewResetPassword.backToLogin")}
                             </span>
                         </p>
                     </form>
@@ -251,12 +253,12 @@ export default function ResetPasswordClient() {
 
                 <div className="text-center mt-6">
                     <p className="text-sm text-gray-600">
-                        Need help?{" "}
+                        {t("Auth.NewResetPassword.needHelp")}{" "}
                         <a
                             href="mailto:support@godigital.com"
                             className="text-blue-600 hover:underline font-medium"
                         >
-                            Contact Support
+                            {t("Auth.NewResetPassword.contactSupport")}
                         </a>
                     </p>
                 </div>

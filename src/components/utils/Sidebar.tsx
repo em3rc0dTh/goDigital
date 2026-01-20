@@ -35,33 +35,35 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname(); // ← Obtener la ruta actual
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
+  const { t } = useI18n();
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
   const menuItems = [
     {
       icon: Sparkles,
-      label: "Home",
+      label: t("Sidebar.menu.Home"),
       link: "/home",
     },
-    { icon: Rocket, label: "Launch Pad", link: "/getting-started" },
-    { icon: TowerControl, label: "Mission Control", link: "/management" },
-    { icon: Folder, label: "Projects", link: "/projects" },
-    { icon: Activity, label: "Activity", link: "/activity" },
-    { icon: Users, label: "Team", link: "/team" },
-    { icon: Coins, label: "Tokens", link: "/tokens" },
-    { icon: CreditCard, label: "Billing", link: "/billing" },
-    { icon: Landmark, label: "Bank Extract", link: "/extract" },
+    { icon: Rocket, label: t("Sidebar.menu.LaunchPad"), link: "/getting-started" },
+    { icon: TowerControl, label: t("Sidebar.menu.MissionControl"), link: "/management" },
+    { icon: Folder, label: t("Sidebar.menu.Projects"), link: "/projects" },
+    { icon: Activity, label: t("Sidebar.menu.Activity"), link: "/activity" },
+    { icon: Users, label: t("Sidebar.menu.Team"), link: "/team" },
+    { icon: Coins, label: t("Sidebar.menu.Tokens"), link: "/tokens" },
+    { icon: CreditCard, label: t("Sidebar.menu.Billing"), link: "/billing" },
+    { icon: Landmark, label: t("Sidebar.menu.BankExtract"), link: "/extract" },
   ];
 
   const bottomItems = [
-    { icon: Settings, label: "Settings" },
-    { icon: LogOut, label: "Log Out" },
+    { icon: Settings, label: t("Sidebar.bottom.Settings"), link: "/settings" },
+    { icon: LogOut, label: t("Sidebar.bottom.LogOut") },
   ];
 
   return (
@@ -178,21 +180,28 @@ function SidebarContent({
 
       <ScrollArea className="px-2 py-3">
         {bottomItems.map((item: any, index: number) => {
-          const handleClick =
-            item.label === "Log Out"
-              ? async () => {
-                await fetch(`${API_BASE}/logout`, {
-                  method: "POST",
-                  credentials: "include",
-                });
-                Cookies.remove("session_token");
-                Cookies.remove("tenantId");
-                Cookies.remove("workspaceName");
-                Cookies.remove("userRole");
-                Cookies.remove("temp_token");
-                window.location.href = "/login";
-              }
-              : () => { };
+          const handleClick = async () => {
+            if (item.label === "Log Out") {
+              await fetch(`${API_BASE}/logout`, {
+                method: "POST",
+                credentials: "include",
+              });
+
+              Cookies.remove("session_token");
+              Cookies.remove("tenantId");
+              Cookies.remove("workspaceName");
+              Cookies.remove("userRole");
+              Cookies.remove("temp_token");
+
+              window.location.href = "/login";
+              return;
+            }
+
+            if (item.link) {
+              router.push(item.link);
+              if (closeMobileMenu) closeMobileMenu();
+            }
+          };
 
           return (
             <Button
@@ -207,6 +216,7 @@ function SidebarContent({
             </Button>
           );
         })}
+
       </ScrollArea>
     </>
   );

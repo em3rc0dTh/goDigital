@@ -13,15 +13,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { AccountsTable, updateAccount } from "./AccountsTable";
 import { Trash2, Download, Upload, Eye, EyeOff } from "lucide-react";
-import { GenericTable } from "../table/common-table";
 import { BusinessTable, PersonalTable } from "../table/transactionTable";
 import Cookies from "js-cookie";
 import crypto from "crypto";
+import { useI18n } from "@/i18n/I18nProvider";
+
 // O si recibes activeDatabase como prop:
 interface TransactionsProps {
   activeDatabase: string;
 }
 export default function Transactions({ activeDatabase }: TransactionsProps) {
+  const { t } = useI18n(); // Hook usage
   const [accountsState, setAccountsState] = useState<any[]>([]);
   const [activeAccount, setActiveAccount] = useState<string | null>(null);
   const [storedTransactions, setStoredTransactions] = useState<any[]>([]);
@@ -650,16 +652,16 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
     <div className="w-full mx-auto space-y-6 pb-10">
       <div className="space-y-1 sm:space-y-2">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
-          Web Capture
+          {t("Extract.Transactions.title")}
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Manage and parse bank transactions
+          {t("Extract.Transactions.subtitle")}
         </p>
       </div>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>Select Account</CardTitle>
+          <CardTitle>{t("Extract.Transactions.selectAccount")}</CardTitle>
         </CardHeader>
         <CardContent>
           <AccountsTable
@@ -674,7 +676,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="pt-4 text-sm sm:text-base">
             <p className="text-blue-900">
-              👆 Select a bank account to get started
+              {t("Extract.Transactions.selectAccountDesc")}
             </p>
           </CardContent>
         </Card>
@@ -685,20 +687,20 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
           <Card>
             <CardHeader>
               <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <span>Parse Transactions</span>
+                <span>{t("Extract.Transactions.parse.title")}</span>
                 <span className="text-xs sm:text-sm font-normal text-muted-foreground">
-                  {isLoading && "Loading..."}
+                  {isLoading && t("Extract.Transactions.parse.loading")}
                 </span>
               </CardTitle>
               <CardDescription className="text-sm">
-                Paste your bank statement text below
+                {t("Extract.Transactions.parse.desc")}
               </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4">
               <Textarea
                 ref={inputTextRef}
-                placeholder="Paste transaction text here..."
+                placeholder={t("Extract.Transactions.parse.placeholder")}
                 className="min-h-[160px] sm:min-h-[200px] font-mono text-xs sm:text-sm"
               />
 
@@ -721,7 +723,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
                   disabled={isLoading}
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Parse & Save
+                  {t("Extract.Transactions.parse.button")}
                 </Button>
 
                 <Button
@@ -731,7 +733,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
                       inputTextRef.current.value = "";
                   }}
                 >
-                  Clear
+                  {t("Extract.Transactions.parse.clear")}
                 </Button>
               </div>
 
@@ -754,7 +756,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
             <Card className="border-yellow-300 bg-yellow-50">
               <CardHeader>
                 <CardTitle className="text-yellow-900 text-sm sm:text-base">
-                  ⚠️ Duplicates ({sessionDuplicates.length})
+                  {t("Extract.Transactions.duplicates.title", { count: sessionDuplicates.length })}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -786,7 +788,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
                   }
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Export Duplicates
+                  {t("Extract.Transactions.duplicates.export")}
                 </Button>
               </CardContent>
             </Card>
@@ -796,7 +798,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
             <Card>
               <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <CardTitle>Stored Transactions</CardTitle>
+                  <CardTitle>{t("Extract.Transactions.stored.title")}</CardTitle>
                   <CardDescription className="mt-1 text-sm">
                     Total: {transactionSummary.count} transactions | Net:{" "}
                     {transactionSummary.net.toFixed(2)}{" "}

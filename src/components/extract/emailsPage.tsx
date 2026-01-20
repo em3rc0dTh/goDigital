@@ -9,6 +9,7 @@ import Cookies from "js-cookie";
 import { format } from 'date-fns';
 import { createPortal } from "react-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useI18n } from "@/i18n/I18nProvider";
 // ============================================================================
 // PARSING FUNCTIONS
 // ============================================================================
@@ -270,6 +271,7 @@ interface EmailsPageProps {
 }
 
 export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
+  const { t } = useI18n(); // Hook usage
   const [emails, setEmails] = useState<any[]>([]);
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -307,7 +309,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
 
       if (!tenantId || !detailId) {
         console.error("Missing tenantId or tenantDetailId in cookies");
-        setStatus("❌ Missing tenant information");
+        setStatus(t("Extract.Emails.status.missingTenant"));
         return;
       }
 
@@ -341,7 +343,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
         });
       } else {
         console.error("No dbName found for active tenant detail");
-        setStatus("❌ Could not load database name");
+        setStatus(t("Extract.Emails.status.noDb"));
       }
     } catch (error) {
       console.error("Error loading tenant info:", error);
@@ -566,9 +568,9 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div>
-          <h1 className="text-2xl md:text-4xl font-bold">Email Capture</h1>
+          <h1 className="text-2xl md:text-4xl font-bold">{t("Extract.Emails.title")}</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Bank transaction emails from IMAP and Gmail API
+            {t("Extract.Emails.subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
@@ -576,21 +578,21 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
-            {isLoading ? "Processing..." : "Ingest IMAP"}
+            {isLoading ? t("Extract.Emails.processing") : t("Extract.Emails.ingestImap")}
           </Button>
 
           <Button onClick={runIngestGmail} disabled={isLoading || !tenantDetailId} className="flex-1 md:flex-none">
             <Mail
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
-            {isLoading ? "Processing..." : "Ingest Gmail"}
+            {isLoading ? t("Extract.Emails.processing") : t("Extract.Emails.ingestGmail")}
           </Button>
 
           <Button onClick={() => loadEmails()} disabled={isLoading} variant="outline" className="flex-1 md:flex-none">
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
-            Refresh
+            {t("Extract.Emails.refresh")}
           </Button>
         </div>
       </div>
@@ -599,10 +601,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
         <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           {/* IZQUIERDA */}
           <CardTitle className="flex items-center gap-2">
-            Emails
-            <span className="text-muted-foreground text-sm">
-              ({emails.length})
-            </span>
+            {t("Extract.Emails.count", { count: emails.length })}
           </CardTitle>
 
           {/* DERECHA */}
@@ -626,7 +625,7 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
 
             {/* SELECTOR FILAS */}
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-muted-foreground">Rows:</span>
+              <span className="text-muted-foreground">{t("Extract.Emails.rows")}</span>
               {[15, 30, 50].map(size => (
                 <Button
                   key={size}
@@ -663,10 +662,10 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
 
           {emails.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>No emails found. Use the ingest buttons above to load emails.</p>
+              <p>{t("Extract.Emails.noEmails")}</p>
               {(!tenantDbName || !tenantDetailId) && (
                 <p className="text-xs text-red-500 mt-2">
-                  ⚠️ Tenant information not loaded. Please refresh the page.
+                  {t("Extract.Emails.tenantError")}
                 </p>
               )}
             </div>
@@ -677,15 +676,15 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
                   <tr>
                     <th className="px-4 py-2 text-left">#</th>
                     {showSourceColumn && (
-                      <th className="px-4 py-2 text-left">Source</th>
+                      <th className="px-4 py-2 text-left">{t("Extract.Emails.table.source")}</th>
                     )}
-                    <th className="px-4 py-2 text-left">From</th>
-                    <th className="px-4 py-2 text-left">Operation</th>
-                    <th className="px-4 py-2 text-left">Beneficiary</th>
+                    <th className="px-4 py-2 text-left">{t("Extract.Emails.table.from")}</th>
+                    <th className="px-4 py-2 text-left">{t("Extract.Emails.table.operation")}</th>
+                    <th className="px-4 py-2 text-left">{t("Extract.Emails.table.beneficiary")}</th>
                     {/* <th className="px-4 py-2 text-left">Subject</th> */}
-                    <th className="px-4 py-2 text-left">Date</th>
-                    <th className="px-4 py-2 text-center">Currency</th>
-                    <th className="px-4 py-2 text-right">Amount</th>
+                    <th className="px-4 py-2 text-left">{t("Extract.Emails.table.date")}</th>
+                    <th className="px-4 py-2 text-center">{t("Extract.Emails.table.currency")}</th>
+                    <th className="px-4 py-2 text-right">{t("Extract.Emails.table.amount")}</th>
                     {/* <th className="px-4 py-2 text-center">Actions</th> */}
                   </tr>
                 </thead>

@@ -10,23 +10,34 @@ const messages = { es, en };
 
 const I18nContext = createContext<{
     locale: Locale;
-    t: (key: string) => string;
+    t: (key: string, vars?: Record<string, string | number>) => string;
     setLocale: (l: Locale) => void;
 } | null>(null);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
     const [locale, setLocale] = useState<Locale>("es");
 
-    const t = (path: string, vars?: Record<string, string>) => {
-        const value = path
+    const t = (path: string, vars?: Record<string, string | number>) => {
+        let value = path
             .split(".")
             .reduce((obj: any, key) => obj?.[key], messages[locale]);
+
+        if (value === undefined) {
+            console.warn(`Missing translation for key: ${path} in locale: ${locale}`);
+            // console.log("Current messages state:", messages[locale]);
+        }
+
+
+        if (value === undefined && locale !== 'en') {
+            console.warn(`Missing translation for key: ${path} in locale: ${locale}. Falling back to en.`);
+            value = path.split(".").reduce((obj: any, key) => obj?.[key], messages['en']);
+        }
 
         let text = typeof value === "string" ? value : path;
 
         if (vars) {
             Object.entries(vars).forEach(([k, v]) => {
-                text = text.replace(`{${k}}`, v);
+                text = text.replace(`{${k}}`, String(v));
             });
         }
 

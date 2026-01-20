@@ -8,9 +8,11 @@ import SettingsView from "../../../components/extract/settings";
 import EmailsPage from "../../../components/extract/emailsPage";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function Extract() {
   const router = useRouter();
+  const { t } = useI18n(); // Hook usage
   const [databases, setDatabases] = useState<any[]>([]);
   const [activeDatabase, setActiveDatabase] = useState<string | null>(null);
   const [showView, setShowView] = useState<"consolidated" | "extract">("consolidated");
@@ -84,9 +86,9 @@ export default function Extract() {
   };
 
   const views = [
-    { id: "transactions", label: "Web Capture", icon: FileText },
-    { id: "emails", label: "Email Capture", icon: Mail },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "transactions", label: t("Extract.tabs.webCapture"), icon: FileText },
+    { id: "emails", label: t("Extract.tabs.emailCapture"), icon: Mail },
+    { id: "settings", label: t("Extract.tabs.settings"), icon: Settings },
   ] as const;
 
   if (isLoading && databases.length === 0) {
@@ -111,14 +113,14 @@ export default function Extract() {
                 className="gap-2 px-4 sm:px-6 py-3 sm:py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-gray-600 data-[state=active]:text-blue-600 font-medium"
               >
                 <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="inline">Analytics</span>
+                <span className="inline">{t("Extract.analytics")}</span>
               </TabsTrigger>
               <TabsTrigger
                 value="extract"
                 className="gap-2 px-4 sm:px-6 py-3 sm:py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-gray-600 data-[state=active]:text-blue-600 font-medium"
               >
                 <List className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="inline">Bank Extract</span>
+                <span className="inline">{t("Extract.title")}</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -134,8 +136,8 @@ export default function Extract() {
                   <TrendingUp className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Analytics</h2>
-                  <p className="text-sm text-gray-600">Consolidated view across all repositories</p>
+                  <h2 className="text-lg font-semibold text-gray-900">{t("Extract.analytics")}</h2>
+                  <p className="text-sm text-gray-600">{t("Extract.consolidatedView")}</p>
                 </div>
               </div>
             </div>
@@ -147,11 +149,12 @@ export default function Extract() {
                   <BarChart3 className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
-                  Summary View
+                  {t("Extract.summaryView")}
                 </h3>
                 <p className="text-sm sm:text-base text-gray-600 mb-8 leading-relaxed">
-                  This view aggregates data from all {databases.length} repositories.
-                  Add summary analytics, cross-repository insights, and summaries here.
+                  {t("Extract.summaryDesc", { count: databases.length })}
+                  {" "}
+                  {t("Extract.summaryPlaceholder")}
                 </p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {databases.map((db) => (
@@ -179,8 +182,8 @@ export default function Extract() {
                     <Building2 className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
-                    <h1 className="text-lg font-semibold text-gray-900">Bank Extract</h1>
-                    <p className="text-sm text-gray-600">Manage your bank accounts and parsed transactions</p>
+                    <h1 className="text-lg font-semibold text-gray-900">{t("Extract.title")}</h1>
+                    <p className="text-sm text-gray-600">{t("Extract.subtitle")}</p>
                   </div>
                 </div>
               </div>
@@ -197,7 +200,7 @@ export default function Extract() {
                   }}
                   className="mt-2 text-red-600 hover:text-red-800 text-sm font-medium underline"
                 >
-                  Try again
+                  {t("Extract.tryAgain")}
                 </button>
               </div>
             )}
@@ -208,10 +211,10 @@ export default function Extract() {
                 <div className="flex items-center gap-2 mb-4">
                   <Database size={18} className="text-gray-700" />
                   <h2 className="text-sm font-semibold text-gray-900">
-                    Repositories
+                    {t("Extract.repositories")}
                   </h2>
                   <span className="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                    {databases.length} total
+                    {t("Extract.total", { count: databases.length })}
                   </span>
                 </div>
 
@@ -240,7 +243,7 @@ export default function Extract() {
             {databases.length === 0 && !isLoading && (
               <div className="mb-6 p-8 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50">
                 <p className="text-gray-600 text-center text-sm">
-                  No databases provisioned. Please complete the launch pad flow.
+                  {t("Extract.noDatabases")}
                 </p>
               </div>
             )}

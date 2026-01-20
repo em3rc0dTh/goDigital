@@ -7,6 +7,7 @@ import { Plus, Trash2 } from "lucide-react";
 import React, { RefObject, useState, useEffect } from "react";
 import { AccountsTable } from "../extract/AccountsTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface AccountsTabProps {
   accounts: any[];
@@ -84,6 +85,7 @@ export function AccountsTab({
     { value: "EUR", label: "EUR" },
   ];
   const [formKey, setFormKey] = useState(0);
+  const { t } = useI18n(); // Hook usage
 
   useEffect(() => {
     console.log('[AccountsSettings] Update values changed:', { updateBankName, updateCurrency, updateAccountType });
@@ -93,7 +95,7 @@ export function AccountsTab({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Your Bank Accounts</CardTitle>
+          <CardTitle>{t("Extract.Settings.Accounts.list")}</CardTitle>
         </CardHeader>
         <CardContent>
           <AccountsTable
@@ -108,7 +110,7 @@ export function AccountsTab({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5" />
-            Add New Account
+            {t("Extract.Settings.Accounts.add")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -122,10 +124,10 @@ export function AccountsTab({
             className="space-y-4"
           >
             <div className="grid grid-cols-2 gap-4">
-              <Input ref={bankAlias} placeholder="Alias (e.g., Main)" />
+              <Input ref={bankAlias} placeholder={t("Extract.Settings.Accounts.alias")} />
               <Select value={bankName ?? undefined} onValueChange={setBankName}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Bank" />
+                  <SelectValue placeholder={t("Extract.Settings.Accounts.bank")} />
                 </SelectTrigger>
                 <SelectContent>
                   {BANKS.map((bank) => (
@@ -136,27 +138,27 @@ export function AccountsTab({
                 </SelectContent>
               </Select>
 
-              <Input ref={bankHolder} placeholder="Account Holder" required />
+              <Input ref={bankHolder} placeholder={t("Extract.Settings.Accounts.holder")} required />
               <Select
                 value={bankAccountType ?? undefined}
                 onValueChange={setBankAccountType}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Bank Account Type" />
+                  <SelectValue placeholder={t("Extract.Settings.Accounts.type")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Personal">Personal</SelectItem>
-                  <SelectItem value="Business">Business</SelectItem>
+                  <SelectItem value="Personal">{t("GettingStarted.form.natural")}</SelectItem>
+                  <SelectItem value="Business">{t("GettingStarted.form.legal")}</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Input ref={bankNumber} placeholder="Account Number" required />
+              <Input ref={bankNumber} placeholder={t("Extract.Settings.Accounts.number")} required />
               <Select
                 value={bankCurrency ?? undefined}
                 onValueChange={setBankCurrency}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Currency" />
+                  <SelectValue placeholder={t("Extract.Settings.Accounts.currency")} />
                 </SelectTrigger>
                 <SelectContent>
                   {CURRENCIES.map((c) => (
@@ -169,10 +171,10 @@ export function AccountsTab({
 
               <Input
                 ref={bankType}
-                placeholder="Account Type (Savings, Checking...)"
+                placeholder={t("Extract.Settings.Accounts.accountTypePlaceholder")}
               />
             </div>
-            <Button type="submit">Add Account</Button>
+            <Button type="submit">{t("Extract.Settings.Accounts.submit")}</Button>
           </form>
         </CardContent>
       </Card>
@@ -180,14 +182,14 @@ export function AccountsTab({
       {activeAccount && (
         <Card>
           <CardHeader>
-            <CardTitle>Update Selected Account</CardTitle>
+            <CardTitle>{t("Extract.Settings.Accounts.update")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Input
                 value={updateAlias}
                 onChange={(e) => setUpdateAlias(e.target.value)}
-                placeholder="Alias"
+                placeholder={t("Extract.Settings.Accounts.alias")}
               />
               <Select
                 key={`bank-${activeAccount}`}
@@ -197,7 +199,7 @@ export function AccountsTab({
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Bank Name" />
+                  <SelectValue placeholder={t("Extract.Settings.Accounts.bank")} />
                 </SelectTrigger>
                 <SelectContent>
                   {BANKS.map((bank) => (
@@ -210,11 +212,11 @@ export function AccountsTab({
               <Input
                 value={updateHolder}
                 onChange={(e) => setUpdateHolder(e.target.value)}
-                placeholder="Account Holder"
+                placeholder={t("Extract.Settings.Accounts.holder")}
               />
               <Input
                 value={updateNumber}
-                placeholder="Account Number"
+                placeholder={t("Extract.Settings.Accounts.number")}
                 readOnly
                 className="bg-gray-100"
               />
@@ -226,7 +228,7 @@ export function AccountsTab({
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Currency" />
+                  <SelectValue placeholder={t("Extract.Settings.Accounts.currency")} />
                 </SelectTrigger>
                 <SelectContent>
                   {CURRENCIES.map((c) => (
@@ -239,10 +241,10 @@ export function AccountsTab({
               <Input
                 value={updateAccountType || ""}
                 onChange={(e) => setUpdateAccountType(e.target.value)}
-                placeholder="Account Type"
+                placeholder={t("Extract.Settings.Accounts.type")}
               />
             </div>
-            <Button onClick={saveAccountUpdates}>Save Changes</Button>
+            <Button onClick={saveAccountUpdates}>{t("Extract.Settings.Accounts.save")}</Button>
           </CardContent>
         </Card>
       )}
@@ -250,11 +252,11 @@ export function AccountsTab({
       {activeAccount && (
         <Card className="border-red-200 bg-red-50">
           <CardHeader>
-            <CardTitle className="text-red-600">Danger Zone</CardTitle>
+            <CardTitle className="text-red-600">{t("Extract.Settings.Accounts.danger")}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-red-800 mb-4">
-              Deleting this account will also remove all associated transactions
+              {t("Extract.Settings.Accounts.dangerDesc")}
             </p>
             <Button
               variant="destructive"
@@ -262,7 +264,7 @@ export function AccountsTab({
               className="w-full"
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete Account
+              {t("Extract.Settings.Accounts.delete")}
             </Button>
           </CardContent>
         </Card>

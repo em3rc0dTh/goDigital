@@ -15,10 +15,12 @@ import {
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function DopplerWelcome() {
   const [step, setStep] = useState(1);
   const router = useRouter();
+  const { t } = useI18n(); // Hook usage
   const next = () => setStep((prev) => Math.min(prev + 1, 3));
   const back = () => setStep((prev) => Math.max(prev - 1, 1));
 
@@ -53,7 +55,7 @@ export default function DopplerWelcome() {
           href="#"
           className="text-sm text-zinc-400 hover:text-white transition-colors"
         >
-          Sign out
+          {t("Setup.signOut")}
         </Link>
       </nav>
 
@@ -62,12 +64,11 @@ export default function DopplerWelcome() {
         {/* Left Text Section */}
         <div className="flex-1 flex flex-col items-start space-y-6 text-center lg:text-left">
           <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight text-white">
-            Welcome to <br className="hidden md:block" />
+            {t("Setup.welcome")} <br className="hidden md:block" />
             {process.env.NEXT_PUBLIC_PROJECT}!
           </h1>
           <p className="text-base md:text-lg text-zinc-400 leading-relaxed max-w-md mx-auto lg:mx-0">
-            Tell us more about yourself so we can improve your{" "}
-            {process.env.NEXT_PUBLIC_PROJECT} experience.
+            {t("Setup.tellUsMore", { project: process.env.NEXT_PUBLIC_PROJECT || "Doppler" })}
           </p>
         </div>
 
@@ -80,20 +81,20 @@ export default function DopplerWelcome() {
                 <Card className="border-zinc-800 bg-[#121212] shadow-2xl shadow-black/50">
                   <CardHeader className="space-y-1 pb-6">
                     <CardTitle className="text-xl text-white">
-                      Name your workplace
+                      {t("Setup.step1.title")}
                     </CardTitle>
                     <CardDescription className="text-zinc-400 text-sm leading-relaxed">
-                      Give your workplace a name that represents your team.
+                      {t("Setup.step1.desc")}
                     </CardDescription>
                   </CardHeader>
 
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label className="text-xs font-medium text-zinc-300 uppercase tracking-wider">
-                        Workplace Name
+                        {t("Setup.step1.label")}
                       </Label>
                       <Input
-                        placeholder="Radar Industries"
+                        placeholder={t("Setup.step1.placeholder")}
                         className="bg-[#1a1a1a] border-zinc-700 text-white placeholder:text-zinc-600 h-11"
                       />
                     </div>
@@ -102,7 +103,7 @@ export default function DopplerWelcome() {
                       onClick={next}
                       className="w-full bg-[#6366f1] hover:bg-[#5558e6] h-11"
                     >
-                      Next
+                      {t("Setup.step1.next")}
                     </Button>
                   </CardContent>
 
@@ -111,7 +112,7 @@ export default function DopplerWelcome() {
                       href="#"
                       className="text-sm font-medium text-emerald-400 hover:text-emerald-300"
                     >
-                      I'm joining an existing workplace
+                      {t("Setup.step1.joinExisting")}
                     </Link>
                     {/* Dots Stepper */}
                     <div className="mt-3 w-full flex justify-center gap-2">
@@ -132,26 +133,26 @@ export default function DopplerWelcome() {
                 <Card className="border-zinc-800 bg-[#121212] shadow-2xl shadow-black/50">
                   <CardHeader className="space-y-1 pb-6">
                     <CardTitle className="text-xl text-white">
-                      What will you use it for?
+                      {t("Setup.step2.title")}
                     </CardTitle>
                     <CardDescription className="text-zinc-400 text-sm leading-relaxed">
-                      Personalize your experience.
+                      {t("Setup.step2.desc")}
                     </CardDescription>
                   </CardHeader>
 
                   <CardContent className="space-y-4">
                     <div className="flex flex-col space-y-2">
-                      <Button>Personal Projects</Button>
-                      <Button>Work Projects</Button>
-                      <Button>Not sure yet</Button>
+                      <Button>{t("Setup.step2.personal")}</Button>
+                      <Button>{t("Setup.step2.work")}</Button>
+                      <Button>{t("Setup.step2.notsure")}</Button>
                     </div>
 
                     <Button className="w-full bg-[#6366f1] h-11" onClick={next}>
-                      Next
+                      {t("Setup.step1.next")}
                     </Button>
 
                     <Button variant="ghost" className="w-full" onClick={back}>
-                      Back
+                      {t("Setup.step2.back")}
                     </Button>
                   </CardContent>
                   <CardFooter>
@@ -173,10 +174,10 @@ export default function DopplerWelcome() {
                 <Card className="border-zinc-800 bg-[#121212] shadow-2xl shadow-black/50">
                   <CardHeader className="space-y-1 pb-6">
                     <CardTitle className="text-xl text-white">
-                      Which service do you use?
+                      {t("Setup.step3.title")}
                     </CardTitle>
                     <CardDescription className="text-zinc-400 text-sm leading-relaxed">
-                      Select anything you frequently use.
+                      {t("Setup.step3.desc")}
                     </CardDescription>
                   </CardHeader>
 
@@ -196,11 +197,11 @@ export default function DopplerWelcome() {
                         router.push("../");
                       }}
                     >
-                      Finish
+                      {t("Setup.step3.finish")}
                     </Button>
 
                     <Button variant="ghost" className="w-full" onClick={back}>
-                      Back
+                      {t("Setup.step2.back")}
                     </Button>
                   </CardContent>
                   <CardFooter>

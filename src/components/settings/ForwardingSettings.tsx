@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Mail, Save, Power, RefreshCw, AlertCircle } from "lucide-react";
 import Cookies from "js-cookie";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface ForwardingRule {
     email: string;
@@ -27,6 +28,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
     const [configExists, setConfigExists] = useState(false);
     const [isActive, setIsActive] = useState(false);
     const [configId, setConfigId] = useState<string>("");
+    const { t } = useI18n(); // Hook usage
     const API_BASE =
         process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
     useEffect(() => {
@@ -320,22 +322,22 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                             <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor" role="img">
                                 <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" />
                             </svg>
-                            Gmail Integration
+                            {t("Extract.Settings.Forwarding.gmailIntegration")}
                         </h3>
                         {loadingGmail ? (
-                            <p className="text-sm text-gray-500 mt-1">Checking status...</p>
+                            <p className="text-sm text-gray-500 mt-1">{t("Extract.Settings.Forwarding.checking")}</p>
                         ) : gmailStatus?.connected ? (
                             <div className="mt-1">
                                 <p className="font-medium text-green-700 text-sm flex items-center gap-2">
-                                    ✅ Connected as {gmailStatus.email}
+                                    {t("Extract.Settings.Forwarding.connectedAs", { email: gmailStatus.email })}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                    Expires: {new Date(gmailStatus.expiration).toLocaleDateString()}
+                                    {t("Extract.Settings.Forwarding.expires", { date: new Date(gmailStatus.expiration).toLocaleDateString() })}
                                 </p>
                             </div>
                         ) : (
                             <p className="text-sm text-blue-700 mt-1">
-                                Connect your business Gmail account to enable automatic email ingestion.
+                                {t("Extract.Settings.Forwarding.connectDesc")}
                             </p>
                         )}
                     </div>
@@ -350,14 +352,14 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                                 onClick={handleDisconnectGmail}
                                 className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium border border-transparent hover:border-red-200 transition"
                             >
-                                Disconnect
+                                {t("Extract.Settings.Forwarding.disconnect")}
                             </button>
                         ) : (
                             <button
                                 onClick={handleConnectGmail}
                                 className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm font-medium transition shadow-sm"
                             >
-                                Connect Gmail
+                                {t("Extract.Settings.Forwarding.connect")}
                             </button>
                         )}
                     </div>
@@ -370,10 +372,9 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                     <div className="flex items-start gap-3">
                         <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
                         <div>
-                            <h3 className="font-semibold text-blue-900">Email Forwarding Rules</h3>
+                            <h3 className="font-semibold text-blue-900">{t("Extract.Settings.Forwarding.rulesTitle")}</h3>
                             <p className="text-sm text-blue-700 mt-1">
-                                Configure which email addresses should forward transactions to specific bank accounts.
-                                Each rule maps an email address to one or more accounts.
+                                {t("Extract.Settings.Forwarding.rulesDesc")}
                             </p>
                         </div>
                     </div>
@@ -384,7 +385,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                                 ? "bg-green-100 text-green-700"
                                 : "bg-gray-100 text-gray-700"
                                 }`}>
-                                {isActive ? "Active" : "Inactive"}
+                                {isActive ? t("Extract.Settings.Forwarding.active") : t("Extract.Settings.Forwarding.inactive")}
                             </span>
                         </div>
                     )}
@@ -403,7 +404,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                         <Power className="w-4 h-4" />
-                        {isActive ? "Deactivate" : "Activate"}
+                        {isActive ? t("Extract.Settings.Forwarding.deactivate") : t("Extract.Settings.Forwarding.activate")}
                     </button>
 
                     <button
@@ -412,7 +413,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                         className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                        Refresh
+                        {t("Extract.Settings.Forwarding.refresh")}
                     </button>
 
                     <button
@@ -421,7 +422,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                         className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
                     >
                         <Trash2 className="w-4 h-4" />
-                        Delete Config
+                        {t("Extract.Settings.Forwarding.deleteConfig")}
                     </button>
                 </div>
             )}
@@ -431,13 +432,13 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                 {forwardingRules.length === 0 ? (
                     <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed">
                         <Mail className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                        <p className="text-gray-500 mb-4">No forwarding rules configured</p>
+                        <p className="text-gray-500 mb-4">{t("Extract.Settings.Forwarding.noRules")}</p>
                         <button
                             onClick={addRule}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-flex items-center gap-2"
                         >
                             <Plus className="w-4 h-4" />
-                            Add First Rule
+                            {t("Extract.Settings.Forwarding.addFirst")}
                         </button>
                     </div>
                 ) : (
@@ -449,7 +450,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                             <div className="flex items-start gap-4">
                                 <div className="flex-1">
                                     <label className="block text-sm font-medium mb-2">
-                                        Email Address
+                                        {t("Extract.Settings.Forwarding.emailAddress")}
                                     </label>
                                     <input
                                         type="email"
@@ -476,7 +477,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
 
                             <div>
                                 <label className="block text-sm font-medium mb-2">
-                                    Forward to Accounts ({rule.accounts.length} selected)
+                                    {t("Extract.Settings.Forwarding.forwardTo", { count: rule.accounts.length })}
                                 </label>
                                 {rule.accounts.length === 0 && (
                                     <p className="text-xs text-amber-600 mb-2 flex items-center gap-1">
@@ -528,7 +529,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                         className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 inline-flex items-center gap-2"
                     >
                         <Plus className="w-4 h-4" />
-                        Add Another Rule
+                        {t("Extract.Settings.Forwarding.addAnother")}
                     </button>
                     <button
                         onClick={saveForwardingConfig}
@@ -536,7 +537,7 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                     >
                         <Save className="w-4 h-4" />
-                        {loading ? "Saving..." : configExists ? "Update Configuration" : "Save Configuration"}
+                        {loading ? t("Extract.Settings.Forwarding.saving") : configExists ? t("Extract.Settings.Forwarding.update") : t("Extract.Settings.Forwarding.save")}
                     </button>
                 </div>
             )}

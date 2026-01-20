@@ -7,12 +7,14 @@ import { EmailTab } from "../settings/EmailsSettings";
 import Cookies from "js-cookie";
 import { ForwardingTab } from "../settings/ForwardingSettings";
 import Swal from "sweetalert2";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface SettingsViewProps {
   activeDatabase: string;
 }
 
 export default function SettingsView({ activeDatabase }: SettingsViewProps) {
+  const { t } = useI18n(); // Hook usage
   const [activeTab, setActiveTab] = useState<"accounts" | "email" | "imap" | "forward">(
     "accounts"
   );
@@ -77,7 +79,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
 
       if (!tenantId || !tenantDetailId) {
         console.error("Missing tenantId or tenantDetailId in cookies");
-        showStatus("❌ Missing tenant information", "error");
+        showStatus(t("Extract.Emails.status.missingTenant"), "error");
         return;
       }
 
@@ -108,11 +110,11 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
         console.log("✅ Loaded tenant DB name:", activeDetail.dbName);
       } else {
         console.error("No dbName found for active tenant detail");
-        showStatus("❌ Could not load database name", "error");
+        showStatus(t("Extract.Emails.status.noDb"), "error");
       }
     } catch (error) {
       console.error("Error loading tenant DB name:", error);
-      showStatus("❌ Error loading tenant information", "error");
+      showStatus(t("Extract.Emails.status.loadTenant"), "error");
     }
   }
 
@@ -138,7 +140,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       }
     } catch (error) {
       console.error("Error loading accounts:", error);
-      showStatus("❌ Error loading accounts", "error");
+      showStatus(t("Extract.Emails.status.loadAccounts"), "error");
     }
   }
 
@@ -161,7 +163,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       }
     } catch (error) {
       console.error("Error loading email setups:", error);
-      showStatus("❌ Error loading email setups", "error");
+      showStatus(t("Extract.Emails.status.loadEmailSetups"), "error");
     }
   }
 
@@ -184,7 +186,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       }
     } catch (error) {
       console.error("Error loading IMAP config:", error);
-      showStatus("❌ Error loading IMAP config", "error");
+      showStatus(t("Extract.Emails.status.loadImapConfig"), "error");
     }
   }
 
@@ -636,17 +638,17 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
   }
 
   const tabs = [
-    { id: "accounts", label: "Accounts", icon: Database },
-    { id: "email", label: "Email Setup", icon: Mail },
-    { id: "forward", label: "Forwarding Setup", icon: Forward },
+    { id: "accounts", label: t("Extract.Settings.tabs.accounts"), icon: Database },
+    { id: "email", label: t("Extract.Settings.tabs.email"), icon: Mail },
+    { id: "forward", label: t("Extract.Settings.tabs.forwarding"), icon: Forward },
   ] as const;
 
   return (
     <div className="w-full space-y-6">
       <div>
-        <h1 className="text-4xl font-bold">Settings</h1>
+        <h1 className="text-4xl font-bold">{t("Extract.Settings.title")}</h1>
         <p className="text-muted-foreground">
-          Manage your bank accounts and email integrations
+          {t("Extract.Settings.subtitle")}
         </p>
       </div>
 
