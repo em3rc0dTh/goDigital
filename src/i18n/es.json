@@ -467,7 +467,12 @@
             "title": "Configuración del Sistema",
             "language": "Idioma",
             "english": "Inglés",
-            "spanish": "Español"
+            "spanish": "Español",
+            "description": "Gestiona tus preferencias y configuraciones de la aplicación",
+            "languageDescription": "Elige tu idioma preferido para la interfaz",
+            "theme": "Tema",
+            "themeDescription": "Personaliza la apariencia de tu aplicación",
+            "comingSoon": "Próximamente"
         }
     }
 }

@@ -467,7 +467,12 @@
             "title": "System Settings",
             "language": "Language",
             "english": "English",
-            "spanish": "Spanish"
+            "spanish": "Spanish",
+            "description": "Manage your preferences and application settings",
+            "languageDescription": "Choose your preferred language for the interface",
+            "theme": "Theme",
+            "themeDescription": "Customize the appearance of your application",
+            "comingSoon": "Coming soon"
         }
     }
 }
