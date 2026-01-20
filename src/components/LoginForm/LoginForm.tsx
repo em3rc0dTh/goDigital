@@ -28,6 +28,7 @@ export function LoginForm() {
   const [tab, setTab] = useState<"login" | "signUp" | "resetPassword">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,10 +45,57 @@ export function LoginForm() {
 
   const router = useRouter();
 
+  // 🆕 Login con Google flow
+  const handleGoogleLogin = async (credentialResponse: any) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error("Google Login Failed", {
+          description: data.error || "An error occurred",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Login exitoso
+      if (data.workspaces && data.workspaces.length > 1) {
+        setWorkspaces(data.workspaces);
+        setShowWorkspaceSelector(true);
+        Cookies.set("temp_token", data.user.token, { expires: 1 / 24, sameSite: "lax" });
+        toast.success("Login Successful", { description: "Please select your workspace" });
+      } else {
+        await loginToWorkspace(data.workspaces[0], data.user.token);
+      }
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Error", { description: "An unexpected error occurred" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage(null);
+
+    // 🆕 Check passwords match for signup
+    if (tab === "signUp" && password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const isSignup = tab === "signUp";
@@ -93,6 +141,7 @@ export function LoginForm() {
 
         setEmail("");
         setPassword("");
+        setConfirmPassword("");
         setFullName("");
         setIsLoading(false);
         return;
@@ -117,6 +166,7 @@ export function LoginForm() {
 
       setEmail("");
       setPassword("");
+      setConfirmPassword("");
       setFullName("");
 
     } catch (error) {
@@ -221,7 +271,10 @@ export function LoginForm() {
             setPassword={setPassword}
             fullName={fullName}
             setFullName={setFullName}
+            confirmPassword={confirmPassword}
+            setConfirmPassword={setConfirmPassword}
             handleLogin={handleLogin}
+            handleGoogleLogin={handleGoogleLogin} // 🆕
             isLoading={isLoading}
           />
         )}
