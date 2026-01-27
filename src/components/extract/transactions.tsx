@@ -88,7 +88,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
       setIsLoading(true);
       const token = Cookies.get("session_token");
       const tenantDetailId = Cookies.get("tenantDetailId");
-      const res = await fetch(`${API_BASE}/accounts/${accountId}/transactions`, {
+      const res = await fetch(`${API_BASE}/accounts/${accountId}/transactions?n=10`, {
         cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -205,7 +205,6 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
       jul: 6, ago: 7, sep: 8, oct: 9, nov: 10, dic: 11,
     };
 
-    // ej: "lun. 05 ene 11:29"
     const match = fechaRaw
       .toLowerCase()
       .match(/(\d{1,2})\s+(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)\s+(\d{2}):(\d{2})/);
@@ -218,9 +217,15 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
 
     const now = new Date();
     let year = now.getFullYear();
+    const currentMonth = now.getMonth();
 
-    // 🔑 regla clave: enero con contexto bancario → puede ser año siguiente
-    if (month === 0 && now.getMonth() === 11) {
+    // 🔑 inferencia correcta de año
+    // ej: hoy feb (1) y movimiento dic (11) → año anterior
+    if (month > currentMonth + 1) {
+      year -= 1;
+    }
+    // ej: hoy dic (11) y movimiento ene (0) → año siguiente
+    else if (month < currentMonth - 1) {
       year += 1;
     }
 
