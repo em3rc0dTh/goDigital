@@ -36,6 +36,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useI18n } from "@/i18n/I18nProvider";
+import Swal from "sweetalert2";
 
 export default function Sidebar() {
   const router = useRouter();
@@ -63,7 +64,7 @@ export default function Sidebar() {
 
   const bottomItems = [
     { icon: Settings, label: t("Sidebar.bottom.Settings"), link: "/settings" },
-    { icon: LogOut, label: t("Sidebar.bottom.LogOut") },
+    { icon: LogOut, label: t("Sidebar.bottom.LogOut"), action: "logout" },
   ];
 
   return (
@@ -124,8 +125,49 @@ function SidebarContent({
 }: any) {
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
+  const handleLogout = async () => {
+    if (closeMobileMenu) closeMobileMenu();
+    const result = await Swal.fire({
+      title: "¿Cerrar sesión?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Cerrar sesión",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#ef4444",
+    });
+
+    if (!result.isConfirmed) return;
+
+    Swal.fire({
+      title: "Cerrando sesión...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    try {
+      await fetch(`${API_BASE}/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch { }
+
+    Cookies.remove("session_token");
+    Cookies.remove("tenantId");
+    Cookies.remove("workspaceName");
+    Cookies.remove("userRole");
+    Cookies.remove("temp_token");
+
+    localStorage.clear();
+    sessionStorage.clear();
+
+    Swal.close();
+    router.replace("/login");
+  };
+
+
   return (
     <>
+      {/* HEADER */}
       <div className="flex items-center justify-between p-3 py-4">
         {!collapsed && (
           <div className="flex items-center gap-2 font-semibold">
@@ -140,7 +182,7 @@ function SidebarContent({
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto hidden lg:flex items-center justify-center"
+          className="ml-auto hidden lg:flex"
         >
           {collapsed ? (
             <ChevronRight className="w-5 h-5" />
@@ -150,13 +192,13 @@ function SidebarContent({
         </Button>
       </div>
 
+      {/* MENU */}
       <ScrollArea className="flex-1 px-2 py-3">
         {menuItems.map((item: any, index: number) => {
-          // Para home (/), solo activo si pathname es exactamente "/"
-          // Para otras rutas, activo si pathname empieza con el link
-          const isActive = item.link === "/"
-            ? pathname === "/"
-            : pathname.startsWith(item.link);
+          const isActive =
+            item.link === "/"
+              ? pathname === "/"
+              : pathname.startsWith(item.link);
 
           return (
             <Button
@@ -178,45 +220,30 @@ function SidebarContent({
 
       <Separator />
 
+      {/* BOTTOM */}
       <ScrollArea className="px-2 py-3">
-        {bottomItems.map((item: any, index: number) => {
-          const handleClick = async () => {
-            if (item.label === "Log Out") {
-              await fetch(`${API_BASE}/logout`, {
-                method: "POST",
-                credentials: "include",
-              });
+        {bottomItems.map((item: any, index: number) => (
+          <Button
+            key={index}
+            variant="ghost"
+            className={`w-full justify-start gap-3 mb-1 ${collapsed ? "px-2" : "px-3"
+              }`}
+            onClick={() => {
+              if (item.action === "logout") {
+                handleLogout();
+                return;
+              }
 
-              Cookies.remove("session_token");
-              Cookies.remove("tenantId");
-              Cookies.remove("workspaceName");
-              Cookies.remove("userRole");
-              Cookies.remove("temp_token");
-
-              window.location.href = "/login";
-              return;
-            }
-
-            if (item.link) {
-              router.push(item.link);
-              if (closeMobileMenu) closeMobileMenu();
-            }
-          };
-
-          return (
-            <Button
-              key={index}
-              variant="ghost"
-              className={`w-full justify-start gap-3 mb-1 ${collapsed ? "px-2" : "px-3"
-                }`}
-              onClick={handleClick}
-            >
-              <item.icon className="w-5 h-5" />
-              {!collapsed && item.label}
-            </Button>
-          );
-        })}
-
+              if (item.link) {
+                router.push(item.link);
+                if (closeMobileMenu) closeMobileMenu();
+              }
+            }}
+          >
+            <item.icon className="w-5 h-5" />
+            {!collapsed && item.label}
+          </Button>
+        ))}
       </ScrollArea>
     </>
   );
