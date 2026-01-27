@@ -280,7 +280,21 @@
         "tabs": {
             "webCapture": "Captura Web",
             "emailCapture": "Captura de Email",
-            "settings": "Configuración"
+            "settings": "Configuración",
+            "bankStatements": "Estados de Cuenta"
+        },
+        "BankStatement": {
+            "title": "Subir Estado de Cuenta",
+            "subtitle": "Sube archivos PDF para extraer transacciones",
+            "upload": "Subir",
+            "uploading": "Subiendo...",
+            "selectFile": "Seleccionar archivo PDF",
+            "dragDrop": "o arrastra y suelta aquí",
+            "success": "Archivo subido exitosamente",
+            "error": "Error al subir archivo",
+            "viewTransactions": "Ver transacciones extraídas",
+            "noFile": "Ningún archivo seleccionado",
+            "removeFile": "Eliminar archivo"
         },
         "Transactions": {
             "title": "Captura Web",

@@ -280,7 +280,21 @@
         "tabs": {
             "webCapture": "Web Capture",
             "emailCapture": "Email Capture",
-            "settings": "Settings"
+            "settings": "Settings",
+            "bankStatements": "Bank Statements"
+        },
+        "BankStatement": {
+            "title": "Upload Bank Statement",
+            "subtitle": "Upload PDF files to extract transactions",
+            "upload": "Upload",
+            "uploading": "Uploading...",
+            "selectFile": "Select PDF file",
+            "dragDrop": "or drag and drop here",
+            "success": "File uploaded successfully",
+            "error": "Error uploading file",
+            "viewTransactions": "View extracted transactions",
+            "noFile": "No file selected",
+            "removeFile": "Remove file"
         },
         "Transactions": {
             "title": "Web Capture",

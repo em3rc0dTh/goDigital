@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -40,12 +40,20 @@ import Swal from "sweetalert2";
 
 export default function Sidebar() {
   const router = useRouter();
-  const pathname = usePathname(); // ← Obtener la ruta actual
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { t } = useI18n();
+
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
+
+  // Fix hydration by ensuring client-only rendering for Sheet
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const menuItems = [
     {
       icon: Sparkles,
@@ -70,30 +78,37 @@ export default function Sidebar() {
   return (
     <>
       {/* MOBILE MENU BUTTON */}
-      <div className="lg:hidden p-4 ">
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Menu className="w-5 h-5" />
-            </Button>
-          </SheetTrigger>
+      <div className="lg:hidden p-4">
+        {mounted && (
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
 
-          <SheetContent side="left" className="p-0">
-            <SheetHeader className="hidden">
-              <SheetTitle>Sidebar</SheetTitle>
-            </SheetHeader>
+            <SheetContent side="left" className="p-0">
+              <SheetHeader className="hidden">
+                <SheetTitle>Sidebar</SheetTitle>
+              </SheetHeader>
 
-            <SidebarContent
-              collapsed={false}
-              setCollapsed={() => { }}
-              menuItems={menuItems}
-              bottomItems={bottomItems}
-              router={router}
-              pathname={pathname}
-              closeMobileMenu={() => setOpen(false)}
-            />
-          </SheetContent>
-        </Sheet>
+              <SidebarContent
+                collapsed={false}
+                setCollapsed={() => { }}
+                menuItems={menuItems}
+                bottomItems={bottomItems}
+                router={router}
+                pathname={pathname}
+                closeMobileMenu={() => setOpen(false)}
+              />
+            </SheetContent>
+          </Sheet>
+        )}
+        {!mounted && (
+          <Button variant="outline" size="icon">
+            <Menu className="w-5 h-5" />
+          </Button>
+        )}
       </div>
 
       {/* DESKTOP SIDEBAR */}
@@ -125,6 +140,7 @@ function SidebarContent({
 }: any) {
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
+
   const handleLogout = async () => {
     if (closeMobileMenu) closeMobileMenu();
     const result = await Swal.fire({
@@ -163,7 +179,6 @@ function SidebarContent({
     Swal.close();
     router.replace("/login");
   };
-
 
   return (
     <>

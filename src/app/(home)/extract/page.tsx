@@ -1,11 +1,12 @@
 "use client"
 import { useState, useEffect } from "react";
-import { BarChart3, Database, FileText, List, Mail, Settings, TrendingUp, Building2 } from "lucide-react";
+import { BarChart3, Database, FileText, List, Mail, Settings, TrendingUp, Building2, Landmark } from "lucide-react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import Transactions from "../../../components/extract/transactions";
 import SettingsView from "../../../components/extract/settings";
 import EmailsPage from "../../../components/extract/emailsPage";
+import BankStatement from "../../../components/extract/bankStatement";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -16,7 +17,7 @@ export default function Extract() {
   const [databases, setDatabases] = useState<any[]>([]);
   const [activeDatabase, setActiveDatabase] = useState<string | null>(null);
   const [showView, setShowView] = useState<"consolidated" | "extract">("consolidated");
-  const [activeView, setActiveView] = useState<"transactions" | "emails" | "settings">("transactions");
+  const [activeView, setActiveView] = useState<"transactions" | "emails" | "settings" | "bankStatement">("transactions");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const API_BASE =
@@ -88,6 +89,7 @@ export default function Extract() {
   const views = [
     { id: "transactions", label: t("Extract.tabs.webCapture"), icon: FileText },
     { id: "emails", label: t("Extract.tabs.emailCapture"), icon: Mail },
+    { id: "bankStatement", label: t("Extract.tabs.bankStatements"), icon: Landmark },
     { id: "settings", label: t("Extract.tabs.settings"), icon: Settings },
   ] as const;
 
@@ -261,6 +263,12 @@ export default function Extract() {
                   )}
                   {activeView === "emails" && (
                     <EmailsPage
+                      key={activeDatabase}
+                      activeDatabase={activeDatabase}
+                    />
+                  )}
+                  {activeView === "bankStatement" && (
+                    <BankStatement
                       key={activeDatabase}
                       activeDatabase={activeDatabase}
                     />
