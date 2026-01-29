@@ -10,6 +10,8 @@ import BankStatement from "../../../components/extract/bankStatement";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { useI18n } from "@/i18n/I18nProvider";
+import RawDataPage from "@/components/extract/raw-data";
+
 
 export default function Extract() {
   const router = useRouter();
@@ -17,7 +19,7 @@ export default function Extract() {
   const [databases, setDatabases] = useState<any[]>([]);
   const [activeDatabase, setActiveDatabase] = useState<string | null>(null);
   const [showView, setShowView] = useState<"consolidated" | "extract">("consolidated");
-  const [activeView, setActiveView] = useState<"transactions" | "emails" | "settings" | "bankStatement">("transactions");
+  const [activeView, setActiveView] = useState<"transactions" | "emails" | "rawData" | "settings" | "bankStatement">("transactions");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const API_BASE =
@@ -90,6 +92,7 @@ export default function Extract() {
     { id: "transactions", label: t("Extract.tabs.webCapture"), icon: FileText },
     { id: "emails", label: t("Extract.tabs.emailCapture"), icon: Mail },
     { id: "bankStatement", label: t("Extract.tabs.bankStatements"), icon: Landmark },
+    { id: "rawData", label: t("Extract.tabs.rawData"), icon: Database },
     { id: "settings", label: t("Extract.tabs.settings"), icon: Settings },
   ] as const;
 
@@ -273,6 +276,10 @@ export default function Extract() {
                       activeDatabase={activeDatabase}
                     />
                   )}
+                  {activeView === "rawData" && (
+                    <RawDataPage key={activeDatabase} />
+                  )}
+
                   {activeView === "settings" && (
                     <SettingsView
                       key={activeDatabase}

@@ -137,14 +137,14 @@ export function PersonalTable({ storedTransactions }: { storedTransactions: any[
     return <ResponsiveTable data={storedTransactions} columns={columns} />;
 }
 
-export function BusinessTable({ storedTransactions }: { storedTransactions: any[] }) {
+export function BusinessTable({ storedTransactions, showOperationNumber = true, showChannel = true, showBalance = true }: { storedTransactions: any[], showOperationNumber?: boolean, showChannel?: boolean, showBalance?: boolean }) {
     const columns: Column[] = [
         { label: "Operation Date", key: "operation_date", mobile: true },
         { label: "Process Date", key: "process_date" },
-        { label: "Operation #", key: "operation_number" },
+        ...(showOperationNumber ? [{ label: "Operation #", key: "operation_number" }] : []),
         { label: "Movement", key: "movement" },
         { label: "Description", key: "descripcion", mobile: true },
-        { label: "Channel", key: "channel" },
+        ...(showChannel ? [{ label: "Channel", key: "channel" }] : []),
         {
             label: "Amount",
             align: "right",
@@ -155,7 +155,7 @@ export function BusinessTable({ storedTransactions }: { storedTransactions: any[
                 </span>
             ),
         },
-        { label: "Balance", key: "balance", align: "right" },
+        ...(showBalance ? [{ label: "Balance", key: "balance", align: "right" as const }] : []),
     ];
 
     return <ResponsiveTable data={storedTransactions} columns={columns} />;

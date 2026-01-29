@@ -270,6 +270,7 @@
         "subtitle": "Manage your bank accounts and parsed transactions",
         "tryAgain": "Try again",
         "analytics": "Analytics",
+        "rawData": "Raw Data",
         "consolidatedView": "Consolidated view across all repositories",
         "summaryView": "Summary View",
         "summaryDesc": "This view aggregates data from all {count} repositories.",
@@ -281,7 +282,8 @@
             "webCapture": "Web Capture",
             "emailCapture": "Email Capture",
             "settings": "Settings",
-            "bankStatements": "Bank Statements"
+            "bankStatements": "Bank Statements",
+            "rawData": "Raw Data"
         },
         "BankStatement": {
             "title": "Upload Bank Statement",

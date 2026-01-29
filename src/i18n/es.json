@@ -270,6 +270,7 @@
         "subtitle": "Gestiona tus cuentas bancarias y transacciones analizadas",
         "tryAgain": "Intentar de nuevo",
         "analytics": "Analíticas",
+        "rawData": "Datos Raw",
         "consolidatedView": "Vista consolidada de todos los repositorios",
         "summaryView": "Vista Resumen",
         "summaryDesc": "Esta vista agrega datos de todos los {count} repositorios.",
@@ -281,7 +282,8 @@
             "webCapture": "Captura Web",
             "emailCapture": "Captura de Email",
             "settings": "Configuración",
-            "bankStatements": "Estados de Cuenta"
+            "bankStatements": "Estados de Cuenta",
+            "rawData": "Datos Raw"
         },
         "BankStatement": {
             "title": "Subir Estado de Cuenta",
