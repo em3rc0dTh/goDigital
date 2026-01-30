@@ -88,7 +88,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
       setIsLoading(true);
       const token = Cookies.get("session_token");
       const tenantDetailId = Cookies.get("tenantDetailId");
-      const res = await fetch(`${API_BASE}/accounts/${accountId}/transactions?n=10`, {
+      const res = await fetch(`${API_BASE}/accounts/${accountId}/transactions`, {
         cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -453,7 +453,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
         .createHash("sha1")
         .update(JSON.stringify({
           acc: cleanAccNum,
-          fecha: tx.fecha_hora,
+          fecha: tx.operation_date ?? tx.operation_number ?? tx.fecha_hora,
           desc: tx.descripcion,
           monto: tx.monto,
         }))

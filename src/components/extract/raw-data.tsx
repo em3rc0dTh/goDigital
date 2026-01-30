@@ -156,8 +156,9 @@ export default function RawDataPage() {
                             <TableRow>
                                 <TableHead>Date</TableHead>
                                 <TableHead>Time</TableHead>
-                                <TableHead>Reference</TableHead>
-                                <TableHead className="text-right">Amount</TableHead>
+                                <TableHead>Origin Reference</TableHead>
+                                <TableHead>Currency</TableHead>
+                                <TableHead>Amount</TableHead>
                                 <TableHead>Origin</TableHead>
                                 <TableHead>Destination</TableHead>
                                 <TableHead>Source</TableHead>
@@ -189,14 +190,19 @@ export default function RawDataPage() {
                                                     <span className="font-medium">
                                                         {tx.subject || tx.transactionVariables.originAccount || "N/A"}
                                                     </span>
-                                                    <span className="text-xs text-muted-foreground">
+                                                    {/* <span className="text-xs text-muted-foreground">
                                                         {tx.from || tx.externalId || ""}
-                                                    </span>
+                                                    </span> */}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right">
+                                                <span >
+                                                    <Badge variant="outline">{tx.transactionVariables.currency}</Badge>
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-right">
                                                 <span className={tx.transactionVariables.amount && tx.transactionVariables.amount < 0 ? "text-red-600 font-semibold" : "text-green-600 font-semibold"}>
-                                                    {tx.transactionVariables.currency} {tx.transactionVariables.amount?.toFixed(2)}
+                                                    {tx.transactionVariables.amount?.toFixed(2)}
                                                 </span>
                                             </TableCell>
                                             <TableCell>
