@@ -164,6 +164,7 @@
             "LaunchPad": "Plataforma de Lanzamiento",
             "MissionControl": "Centro de Mando",
             "Projects": "Proyectos",
+            "Entities": "Entidades",
             "Activity": "Actividad",
             "Team": "Equipo",
             "Tokens": "Tokens",
@@ -490,6 +491,108 @@
             "theme": "Tema",
             "themeDescription": "Personaliza la apariencia de tu aplicación",
             "comingSoon": "Próximamente"
+        }
+    },
+    "Projects": {
+        "title": "Proyectos",
+        "description": "Gestiona tus proyectos aquí.",
+        "add": "Agregar Proyecto",
+        "searchPlaceholder": "Buscar proyectos...",
+        "status": {
+            "all": "Todos",
+            "active": "Activo",
+            "planned": "Planificado",
+            "onHold": "En Espera",
+            "completed": "Completado",
+            "cancelled": "Cancelado"
+        },
+        "table": {
+            "name": "Nombre",
+            "code": "Código",
+            "status": "Estado",
+            "description": "Descripción",
+            "actions": "Acciones",
+            "noProjects": "No se encontraron proyectos."
+        },
+        "dialog": {
+            "createTitle": "Crear Proyecto",
+            "editTitle": "Editar Proyecto",
+            "createDesc": "Agrega un nuevo proyecto al sistema.",
+            "editDesc": "Actualiza los detalles del proyecto existente.",
+            "name": "Nombre",
+            "code": "Código",
+            "status": "Estado",
+            "startDate": "Fecha Inicio",
+            "endDate": "Fecha Fin",
+            "owner": "Dueño del Proyecto",
+            "businessUnit": "ID Unidad de Negocio",
+            "description": "Descripción",
+            "cancel": "Cancelar",
+            "save": "Guardar"
+        },
+        "messages": {
+            "created": "Proyecto creado",
+            "updated": "Proyecto actualizado",
+            "deleted": "Proyecto eliminado",
+            "loadError": "Error al cargar proyectos",
+            "saveError": "Error al guardar proyecto",
+            "deleteError": "Error al eliminar proyecto",
+            "confirmDelete": "¿Estás seguro de que deseas eliminar este proyecto?"
+        }
+    },
+    "Entities": {
+        "title": "Entidades",
+        "description": "Gestiona tus vendedores, proveedores y suministradores.",
+        "add": "Agregar Entidad",
+        "searchPlaceholder": "Buscar entidades...",
+        "tabs": {
+            "all": "Todos",
+            "providers": "Proveedores",
+            "vendors": "Vendedores",
+            "suppliers": "Suministradores"
+        },
+        "table": {
+            "name": "Nombre",
+            "taxId": "RUC / Tax ID",
+            "type": "Tipo",
+            "email": "Email",
+            "actions": "Acciones",
+            "noEntities": "No se encontraron entidades."
+        },
+        "dialog": {
+            "createTitle": "Crear Entidad",
+            "editTitle": "Editar Entidad",
+            "createDesc": "Agrega una nueva entidad al sistema.",
+            "editDesc": "Actualiza los detalles de esta entidad.",
+            "name": "Nombre",
+            "type": "Tipo",
+            "legalClass": "Clase Legal",
+            "businessType": "Tipo de Negocio",
+            "identifiers": "Identificadores",
+            "taxId": "RUC / ID Tributario",
+            "nationalId": "DNI / ID Nacional",
+            "contact": "Contacto",
+            "email": "Email",
+            "phone": "Teléfono",
+            "address": "Dirección",
+            "cancel": "Cancelar",
+            "save": "Guardar",
+            "options": {
+                "provider": "Proveedor",
+                "vendor": "Vendedor",
+                "supplier": "Suministrador",
+                "legalEntity": "Persona Jurídica",
+                "naturalEntity": "Persona Natural"
+            }
+        },
+        "messages": {
+            "created": "Entidad creada",
+            "updated": "Entidad actualizada",
+            "deleted": "Entidad eliminada",
+            "loadError": "Error al cargar entidades",
+            "saveError": "Error al guardar entidad",
+            "deleteError": "Error al eliminar entidad",
+            "confirmDelete": "¿Estás seguro de que deseas eliminar esta entidad?"
         }
     }
 }

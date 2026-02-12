@@ -164,6 +164,7 @@
             "LaunchPad": "Launch Pad",
             "MissionControl": "Mission Control",
             "Projects": "Projects",
+            "Entities": "Entities",
             "Activity": "Activity",
             "Team": "Team",
             "Tokens": "Tokens",
@@ -490,6 +491,108 @@
             "theme": "Theme",
             "themeDescription": "Customize the appearance of your application",
             "comingSoon": "Coming soon"
+        }
+    },
+    "Projects": {
+        "title": "Projects",
+        "description": "Manage your projects here.",
+        "add": "Add Project",
+        "searchPlaceholder": "Search projects...",
+        "status": {
+            "all": "All",
+            "active": "Active",
+            "planned": "Planned",
+            "onHold": "On Hold",
+            "completed": "Completed",
+            "cancelled": "Cancelled"
+        },
+        "table": {
+            "name": "Name",
+            "code": "Code",
+            "status": "Status",
+            "description": "Description",
+            "actions": "Actions",
+            "noProjects": "No projects found."
+        },
+        "dialog": {
+            "createTitle": "Create Project",
+            "editTitle": "Edit Project",
+            "createDesc": "Add a new project to the system.",
+            "editDesc": "Update existing project details.",
+            "name": "Name",
+            "code": "Code",
+            "status": "Status",
+            "startDate": "Start Date",
+            "endDate": "End Date",
+            "owner": "Project Owner",
+            "businessUnit": "Business Unit ID",
+            "description": "Description",
+            "cancel": "Cancel",
+            "save": "Save"
+        },
+        "messages": {
+            "created": "Project created",
+            "updated": "Project updated",
+            "deleted": "Project deleted",
+            "loadError": "Failed to load projects",
+            "saveError": "Failed to save project",
+            "deleteError": "Failed to delete project",
+            "confirmDelete": "Are you sure you want to delete this project?"
+        }
+    },
+    "Entities": {
+        "title": "Entities",
+        "description": "Manage your vendors, suppliers and providers.",
+        "add": "Add Entity",
+        "searchPlaceholder": "Search entities...",
+        "tabs": {
+            "all": "All",
+            "providers": "Providers",
+            "vendors": "Vendors",
+            "suppliers": "Suppliers"
+        },
+        "table": {
+            "name": "Name",
+            "taxId": "Tax ID",
+            "type": "Type",
+            "email": "Email",
+            "actions": "Actions",
+            "noEntities": "No entities found."
+        },
+        "dialog": {
+            "createTitle": "Create Entity",
+            "editTitle": "Edit Entity",
+            "createDesc": "Add a new entity to the system.",
+            "editDesc": "Update details for this entity.",
+            "name": "Name",
+            "type": "Type",
+            "legalClass": "Legal Class",
+            "businessType": "Business Type",
+            "identifiers": "Identifiers",
+            "taxId": "Tax ID (RUC/NIT)",
+            "nationalId": "National ID",
+            "contact": "Contact",
+            "email": "Email",
+            "phone": "Phone",
+            "address": "Address",
+            "cancel": "Cancel",
+            "save": "Save",
+            "options": {
+                "provider": "Provider",
+                "vendor": "Vendor",
+                "supplier": "Supplier",
+                "legalEntity": "Legal Entity",
+                "naturalEntity": "Natural Person"
+            }
+        },
+        "messages": {
+            "created": "Entity created",
+            "updated": "Entity updated",
+            "deleted": "Entity deleted",
+            "loadError": "Failed to load entities",
+            "saveError": "Failed to save entity",
+            "deleteError": "Failed to delete entity",
+            "confirmDelete": "Are you sure you want to delete this entity?"
         }
     }
 }

@@ -46,6 +46,7 @@ export default function Sidebar() {
     { icon: Rocket, label: t("Sidebar.menu.LaunchPad"), link: "/getting-started" },
     { icon: TowerControl, label: t("Sidebar.menu.MissionControl"), link: "/management" },
     { icon: Folder, label: t("Sidebar.menu.Projects"), link: "/projects" },
+    { icon: Users, label: t("Sidebar.menu.Entities"), link: "/entities" },
     { icon: Activity, label: t("Sidebar.menu.Activity"), link: "/activity" },
     { icon: Users, label: t("Sidebar.menu.Team"), link: "/team" },
     { icon: Coins, label: t("Sidebar.menu.Tokens"), link: "/tokens" },

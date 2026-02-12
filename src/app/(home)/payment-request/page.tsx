@@ -10,6 +10,8 @@ import Cookies from "js-cookie";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function PaymentRequestPage() {
     // Step management (0 = project selection, then 1-4 as before)
@@ -29,6 +31,11 @@ export default function PaymentRequestPage() {
     const [loadingProjects, setLoadingProjects] = useState(true);
     const [projects, setProjects] = useState([]);
     const [providers, setProviders] = useState([]);
+
+    // Pagination and Search State
+    const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 9;
     const [userEmail, setUserEmail] = useState(Cookies.get("userEmail") || "");
     // Initialize formData with default values
     const [formData, setFormData] = useState(() => {
@@ -48,7 +55,15 @@ export default function PaymentRequestPage() {
         const fetchProjects = async () => {
             try {
                 setLoadingProjects(true);
-                const projectsRes = await fetch(`/api/projects`);
+                const token = Cookies.get("session_token");
+                const tenantDetailId = Cookies.get("tenantDetailId");
+                const projectsRes = await fetch(`${API_BASE}/projects`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "x-tenant-detail-id": tenantDetailId || "",
+                    },
+                    credentials: "include",
+                });
 
                 if (projectsRes.ok) {
                     const data = await projectsRes.json();
@@ -88,9 +103,17 @@ export default function PaymentRequestPage() {
         const fetchData = async () => {
             try {
                 setLoading(true);
+                const token = Cookies.get("session_token");
+                const tenantDetailId = Cookies.get("tenantDetailId");
                 const [schemaRes, providersRes] = await Promise.all([
                     fetch(`${API_BASE}/forms/name/${formName}`),
-                    fetch(`/api/providers`)
+                    fetch(`${API_BASE}/entities?vendor_type=Proveedor`, {
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "x-tenant-detail-id": tenantDetailId || "",
+                        },
+                        credentials: "include",
+                    })
                 ]);
 
                 if (schemaRes.ok) {
@@ -121,7 +144,7 @@ export default function PaymentRequestPage() {
         setSelectedProject(project);
         setFormData(prev => ({
             ...prev,
-            project: project.id,
+            project: project._id || project.id,
             projectName: project.name
         }));
         setStep(1); // Move to file question step
@@ -168,11 +191,134 @@ export default function PaymentRequestPage() {
             }
 
             const extractedData = await response.json();
+            console.log("Extracted Data (Raw):", extractedData);
+
+            // Normalize keys (trim whitespace)
+            const normalizedExtracted: any = {};
+            Object.keys(extractedData).forEach(key => {
+                normalizedExtracted[key.trim()] = extractedData[key];
+            });
+
+            // Map extracted data to form fields
+            const mappedData: any = {};
+
+            // Helper to clean currency strings
+            const parseAmount = (val: any) => {
+                if (typeof val === 'number') return val;
+                if (!val) return 0;
+                return parseFloat(val.toString().replace(/[^0-9.-]+/g, ""));
+            };
+
+            // Helper to parse dates (DD/MM/YYYY to YYYY-MM-DD)
+            const parseDate = (dateStr: string) => {
+                if (!dateStr) return undefined;
+
+                const clean = dateStr.toString().trim();
+                console.log(`Parsing date: ${clean}`);
+
+                // If already in YYYY-MM-DD
+                if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
+
+                // Handle "DD/MM/YYYY" or "DD-MM-YYYY"
+                const parts = clean.split(/[\/\-]/);
+                if (parts.length === 3) {
+                    // Check for Year last (DD/MM/YYYY)
+                    if (parts[2].length === 4) {
+                        const d = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        console.log(`Parsed DD/MM/YYYY to: ${d}`);
+                        return d;
+                    }
+                    // Check for Year first (YYYY/MM/DD)
+                    if (parts[0].length === 4) {
+                        const d = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                        console.log(`Parsed YYYY/MM/DD to: ${d}`);
+                        return d;
+                    }
+                }
+                return clean; // Fallback to original if unknown format
+            };
+
+            if (normalizedExtracted["Amount"]) mappedData.amount = parseAmount(normalizedExtracted["Amount"]);
+            if (normalizedExtracted["Tax"]) mappedData.tax = parseAmount(normalizedExtracted["Tax"]);
+            if (normalizedExtracted["Total Amount"]) mappedData.total_amount = parseAmount(normalizedExtracted["Total Amount"]);
+
+            if (normalizedExtracted["Issue Date"]) mappedData.issueDate = parseDate(normalizedExtracted["Issue Date"]);
+            if (normalizedExtracted["Deadline"]) mappedData.deliveryDeadline = parseDate(normalizedExtracted["Deadline"]);
+
+            if (normalizedExtracted["Currency"]) {
+                const curr = normalizedExtracted["Currency"].toLowerCase();
+                mappedData.currency = curr.includes("dolar") || curr.includes("usd") ? "USD" : "PEN";
+            }
+
+            if (normalizedExtracted["Payment description (auto-extracted from file)"]) {
+                mappedData.description = normalizedExtracted["Payment description (auto-extracted from file)"];
+            }
+
+            if (normalizedExtracted["Additional Notes"]) {
+                mappedData.notes = normalizedExtracted["Additional Notes"];
+            }
+
+            // Map items if present and convert parsed strings to numbers
+            if (normalizedExtracted["Extracted Items (from files)"]) {
+                const itemsRaw = normalizedExtracted["Extracted Items (from files)"];
+                mappedData.items = itemsRaw.map((item: any) => ({
+                    ...item,
+                    quantity: parseAmount(item.quantity),
+                    unit_price: parseAmount(item.unit_price),
+                    total: parseAmount(item.total)
+                }));
+            }
+
+            // Try to match beneficiary to a provider ID
+            if (normalizedExtracted["Beneficiary"]) {
+                const beneficiaryName = normalizedExtracted["Beneficiary"];
+                console.log("Looking for beneficiary:", beneficiaryName);
+
+                // Helper to normalize company names for comparison
+                // Removes dots, extra spaces, and converts to lowercase
+                const normalizeName = (name: string) => {
+                    if (!name) return "";
+                    return name.toLowerCase()
+                        .replace(/\./g, "")     // Remove dots
+                        .replace(/[,\-]/g, "")  // Remove commas, dashes
+                        .replace(/\s+/g, " ")   // Normalize spaces
+                        .trim();
+                };
+
+                const normalizedTarget = normalizeName(beneficiaryName);
+                console.log("Normalized target:", normalizedTarget);
+
+                const provider: any = providers.find((p: any) => {
+                    if (!p) return false;
+                    const name = normalizeName(p.name);
+                    const businessName = normalizeName(p.businessName);
+
+                    if (name === normalizedTarget || businessName === normalizedTarget) return true;
+
+                    if (normalizedTarget.length > 3) {
+                        const nameMatch = name.length > 0 && (name.includes(normalizedTarget) || normalizedTarget.includes(name));
+                        const businessMatch = businessName.length > 0 && (businessName.includes(normalizedTarget) || normalizedTarget.includes(businessName));
+                        return nameMatch || businessMatch;
+                    }
+                    return false;
+                });
+
+                if (provider) {
+                    console.log("Match found:", provider.name);
+                    mappedData.beneficiary = provider._id || provider.id;
+                } else {
+                    console.warn("No matching provider found for:", beneficiaryName);
+                }
+            }
+
             const userEmail = Cookies.get("userEmail");
+            console.log("Setting userIdCreator to:", userEmail);
+
             setFormData((prev: any) => ({
                 ...prev,
-                ...extractedData,
-                userIdCreator: userEmail,
+                ...extractedData, // Keep raw data
+                ...mappedData,    // Apply mapped data
+                userIdCreator: userEmail || prev.userIdCreator || "", // Ensure it's never undefined
                 project: prev.project, // Keep selected project
                 projectName: prev.projectName,
             }));
@@ -220,25 +366,50 @@ export default function PaymentRequestPage() {
         if (!schemaData) return null;
         const newSchema = JSON.parse(JSON.stringify(schemaData.schema));
 
+        // Remove title to avoid duplication with page header
+        delete newSchema.title;
+        delete newSchema.description;
+
         const updateEnum = (key: any, items: any, valueKey: any, labelKey: any) => {
             if (newSchema.properties?.[key]) {
-                newSchema.properties[key].oneOf = items.map((i: any) => ({
-                    const: i[valueKey],
-                    title: i[labelKey]
-                }));
+                const oneOfItems = items
+                    .filter((i: any) => i[valueKey]) // Filter out items with undefined/null ID
+                    .map((i: any) => ({
+                        const: i[valueKey],
+                        title: i[labelKey] || "Unknown"
+                    }));
 
-                delete newSchema.properties[key].enum;
-                delete newSchema.properties[key].enumNames;
+                if (oneOfItems.length > 0) {
+                    newSchema.properties[key].oneOf = oneOfItems;
+
+                    // RJSF sometimes needs type to be explicit
+                    if (!newSchema.properties[key].type) {
+                        newSchema.properties[key].type = "string";
+                    }
+
+                    delete newSchema.properties[key].enum;
+                    delete newSchema.properties[key].enumNames;
+                }
             }
         };
 
+        // Use _id for projects (MongoDB ObjectId)
         ['project', 'projectId', 'userIdProject'].forEach(key =>
-            updateEnum(key, projects, 'id', 'name')
+            updateEnum(key, projects, '_id', 'name')
         );
 
+        // Use _id for providers (MongoDB ObjectId)
         ['provider', 'providerId', 'supplier', 'userIdProvider', 'beneficiary'].forEach(key =>
-            updateEnum(key, providers, 'company_id', 'name')
+            updateEnum(key, providers, '_id', 'name')
         );
+
+        // Ensure userIdCreator exists in properties since it's required
+        if (!newSchema.properties.userIdCreator) {
+            newSchema.properties.userIdCreator = {
+                type: "string",
+                title: "Created by"
+            };
+        }
 
         return newSchema;
     }, [schemaData, projects, providers]);
@@ -250,20 +421,106 @@ export default function PaymentRequestPage() {
             ...schemaData.uiSchema,
             "project": { "ui:widget": "SelectWidget" },
             "beneficiary": { "ui:widget": "SelectWidget" },
+            "userIdCreator": { "ui:readonly": true, "ui:widget": "hidden" }, // Hide or make readonly
         };
     }, [schemaData]);
 
     const handleFormChange = (e: any) => {
-        console.log("Form changed:", e.formData);
-        setFormData(e.formData);
+        // Create a copy of the form data
+        const newData = { ...e.formData };
+
+        // Auto-calculate Total Amount
+        // Ensure values are treated as numbers
+        const amount = parseFloat(newData.amount) || 0;
+        const tax = parseFloat(newData.tax) || 0;
+
+        // Calculate total (Amount + Tax)
+        const calculatedTotal = Number((amount + tax).toFixed(2));
+
+        // Only update if the value is different to avoid potential cycles
+        // though strictly setting key values is usually fine in this direction
+        newData.total_amount = calculatedTotal;
+
+        console.log("Form changed:", newData);
+        setFormData(newData);
     };
 
-    const handleSubmit = (e: any) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e: any) => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
         console.log("Form submitted:", e.formData);
-        toast.success("Payment request submitted successfully!", {
-            description: "Your request has been sent for approval"
-        });
+
+        try {
+            const data = e.formData;
+
+            // Map form fields to backend payload
+            const payload = {
+                project_id: data.project,
+                provider_id: data.beneficiary,
+                subtotal: Number(data.amount),
+                tax: Number(data.tax),
+                total: Number(data.total_amount),
+                currency: data.currency || "USD",
+                date: data.issueDate ? new Date(data.issueDate) : new Date(),
+                dueDate: data.deliveryDeadline ? new Date(data.deliveryDeadline) : undefined,
+                notes: data.description || data.notes,
+                status: 'pending'
+            };
+            const token = Cookies.get("session_token");
+            const tenantDetailId = Cookies.get("tenantDetailId");
+            const response = await fetch(`${API_BASE}/payment-requests`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                    "x-tenant-detail-id": tenantDetailId || "",
+                },
+                credentials: "include",
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Failed to submit payment request");
+            }
+
+            toast.success("Payment request submitted successfully!", {
+                description: "Your request has been sent for approval"
+            });
+
+            resetForm();
+        } catch (error: any) {
+            console.error("Submission error:", error);
+            toast.error("Submission failed", {
+                description: error.message
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
+
+    // Filter and Paginate Projects
+    const filteredProjects = React.useMemo(() => {
+        return projects.filter((project: any) =>
+            project.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            project.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            project.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [projects, searchTerm]);
+
+    const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE);
+
+    const paginatedProjects = React.useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredProjects.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredProjects, currentPage]);
+
+    // Reset page on search
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
 
     // Step 0: Project Selection
     if (step === 0) {
@@ -305,57 +562,107 @@ export default function PaymentRequestPage() {
                     </div>
 
                     <Card className="shadow-lg sm:shadow-xl border-2">
-                        <CardHeader className="space-y-2 pb-6 sm:pb-8 bg-muted/30 px-4 sm:px-6">
-                            <CardTitle className="text-xl sm:text-2xl">Available Projects</CardTitle>
-                            <CardDescription className="text-sm sm:text-base">
-                                Select the project associated with this payment request
-                            </CardDescription>
+                        <CardHeader className="space-y-4 pb-6 sm:pb-8 bg-muted/30 px-4 sm:px-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div>
+                                    <CardTitle className="text-xl sm:text-2xl">Available Projects</CardTitle>
+                                    <CardDescription className="text-sm sm:text-base mt-1">
+                                        Select the project associated with this payment request
+                                    </CardDescription>
+                                </div>
+                                <div className="relative w-full sm:w-72">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type="search"
+                                        placeholder="Search by name, code or description..."
+                                        className="pl-9 bg-background"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent className="pt-6 sm:pt-8 px-4 sm:px-6">
-                            {projects.length === 0 ? (
+                            {paginatedProjects.length === 0 ? (
                                 <Alert>
                                     <AlertCircle className="h-4 w-4" />
                                     <AlertDescription>
-                                        No projects available. Please contact your administrator.
+                                        {searchTerm ? "No projects found match your search criteria." : "No projects available. Please contact your administrator."}
                                     </AlertDescription>
                                 </Alert>
                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                                    {projects.map((project: any) => (
-                                        <button
-                                            key={project.id}
-                                            onClick={() => handleProjectSelect(project)}
-                                            className="group relative p-4 sm:p-6 border-2 border-muted hover:border-primary rounded-lg transition-all hover:shadow-lg bg-card text-left"
-                                        >
-                                            <div className="flex items-start gap-3">
-                                                <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                                    <FolderKanban className="h-5 w-5 text-primary" />
+                                <>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                                        {paginatedProjects.map((project: any) => (
+                                            <button
+                                                key={project.id || project._id}
+                                                onClick={() => handleProjectSelect(project)}
+                                                className="group relative p-4 sm:p-6 border-2 border-muted hover:border-primary rounded-lg transition-all hover:shadow-lg bg-card text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex flex-col h-full"
+                                            >
+                                                <div className="flex items-start gap-3 w-full">
+                                                    <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors shrink-0">
+                                                        <FolderKanban className="h-5 w-5 text-primary" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="font-semibold text-sm sm:text-base break-words group-hover:text-primary transition-colors">
+                                                            {project.name}
+                                                        </h3>
+                                                        {project.description && (
+                                                            <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">
+                                                                {project.description}
+                                                            </p>
+                                                        )}
+                                                        {project.code && (
+                                                            <p className="text-xs text-muted-foreground mt-2">
+                                                                Code: {project.code}
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h3 className="font-semibold text-sm sm:text-base break-words group-hover:text-primary transition-colors">
-                                                        {project.name}
-                                                    </h3>
-                                                    {project.description && (
-                                                        <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">
-                                                            {project.description}
-                                                        </p>
-                                                    )}
-                                                    {project.code && (
-                                                        <p className="text-xs text-muted-foreground mt-2">
-                                                            Code: {project.code}
-                                                        </p>
-                                                    )}
-                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Pagination Controls */}
+                                    {totalPages > 1 && (
+                                        <div className="flex flex-col-reverse sm:flex-row items-center justify-between border-t border-border pt-4 gap-4">
+                                            <p className="text-sm text-muted-foreground">
+                                                Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredProjects.length)} of {filteredProjects.length} projects
+                                            </p>
+                                            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    disabled={currentPage === 1}
+                                                    className="h-8"
+                                                >
+                                                    <ChevronLeft className="h-4 w-4 mr-2" />
+                                                    Previous
+                                                </Button>
+                                                <span className="text-sm font-medium mx-2 sm:hidden">
+                                                    Page {currentPage} of {totalPages}
+                                                </span>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                    disabled={currentPage === totalPages}
+                                                    className="h-8"
+                                                >
+                                                    Next
+                                                    <ChevronRight className="h-4 w-4 ml-2" />
+                                                </Button>
                                             </div>
-                                        </button>
-                                    ))}
-                                </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </CardContent>
                     </Card>
 
                     <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-500">
-                        Step 1 of 5
+                        Step 1 of 4
                     </div>
                 </div>
             </div>
@@ -419,7 +726,7 @@ export default function PaymentRequestPage() {
                     </Card>
 
                     <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-500">
-                        Step 2 of 5
+                        Step 2 of 4
                     </div>
                 </div>
             </div>
@@ -483,7 +790,7 @@ export default function PaymentRequestPage() {
                     </Card>
 
                     <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-500">
-                        Step 3 of 5
+                        Step 3 of 4
                     </div>
                 </div>
             </div>
@@ -517,7 +824,7 @@ export default function PaymentRequestPage() {
 
                     <Card className="shadow-lg sm:shadow-xl border-2">
                         <CardHeader className="space-y-2 pb-6 sm:pb-8 bg-muted/30 px-4 sm:px-6">
-                            <CardTitle className="text-xl sm:text-2xl">Step 4: Upload Files</CardTitle>
+                            <CardTitle className="text-xl sm:text-2xl">Step 3: Upload Files</CardTitle>
                             <CardDescription className="text-sm sm:text-base">
                                 Upload your quotation or purchase order. Our AI will extract the information automatically.
                             </CardDescription>
@@ -575,7 +882,7 @@ export default function PaymentRequestPage() {
                     </Card>
 
                     <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-500">
-                        Step 4 of 5
+                        Step 3 of 4
                     </div>
                 </div>
             </div>
@@ -665,7 +972,20 @@ export default function PaymentRequestPage() {
                     </Alert>
                 )}
 
-                <Card className="shadow-lg sm:shadow-xl border-2">
+                <Card className="shadow-lg sm:shadow-xl border-2 relative overflow-hidden">
+                    {isSubmitting && (
+                        <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-200">
+                            <div className="relative mb-4">
+                                <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full"></div>
+                                <Loader2 className="relative h-12 w-12 animate-spin text-primary" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-1">Processing Payment Request</h3>
+                            <p className="text-sm text-muted-foreground max-w-xs">
+                                We are saving your request and sending email notifications to the project owner.
+                            </p>
+                        </div>
+                    )}
+
                     <CardHeader className="space-y-2 pb-6 sm:pb-8 bg-muted/30 px-4 sm:px-6">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div className="flex-1 min-w-0">
@@ -686,11 +1006,32 @@ export default function PaymentRequestPage() {
                             formData={formData}
                             onChange={handleFormChange}
                             onSubmit={handleSubmit}
-                        />
+                        >
+                            <div className="mt-6">
+                                <Button
+                                    type="submit"
+                                    className="w-full sm:w-auto min-w-[200px] h-11 text-base shadow-md hover:shadow-lg transition-all"
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Submitting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Submit Payment Request
+                                            <CheckCircle2 className="ml-2 h-4 w-4" />
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </SchemaForm>
 
                         <button
                             onClick={resetForm}
                             className="text-xs sm:text-sm text-gray-600 hover:text-gray-800 underline py-2"
+                            disabled={isSubmitting}
                         >
                             ← Start over
                         </button>
@@ -707,7 +1048,7 @@ export default function PaymentRequestPage() {
                 </div>
 
                 <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-500">
-                    Step 5 of 5
+                    Step 4 of 4
                 </div>
             </div>
         </div>

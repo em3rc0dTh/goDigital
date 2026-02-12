@@ -21,6 +21,7 @@ interface SchemaFormProps {
     onSubmit?: (e: any) => void;
     onError?: (e: any) => void;
     className?: string;
+    children?: React.ReactNode;
 }
 
 import { FileWidget } from "./widgets/FileWidget";
@@ -42,6 +43,7 @@ export const SchemaForm: React.FC<SchemaFormProps> = ({
     onSubmit,
     onError,
     className,
+    children,
 }) => {
 
     // Helper to preprocess schema and uiSchema
@@ -98,7 +100,9 @@ export const SchemaForm: React.FC<SchemaFormProps> = ({
                 }}
                 showErrorList={"top"}
                 noHtml5Validate={true} // Use RJSF validation
-            />
+            >
+                {children}
+            </Form>
         </div>
     );
 };
