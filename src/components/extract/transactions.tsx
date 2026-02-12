@@ -293,8 +293,8 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
       return;
     }
 
-    let startTs = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
-    let endTs = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
+    const startTs = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
+    const endTs = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
 
     const kept: any[] = [];
     const removed: any[] = [];

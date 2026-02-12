@@ -168,7 +168,8 @@
             "Team": "Team",
             "Tokens": "Tokens",
             "Billing": "Billing",
-            "BankExtract": "Bank Extract"
+            "BankExtract": "Bank Extract",
+            "PaymentRequest": "Payment Request"
         },
         "bottom": {
             "Settings": "Settings",

@@ -74,8 +74,10 @@ export function LoginForm() {
         setWorkspaces(data.workspaces);
         setShowWorkspaceSelector(true);
         Cookies.set("temp_token", data.user.token, { expires: 1 / 24, sameSite: "lax" });
+        Cookies.set("userEmail", data.user.email, { expires: 1 / 24, sameSite: "lax" });
         toast.success(t("Auth.Messages.loginSuccessful"), { description: t("Auth.Messages.selectWorkspace") });
       } else {
+        Cookies.set("userEmail", data.user.email, { expires: 1 / 24, sameSite: "lax" });
         await loginToWorkspace(data.workspaces[0], data.user.token);
       }
 
@@ -159,10 +161,13 @@ export function LoginForm() {
           sameSite: "lax",
         });
 
+        Cookies.set("userEmail", data.user.email, { expires: 1 / 24, sameSite: "lax" });
+
         toast.success(t("Auth.Messages.loginSuccessful"), {
           description: t("Auth.Messages.selectWorkspace"),
         });
       } else {
+        Cookies.set("userEmail", data.user.email, { expires: 1 / 24, sameSite: "lax" });
         await loginToWorkspace(data.workspaces[0], data.user.token);
       }
 

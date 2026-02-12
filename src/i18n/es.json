@@ -168,7 +168,8 @@
             "Team": "Equipo",
             "Tokens": "Tokens",
             "Billing": "Facturación",
-            "BankExtract": "Extracto Bancario"
+            "BankExtract": "Extracto Bancario",
+            "PaymentRequest": "Solicitudes de Pago"
         },
         "bottom": {
             "Settings": "Configuración",
