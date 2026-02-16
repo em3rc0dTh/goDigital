@@ -170,7 +170,8 @@
             "Tokens": "Tokens",
             "Billing": "Facturación",
             "BankExtract": "Extracto Bancario",
-            "PaymentRequest": "Solicitudes de Pago"
+            "PaymentRequest": "Solicitudes de Pago",
+            "BusinessUnits": "Unidades de Negocio"
         },
         "bottom": {
             "Settings": "Configuración",
@@ -593,6 +594,80 @@
             "saveError": "Error al guardar entidad",
             "deleteError": "Error al eliminar entidad",
             "confirmDelete": "¿Estás seguro de que deseas eliminar esta entidad?"
+        }
+    },
+    "BusinessUnits": {
+        "title": "Unidades de Negocio",
+        "description": "Gestiona tus unidades de negocio aquí.",
+        "add": "Agregar Unidad de Negocio",
+        "searchPlaceholder": "Buscar unidades de negocio...",
+        "table": {
+            "name": "Nombre",
+            "adminEmail": "Email del Administrador",
+            "createdAt": "Creado el",
+            "actions": "Acciones",
+            "noUnits": "No se encontraron unidades de negocio."
+        },
+        "dialog": {
+            "createTitle": "Crear Unidad de Negocio",
+            "editTitle": "Editar Unidad de Negocio",
+            "createDesc": "Agrega una nueva unidad de negocio al sistema.",
+            "editDesc": "Actualiza los detalles de la unidad de negocio existente.",
+            "name": "Nombre",
+            "adminEmail": "Email del Administrador",
+            "cancel": "Cancelar",
+            "save": "Guardar"
+        },
+        "messages": {
+            "created": "Unidad de Negocio creada",
+            "updated": "Unidad de Negocio actualizada",
+            "deleted": "Unidad de Negocio eliminada",
+            "loadError": "Error al cargar unidades de negocio",
+            "saveError": "Error al guardar unidad de negocio",
+            "deleteError": "Error al eliminar unidad de negocio",
+            "confirmDelete": "¿Estás seguro de que deseas eliminar esta unidad de negocio?"
+        }
+    },
+    "PaymentRequestDetail": {
+        "title": "Solicitud de Pago",
+        "loading": "Cargando detalles de la solicitud...",
+        "error": {
+            "title": "Algo salió mal",
+            "goBack": "Volver"
+        },
+        "header": {
+            "created": "Creado"
+        },
+        "statusFlow": {
+            "created": "Creado",
+            "approved": "Aprobado",
+            "authorized": "Autorizado",
+            "paid": "Pagado"
+        },
+        "sections": {
+            "financialDetails": "Detalles Financieros",
+            "projectVendor": "Proyecto y Proveedor",
+            "requestInfo": "Información de la Solicitud"
+        },
+        "fields": {
+            "subtotal": "Monto (Subtotal)",
+            "tax": "Impuesto",
+            "total": "Monto Total",
+            "subjectToApproval": "Sujeto a aprobación",
+            "project": "Proyecto",
+            "vendor": "Proveedor / Beneficiario",
+            "issueDate": "Fecha de Emisión",
+            "dueDate": "Fecha de Vencimiento",
+            "createdBy": "Creado por",
+            "description": "Descripción / Notas",
+            "noNotes": "No se proporcionaron notas adicionales."
+        },
+        "status": {
+            "pending": "Pendiente",
+            "approved": "Aprobado",
+            "authorized": "Autorizado",
+            "paid": "Pagado",
+            "rejected": "Rechazado"
         }
     }
 }

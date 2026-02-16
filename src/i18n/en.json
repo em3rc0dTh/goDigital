@@ -624,8 +624,49 @@
             "deleted": "Business Unit deleted",
             "loadError": "Failed to load business units",
             "saveError": "Failed to save business unit",
-            "deleteError": "Failed to delete business unit",
-            "confirmDelete": "Are you sure you want to delete this business unit?"
+            "deleteError": "Failed to delete business unit"
+        }
+    },
+    "PaymentRequestDetail": {
+        "title": "Payment Request",
+        "loading": "Loading request details...",
+        "error": {
+            "title": "Something went wrong",
+            "goBack": "Go Back"
+        },
+        "header": {
+            "created": "Created"
+        },
+        "statusFlow": {
+            "created": "Created",
+            "approved": "Approved",
+            "authorized": "Authorized",
+            "paid": "Paid"
+        },
+        "sections": {
+            "financialDetails": "Financial Details",
+            "projectVendor": "Project & Vendor",
+            "requestInfo": "Request Info"
+        },
+        "fields": {
+            "subtotal": "Amount (Subtotal)",
+            "tax": "Tax",
+            "total": "Total Amount",
+            "subjectToApproval": "Is subject to approval",
+            "project": "Project",
+            "vendor": "Vendor / Beneficiary",
+            "issueDate": "Issue Date",
+            "dueDate": "Due Date",
+            "createdBy": "Created By",
+            "description": "Description / Notes",
+            "noNotes": "No additional notes provided."
+        },
+        "status": {
+            "pending": "Pending",
+            "approved": "Approved",
+            "authorized": "Authorized",
+            "paid": "Paid",
+            "rejected": "Rejected"
         }
     }
 }

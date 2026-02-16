@@ -1,6 +1,7 @@
 import { Check, ShieldCheck, CreditCard, XCircle, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface PaymentStatusFlowProps {
     status: string;
@@ -14,11 +15,13 @@ interface PaymentStatusFlowProps {
 }
 
 export const PaymentStatusFlow: React.FC<PaymentStatusFlowProps> = ({ status, dates }) => {
+    const { t } = useI18n();
+
     const steps = [
-        { id: 'pending', label: 'Created', icon: FileText, date: dates?.createdAt },
-        { id: 'approved', label: 'Approved', icon: Check, date: dates?.approvedAt },
-        { id: 'authorized', label: 'Authorized', icon: ShieldCheck, date: dates?.authorizedAt },
-        { id: 'paid', label: 'Paid', icon: CreditCard, date: dates?.paidAt },
+        { id: 'pending', label: t('PaymentRequestDetail.statusFlow.created'), icon: FileText, date: dates?.createdAt },
+        { id: 'approved', label: t('PaymentRequestDetail.statusFlow.approved'), icon: Check, date: dates?.approvedAt },
+        { id: 'authorized', label: t('PaymentRequestDetail.statusFlow.authorized'), icon: ShieldCheck, date: dates?.authorizedAt },
+        { id: 'paid', label: t('PaymentRequestDetail.statusFlow.paid'), icon: CreditCard, date: dates?.paidAt },
     ];
 
     const currentStatus = status?.toLowerCase() || 'pending';

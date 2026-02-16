@@ -11,8 +11,10 @@ import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { PaymentStatusFlow } from "@/components/payment-requests/PaymentStatusFlow";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function PaymentRequestDetailPage() {
+    const { t } = useI18n();
     const params = useParams();
     const router = useRouter();
     const id = params?.id as string;
@@ -68,7 +70,7 @@ export default function PaymentRequestDetailPage() {
                     <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full"></div>
                     <Loader2 className="relative h-12 w-12 animate-spin text-primary mb-4" />
                 </div>
-                <p className="text-muted-foreground animate-pulse">Loading request details...</p>
+                <p className="text-muted-foreground animate-pulse">{t("PaymentRequestDetail.loading")}</p>
             </div>
         );
     }
@@ -79,11 +81,11 @@ export default function PaymentRequestDetailPage() {
                 <div className="bg-destructive/10 p-6 rounded-full mb-4">
                     <AlertCircle className="h-10 w-10 text-destructive" />
                 </div>
-                <h1 className="text-2xl font-bold text-foreground mb-2">Something went wrong</h1>
+                <h1 className="text-2xl font-bold text-foreground mb-2">{t("PaymentRequestDetail.error.title")}</h1>
                 <p className="text-muted-foreground mb-6">{error}</p>
-                <Button onClick={() => router.back()} variant="outline">
+                <Button onClick={() => router.push('/payment-requests')} variant="outline">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Go Back
+                    {t("PaymentRequestDetail.error.goBack")}
                 </Button>
             </div>
         );
@@ -123,17 +125,17 @@ export default function PaymentRequestDetailPage() {
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight">Payment Request</h1>
+                            <h1 className="text-2xl font-bold tracking-tight">{t("PaymentRequestDetail.title")}</h1>
                             <div className="flex items-center gap-2 text-muted-foreground text-sm mt-1">
                                 <span className="font-mono bg-muted px-2 py-0.5 rounded text-xs">#{id.slice(-6).toUpperCase()}</span>
                                 <span>•</span>
-                                <span>Created {data.createdAt ? format(new Date(data.createdAt), "PPP") : "Unknown"}</span>
+                                <span>{t("PaymentRequestDetail.header.created")} {data.createdAt ? format(new Date(data.createdAt), "PPP") : "Unknown"}</span>
                             </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
                         <Badge variant="outline" className={`px-4 py-1.5 text-sm font-medium border capitalize ${getStatusColor(data.status)}`}>
-                            {data.status || 'Pending'}
+                            {t(`PaymentRequestDetail.status.${data.status?.toLowerCase() || 'pending'}`)}
                         </Badge>
                     </div>
                 </div>
@@ -146,13 +148,13 @@ export default function PaymentRequestDetailPage() {
                             <CardHeader className="bg-muted/30 pb-4">
                                 <CardTitle className="text-lg flex items-center gap-2">
                                     <Building className="h-5 w-5 text-primary" />
-                                    Project & Vendor
+                                    {t("PaymentRequestDetail.sections.projectVendor")}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="pt-6 space-y-6">
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="space-y-2">
-                                        <p className="text-sm font-medium text-muted-foreground">Project</p>
+                                        <p className="text-sm font-medium text-muted-foreground">{t("PaymentRequestDetail.fields.project")}</p>
                                         <div className="p-3 bg-muted/40 rounded-lg border border-border/50">
                                             <p className="font-semibold text-sm sm:text-base">
                                                 {typeof data.project_id === 'object' ? data.project_id?.name : "Project ID"}
@@ -163,7 +165,7 @@ export default function PaymentRequestDetailPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <p className="text-sm font-medium text-muted-foreground">Vendor / Beneficiary</p>
+                                        <p className="text-sm font-medium text-muted-foreground">{t("PaymentRequestDetail.fields.vendor")}</p>
                                         <div className="p-3 bg-muted/40 rounded-lg border border-border/50">
                                             <p className="font-semibold text-sm sm:text-base">
                                                 {typeof data.provider_id === 'object' ? data.provider_id?.name : "Provider ID"}
@@ -181,30 +183,30 @@ export default function PaymentRequestDetailPage() {
                             <CardHeader className="bg-muted/30 pb-4">
                                 <CardTitle className="text-lg flex items-center gap-2">
                                     <DollarSign className="h-5 w-5 text-primary" />
-                                    Financial Details
+                                    {t("PaymentRequestDetail.sections.financialDetails")}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="pt-6 grid gap-6">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                        <p className="text-sm text-muted-foreground">Amount (Subtotal)</p>
+                                        <p className="text-sm text-muted-foreground">{t("PaymentRequestDetail.fields.subtotal")}</p>
                                         <p className="text-xl font-semibold">{data.currency} {data.subtotal?.toFixed(2)}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-sm text-muted-foreground">Tax</p>
+                                        <p className="text-sm text-muted-foreground">{t("PaymentRequestDetail.fields.tax")}</p>
                                         <p className="text-xl font-semibold text-muted-foreground">{data.currency} {data.tax?.toFixed(2)}</p>
                                     </div>
                                 </div>
                                 <Separator />
                                 <div className="flex justify-between items-end bg-primary/5 -mx-6 -mb-6 p-6">
                                     <div>
-                                        <p className="text-sm font-medium text-muted-foreground mb-1">Total Amount</p>
+                                        <p className="text-sm font-medium text-muted-foreground mb-1">{t("PaymentRequestDetail.fields.total")}</p>
                                         <p className="text-3xl font-bold text-primary">
                                             {data.currency} {data.total?.toFixed(2)}
                                         </p>
                                     </div>
                                     <div className="text-right text-xs text-muted-foreground">
-                                        Is subject to approval
+                                        {t("PaymentRequestDetail.fields.subjectToApproval")}
                                     </div>
                                 </div>
                             </CardContent>
@@ -218,7 +220,7 @@ export default function PaymentRequestDetailPage() {
                             <CardHeader className="bg-muted/30 pb-4">
                                 <CardTitle className="text-lg flex items-center gap-2">
                                     <FileText className="h-5 w-5 text-primary" />
-                                    Request Info
+                                    {t("PaymentRequestDetail.sections.requestInfo")}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="pt-6 space-y-6">
@@ -226,7 +228,7 @@ export default function PaymentRequestDetailPage() {
                                     <div className="flex items-start gap-3">
                                         <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-medium">Issue Date</p>
+                                            <p className="text-sm font-medium">{t("PaymentRequestDetail.fields.issueDate")}</p>
                                             <p className="text-sm text-foreground">
                                                 {data.date ? format(new Date(data.date), "PPP") : "-"}
                                             </p>
@@ -236,7 +238,7 @@ export default function PaymentRequestDetailPage() {
                                     <div className="flex items-start gap-3">
                                         <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-medium">Due Date</p>
+                                            <p className="text-sm font-medium">{t("PaymentRequestDetail.fields.dueDate")}</p>
                                             <p className="text-sm text-foreground">
                                                 {data.dueDate ? format(new Date(data.dueDate), "PPP") : "-"}
                                             </p>
@@ -246,7 +248,7 @@ export default function PaymentRequestDetailPage() {
                                     <div className="flex items-start gap-3">
                                         <User className="h-4 w-4 text-muted-foreground mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-medium">Created By</p>
+                                            <p className="text-sm font-medium">{t("PaymentRequestDetail.fields.createdBy")}</p>
                                             <p className="text-sm text-foreground break-all">
                                                 {data.userIdCreator || "-"}
                                             </p>
@@ -257,9 +259,9 @@ export default function PaymentRequestDetailPage() {
                                 <Separator />
 
                                 <div>
-                                    <p className="text-sm font-medium mb-2">Description / Notes</p>
+                                    <p className="text-sm font-medium mb-2">{t("PaymentRequestDetail.fields.description")}</p>
                                     <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                        {data.notes || "No additional notes provided."}
+                                        {data.notes || t("PaymentRequestDetail.fields.noNotes")}
                                     </p>
                                 </div>
                             </CardContent>
