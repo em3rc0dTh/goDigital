@@ -525,7 +525,7 @@
             "startDate": "Fecha Inicio",
             "endDate": "Fecha Fin",
             "owner": "Dueño del Proyecto",
-            "businessUnit": "ID Unidad de Negocio",
+            "businessUnit": "Unidad de Negocio",
             "description": "Descripción",
             "cancel": "Cancelar",
             "save": "Guardar"

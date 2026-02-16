@@ -118,3 +118,64 @@ export const transactions = pgTable("transaction", {
   metadata: text("metadata"), // JSON string for extra fields (nro_operacion, canal, etc.)
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Payment Request Workflow Tables
+
+export const businessUnits = pgTable("business_unit", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  adminId: text("admin_id").references(() => users.id), // Unit Admin
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const businessUnitTreasurers = pgTable(
+  "business_unit_treasurer",
+  {
+    businessUnitId: uuid("business_unit_id")
+      .notNull()
+      .references(() => businessUnits.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.businessUnitId, t.userId] }),
+  })
+);
+
+export const projects = pgTable("project", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  projectOwnerId: text("project_owner_id").references(() => users.id), // Project Owner
+  businessUnitId: uuid("business_unit_id").references(() => businessUnits.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const providers = pgTable("provider", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  taxId: text("tax_id"), // RUC/NIF
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const paymentRequests = pgTable("payment_request", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").references(() => projects.id),
+  providerId: uuid("provider_id").references(() => providers.id),
+  subtotal: doublePrecision("subtotal").notNull(),
+  tax: doublePrecision("tax").notNull(),
+  total: doublePrecision("total").notNull(),
+  currency: text("currency").notNull(), // USD, PEN
+  date: timestamp("date"),
+  dueDate: timestamp("due_date"),
+  creatorId: text("creator_id").references(() => users.id),
+  notes: text("notes"),
+  status: text("status").default("pending"), // pending, approved, authorized, paid, rejected
+  paymentProof: text("payment_proof"), // URL to voucher
+  approvedBy: text("approved_by").references(() => users.id), // Project Owner
+  authorizedBy: text("authorized_by").references(() => users.id), // BU Admin
+  paidBy: text("paid_by").references(() => users.id), // Treasurer
+  rejectedBy: text("rejected_by").references(() => users.id), // Any
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});

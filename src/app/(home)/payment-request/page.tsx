@@ -44,11 +44,14 @@ export default function PaymentRequestPage() {
             amount: 0,
             tax: 0,
             total_amount: 0,
+            issueDate: (() => {
+                const d = new Date();
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            })(),
         };
     });
 
-    const API_BASE =
-        process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
     // Load projects on initial mount
     useEffect(() => {
@@ -67,7 +70,9 @@ export default function PaymentRequestPage() {
 
                 if (projectsRes.ok) {
                     const data = await projectsRes.json();
-                    setProjects(data);
+                    // Filter for active projects only as per user request
+                    const activeProjects = data.filter((p: any) => p.status === 'active');
+                    setProjects(activeProjects);
                 } else {
                     toast.error("Failed to load projects.");
                 }
@@ -107,7 +112,7 @@ export default function PaymentRequestPage() {
                 const tenantDetailId = Cookies.get("tenantDetailId");
                 const [schemaRes, providersRes] = await Promise.all([
                     fetch(`${API_BASE}/forms/name/${formName}`),
-                    fetch(`${API_BASE}/entities?vendor_type=Proveedor`, {
+                    fetch(`${API_BASE}/entities?vendor_type=provider`, {
                         headers: {
                             "Authorization": `Bearer ${token}`,
                             "x-tenant-detail-id": tenantDetailId || "",
@@ -242,7 +247,12 @@ export default function PaymentRequestPage() {
             if (normalizedExtracted["Tax"]) mappedData.tax = parseAmount(normalizedExtracted["Tax"]);
             if (normalizedExtracted["Total Amount"]) mappedData.total_amount = parseAmount(normalizedExtracted["Total Amount"]);
 
-            if (normalizedExtracted["Issue Date"]) mappedData.issueDate = parseDate(normalizedExtracted["Issue Date"]);
+            // if (normalizedExtracted["Issue Date"]) mappedData.issueDate = parseDate(normalizedExtracted["Issue Date"]);
+            // Always set issueDate to today as per requirement
+            mappedData.issueDate = (() => {
+                const d = new Date();
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            })();
             if (normalizedExtracted["Deadline"]) mappedData.deliveryDeadline = parseDate(normalizedExtracted["Deadline"]);
 
             if (normalizedExtracted["Currency"]) {
@@ -355,6 +365,10 @@ export default function PaymentRequestPage() {
             amount: 0,
             tax: 0,
             total_amount: 0,
+            issueDate: (() => {
+                const d = new Date();
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            })(),
         });
     };
 
@@ -411,6 +425,15 @@ export default function PaymentRequestPage() {
             };
         }
 
+        if (newSchema.properties.issueDate) {
+            const today = new Date();
+            const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            if (!newSchema.properties.issueDate.type) {
+                newSchema.properties.issueDate.type = "string";
+            }
+            newSchema.properties.issueDate.default = localDate;
+        }
+
         return newSchema;
     }, [schemaData, projects, providers]);
 
@@ -422,6 +445,7 @@ export default function PaymentRequestPage() {
             "project": { "ui:widget": "SelectWidget" },
             "beneficiary": { "ui:widget": "SelectWidget" },
             "userIdCreator": { "ui:readonly": true, "ui:widget": "hidden" }, // Hide or make readonly
+            "issueDate": { "ui:readonly": true },
         };
     }, [schemaData]);
 
@@ -463,8 +487,16 @@ export default function PaymentRequestPage() {
                 tax: Number(data.tax),
                 total: Number(data.total_amount),
                 currency: data.currency || "USD",
-                date: data.issueDate ? new Date(data.issueDate) : new Date(),
-                dueDate: data.deliveryDeadline ? new Date(data.deliveryDeadline) : undefined,
+                date: data.issueDate || (() => {
+                    const d = new Date();
+                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                })(),
+                dueDate: data.deliveryDeadline ? (() => {
+                    const d = new Date(data.deliveryDeadline);
+                    return !isNaN(d.getTime())
+                        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+                        : undefined;
+                })() : undefined,
                 notes: data.description || data.notes,
                 status: 'pending'
             };

@@ -48,9 +48,15 @@ interface Project {
     isActive: boolean;
 }
 
+interface BusinessUnit {
+    _id: string;
+    name: string;
+}
+
 export default function ProjectsPage() {
     const { t } = useI18n();
     const [projects, setProjects] = useState<Project[]>([]);
+    const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentStatus, setCurrentStatus] = useState("active");
@@ -103,6 +109,27 @@ export default function ProjectsPage() {
 
     useEffect(() => {
         fetchProjects();
+
+        const fetchBusinessUnits = async () => {
+            try {
+                const token = Cookies.get("session_token");
+                const tenantDetailId = Cookies.get("tenantDetailId");
+                const response = await fetch(`${API_BASE}/business-units`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "x-tenant-detail-id": tenantDetailId || "",
+                    },
+                    credentials: "include"
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setBusinessUnits(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch business units", error);
+            }
+        };
+        fetchBusinessUnits();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -401,11 +428,21 @@ export default function ProjectsPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="businessUnitId">{t("Projects.dialog.businessUnit")}</Label>
-                                <Input
-                                    id="businessUnitId"
+                                <Select
                                     value={formData.business_unit_id}
-                                    onChange={(e) => setFormData({ ...formData, business_unit_id: e.target.value })}
-                                />
+                                    onValueChange={(val) => setFormData({ ...formData, business_unit_id: val })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t("Projects.dialog.businessUnit")} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {businessUnits.map((bu) => (
+                                            <SelectItem key={bu._id} value={bu._id}>
+                                                {bu.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 

@@ -27,16 +27,34 @@ export const DateWidget = (props: WidgetProps) => {
         value ? new Date(value) : undefined
     );
 
+    React.useEffect(() => {
+        if (value) {
+            if (value instanceof Date) {
+                setDate(value);
+            } else if (typeof value === 'string') {
+                // Try parsing YYYY-MM-DD
+                if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                    const [y, m, d] = value.split('-').map(Number);
+                    setDate(new Date(y, m - 1, d));
+                } else {
+                    // Handle ISO strings or other formats
+                    const d = new Date(value);
+                    if (!isNaN(d.getTime())) {
+                        setDate(d);
+                    }
+                }
+            }
+        } else {
+            setDate(undefined);
+        }
+    }, [value]);
+
     const handleSelect = (newDate: Date | undefined) => {
         setDate(newDate);
         if (newDate) {
-            // RJSF expects YYYY-MM-DD for date fields
             onChange(format(newDate, "yyyy-MM-dd"));
         } else {
             onChange(undefined);
-        }
-        if (id) {
-            // onBlur(id, newDate); // RJSF might expect string or Date, being safe
         }
     };
 

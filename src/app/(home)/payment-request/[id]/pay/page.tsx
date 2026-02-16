@@ -1,5 +1,5 @@
 import PaymentRequestReview from "@/components/payment-requests/PaymentRequestReview";
 
 export default function Page() {
-    return <PaymentRequestReview type="review" />;
+    return <PaymentRequestReview type="pay" />;
 }
