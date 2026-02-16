@@ -10,6 +10,7 @@ import { Loader2, FileText, Calendar, DollarSign, User, Building, ArrowLeft, Ale
 import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { PaymentStatusFlow } from "@/components/payment-requests/PaymentStatusFlow";
 
 export default function PaymentRequestDetailPage() {
     const params = useParams();
@@ -99,6 +100,15 @@ export default function PaymentRequestDetailPage() {
         }
     };
 
+    // logic to approximate dates
+    const dates = {
+        createdAt: data.createdAt,
+        // If current status matches, use updatedAt as the date for that step
+        [data.status === 'approved' ? 'approvedAt' :
+            data.status === 'authorized' ? 'authorizedAt' :
+                data.status === 'paid' ? 'paidAt' : '']: data.updatedAt
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-muted/50 py-8">
             <div className="container max-w-4xl mx-auto px-4">
@@ -108,7 +118,7 @@ export default function PaymentRequestDetailPage() {
                         <Button
                             variant="ghost"
                             className="h-10 w-10 rounded-full p-0 shrink-0 hover:bg-muted"
-                            onClick={() => router.back()}
+                            onClick={() => router.push('/payment-requests')}
                         >
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
@@ -131,40 +141,6 @@ export default function PaymentRequestDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Main Content */}
                     <div className="md:col-span-2 space-y-6">
-                        {/* Financial Details */}
-                        <Card className="shadow-sm border-muted-foreground/20 overflow-hidden">
-                            <CardHeader className="bg-muted/30 pb-4">
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <DollarSign className="h-5 w-5 text-primary" />
-                                    Financial Details
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="pt-6 grid gap-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <p className="text-sm text-muted-foreground">Amount (Subtotal)</p>
-                                        <p className="text-xl font-semibold">{data.currency} {data.subtotal?.toFixed(2)}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-sm text-muted-foreground">Tax</p>
-                                        <p className="text-xl font-semibold text-muted-foreground">{data.currency} {data.tax?.toFixed(2)}</p>
-                                    </div>
-                                </div>
-                                <Separator />
-                                <div className="flex justify-between items-end bg-primary/5 -mx-6 -mb-6 p-6">
-                                    <div>
-                                        <p className="text-sm font-medium text-muted-foreground mb-1">Total Amount</p>
-                                        <p className="text-3xl font-bold text-primary">
-                                            {data.currency} {data.total?.toFixed(2)}
-                                        </p>
-                                    </div>
-                                    <div className="text-right text-xs text-muted-foreground">
-                                        Is subject to approval
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
                         {/* Project & Vendor */}
                         <Card className="shadow-sm border-muted-foreground/20">
                             <CardHeader className="bg-muted/30 pb-4">
@@ -200,6 +176,40 @@ export default function PaymentRequestDetailPage() {
                                 </div>
                             </CardContent>
                         </Card>
+                        {/* Financial Details */}
+                        <Card className="shadow-sm border-muted-foreground/20 overflow-hidden">
+                            <CardHeader className="bg-muted/30 pb-4">
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <DollarSign className="h-5 w-5 text-primary" />
+                                    Financial Details
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-6 grid gap-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <p className="text-sm text-muted-foreground">Amount (Subtotal)</p>
+                                        <p className="text-xl font-semibold">{data.currency} {data.subtotal?.toFixed(2)}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-sm text-muted-foreground">Tax</p>
+                                        <p className="text-xl font-semibold text-muted-foreground">{data.currency} {data.tax?.toFixed(2)}</p>
+                                    </div>
+                                </div>
+                                <Separator />
+                                <div className="flex justify-between items-end bg-primary/5 -mx-6 -mb-6 p-6">
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground mb-1">Total Amount</p>
+                                        <p className="text-3xl font-bold text-primary">
+                                            {data.currency} {data.total?.toFixed(2)}
+                                        </p>
+                                    </div>
+                                    <div className="text-right text-xs text-muted-foreground">
+                                        Is subject to approval
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
                     </div>
 
                     {/* Sidebar / Meta Details */}
@@ -256,6 +266,13 @@ export default function PaymentRequestDetailPage() {
                         </Card>
                     </div>
                 </div>
+
+                {/* Status Flow */}
+                <Card className="shadow-sm border-muted-foreground/20 my-6">
+                    <CardContent className="pt-6">
+                        <PaymentStatusFlow status={data.status} dates={dates} />
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );
