@@ -491,6 +491,9 @@
             "languageDescription": "Choose your preferred language for the interface",
             "theme": "Theme",
             "themeDescription": "Customize the appearance of your application",
+            "themeLight": "Light",
+            "themeDark": "Dark",
+            "themeSystem": "System",
             "comingSoon": "Coming soon"
         }
     },

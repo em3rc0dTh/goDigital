@@ -491,6 +491,9 @@
             "languageDescription": "Elige tu idioma preferido para la interfaz",
             "theme": "Tema",
             "themeDescription": "Personaliza la apariencia de tu aplicación",
+            "themeLight": "Claro",
+            "themeDark": "Oscuro",
+            "themeSystem": "Sistema",
             "comingSoon": "Próximamente"
         }
     },
