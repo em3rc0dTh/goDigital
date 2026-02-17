@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,14 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Loader2, FileText, Calendar, DollarSign, User, Building, ArrowLeft, AlertCircle, Clock, ShieldCheck, ThumbsUp, ThumbsDown, CheckCircle, CreditCard, XCircle } from "lucide-react";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
@@ -31,10 +39,22 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isPayDialogOpen, setIsPayDialogOpen] = useState(false);
-    const [paymentProofUrl, setPaymentProofUrl] = useState("");
-    const [processingAction, setProcessingAction] = useState<string | null>(null);
 
+    // Action Dialog State
+    const [actionDialogOpen, setActionDialogOpen] = useState(false);
+    const [currentAction, setCurrentAction] = useState<'approve' | 'authorize' | 'pay' | 'reject' | null>(null);
+    const [processingAction, setProcessingAction] = useState(false);
+
+    // Form inputs
+    const [notes, setNotes] = useState("");
+    const [rejectionReason, setRejectionReason] = useState("");
+    const [paymentDate, setPaymentDate] = useState("");
+    const [debitedBankAccountId, setDebitedBankAccountId] = useState("");
+    const [paymentProofUrl, setPaymentProofUrl] = useState("");
+
+    // Data for dropdowns
+    const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+    const [businessUnit, setBusinessUnit] = useState<any>();
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
     useEffect(() => {
@@ -62,6 +82,7 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                 }
 
                 const result = await response.json();
+                setBusinessUnit(result.project.business_unit_id || null)
                 console.log("Fetched Data:", result); // Debugging
                 setData(result);
             } catch (err: any) {
@@ -76,24 +97,74 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
         fetchData();
     }, [id, API_BASE]);
 
-    const handleAction = async (action: 'approve' | 'authorize' | 'pay' | 'reject') => {
-        if (!data) return;
-        setProcessingAction(action);
+    useEffect(() => {
+        // Fetch bank accounts on mount (or only when needed)
+        const fetchAccounts = async () => {
+            if (!businessUnit) return;
+            try {
+                const token = Cookies.get("session_token");
+                const tenantDetailId = Cookies.get("tenantDetailId");
+                const response = await fetch(`${API_BASE}/accounts/bu/${businessUnit}`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "x-tenant-detail-id": tenantDetailId || "",
+                    },
+                    credentials: "include",
+                });
+                if (response.ok) {
+                    const accounts = await response.json();
+                    setBankAccounts(accounts);
+                }
+            } catch (e) {
+                console.error("Failed to fetch accounts", e);
+            }
+        };
+        fetchAccounts();
+    }, [API_BASE, businessUnit]);
+
+    const openActionDialog = (action: 'approve' | 'authorize' | 'pay' | 'reject') => {
+        setCurrentAction(action);
+        setNotes("");
+        setRejectionReason("");
+        setPaymentDate("");
+        setDebitedBankAccountId("");
+        setPaymentProofUrl("");
+        setActionDialogOpen(true);
+    };
+
+    const submitAction = async () => {
+        if (!data || !currentAction) return;
+        setProcessingAction(true);
 
         try {
             const token = Cookies.get("session_token");
             const tenantDetailId = Cookies.get("tenantDetailId");
 
-            let endpoint = action;
-            let body = {};
+            const endpoint = currentAction;
+            let body: any = {};
 
-            if (action === 'pay') {
+            if (currentAction === 'approve') {
+                body = { notes };
+            } else if (currentAction === 'authorize') {
+                body = {
+                    notes,
+                    payment_date: paymentDate,
+                    debited_bank_account: debitedBankAccountId
+                };
+            } else if (currentAction === 'pay') {
                 if (!paymentProofUrl) {
                     toast.error("Payment proof URL is required");
-                    setProcessingAction(null);
+                    setProcessingAction(false);
                     return;
                 }
-                body = { payment_proof: paymentProofUrl };
+                body = { payment_proof: paymentProofUrl, notes };
+            } else if (currentAction === 'reject') {
+                if (!rejectionReason) {
+                    toast.error("Rejection reason is required");
+                    setProcessingAction(false);
+                    return;
+                }
+                body = { reason: rejectionReason };
             }
 
             const response = await fetch(`${API_BASE}/payment-requests/${id}/${endpoint}`, {
@@ -115,17 +186,13 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
             const updatedData = await response.json();
             setData(updatedData);
 
-            toast.success(`Request ${action}d successfully`); // simple pluralization
-
-            if (action === 'pay') {
-                setIsPayDialogOpen(false);
-                setPaymentProofUrl("");
-            }
+            toast.success(`Request ${currentAction}d successfully`); // simple pluralization
+            setActionDialogOpen(false);
         } catch (error: any) {
             console.error(error);
             toast.error(error.message || "Failed to update status");
         } finally {
-            setProcessingAction(null);
+            setProcessingAction(false);
         }
     };
 
@@ -176,79 +243,161 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
         return (
             <div className="flex gap-2">
                 <Button
-                    onClick={() => handleAction('reject')}
+                    onClick={() => openActionDialog('reject')}
                     variant="outline"
                     className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 gap-2"
-                    disabled={!!processingAction}
                 >
-                    {processingAction === 'reject' ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                    <XCircle className="h-4 w-4" />
                     Reject
                 </Button>
 
                 {data.status === 'pending' && (
                     <Button
-                        onClick={() => handleAction('approve')}
+                        onClick={() => openActionDialog('approve')}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
-                        disabled={!!processingAction}
                     >
-                        {processingAction === 'approve' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
+                        <ThumbsUp className="h-4 w-4" />
                         Approve
                     </Button>
                 )}
 
                 {data.status === 'approved' && (
                     <Button
-                        onClick={() => handleAction('authorize')}
+                        onClick={() => openActionDialog('authorize')}
                         className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
-                        disabled={!!processingAction}
                     >
-                        {processingAction === 'authorize' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                        <ShieldCheck className="h-4 w-4" />
                         Authorize
                     </Button>
                 )}
 
                 {data.status === 'authorized' && (
-                    <Dialog open={isPayDialogOpen} onOpenChange={setIsPayDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="bg-green-600 hover:bg-green-700 text-white gap-2">
-                                <CreditCard className="h-4 w-4" />
-                                Attend / Pay
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Process Payment</DialogTitle>
-                                <DialogDescription>
-                                    Upload payment proof or provide a reference URL to mark this request as paid.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="proof">Payment Proof URL</Label>
-                                    <Input
-                                        id="proof"
-                                        placeholder="https://storage.example.com/voucher.pdf"
-                                        value={paymentProofUrl}
-                                        onChange={(e) => setPaymentProofUrl(e.target.value)}
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                        For this demo, please paste a URL to the payment voucher.
-                                    </p>
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsPayDialogOpen(false)}>Cancel</Button>
-                                <Button
-                                    onClick={() => handleAction('pay')}
-                                    disabled={!paymentProofUrl || !!processingAction}
-                                >
-                                    {processingAction === 'pay' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Mark as Paid
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                    <Button
+                        onClick={() => openActionDialog('pay')}
+                        className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                    >
+                        <CreditCard className="h-4 w-4" />
+                        Attend / Pay
+                    </Button>
                 )}
+
+                <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle className="capitalize">{currentAction} Request</DialogTitle>
+                            <DialogDescription>
+                                {currentAction === 'reject' ? "Please provide a reason for rejection." :
+                                    currentAction === 'approve' ? "You can add optional notes for approval." :
+                                        currentAction === 'authorize' ? "Specify payment details for authorization." :
+                                            "Upload proof of payment to complete this request."}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="grid gap-4 py-4">
+                            {currentAction === 'reject' && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="reason">Reason for Rejection <span className="text-red-500">*</span></Label>
+                                    <Textarea
+                                        id="reason"
+                                        placeholder="Budget limit exceeded..."
+                                        value={rejectionReason}
+                                        onChange={(e) => setRejectionReason(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            )}
+
+                            {currentAction === 'approve' && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="app-notes">Notes (Optional)</Label>
+                                    <Textarea
+                                        id="app-notes"
+                                        placeholder="Looks good to me..."
+                                        value={notes}
+                                        onChange={(e) => setNotes(e.target.value)}
+                                    />
+                                </div>
+                            )}
+
+                            {currentAction === 'authorize' && (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="auth-notes">Observations (Optional)</Label>
+                                        <Textarea
+                                            id="auth-notes"
+                                            placeholder="Authorized for Friday payment..."
+                                            value={notes}
+                                            onChange={(e) => setNotes(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="payment-date">Payment Date (Optional)</Label>
+                                        <Input
+                                            id="payment-date"
+                                            type="date"
+                                            value={paymentDate}
+                                            onChange={(e) => setPaymentDate(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bank-account">Debited Bank Account (Optional)</Label>
+                                        <Select value={debitedBankAccountId} onValueChange={setDebitedBankAccountId}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select account" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {bankAccounts.map((acc) => (
+                                                    <SelectItem key={acc.id} value={acc.id}>
+                                                        {acc.bank_name} - {acc.alias} ({acc.currency}) - {acc.bank_account_type}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </>
+                            )}
+
+                            {currentAction === 'pay' && (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="proof">Payment Proof URL <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="proof"
+                                            placeholder="https://storage.googleapis.com/.../voucher.jpg"
+                                            value={paymentProofUrl}
+                                            onChange={(e) => setPaymentProofUrl(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="pay-notes">Observations (Optional)</Label>
+                                        <Textarea
+                                            id="pay-notes"
+                                            placeholder="Paid via transfer #12345..."
+                                            value={notes}
+                                            onChange={(e) => setNotes(e.target.value)}
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setActionDialogOpen(false)}>Cancel</Button>
+                            <Button
+                                onClick={submitAction}
+                                disabled={processingAction}
+                                className={currentAction === 'reject' ? "bg-red-600 hover:bg-red-700" : ""}
+                            >
+                                {processingAction && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {currentAction === 'pay' ? 'Mark as Paid' :
+                                    currentAction === 'reject' ? 'Reject Request' :
+                                        currentAction === 'authorize' ? 'Authorize Request' :
+                                            'Approve Request'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         );
     };
@@ -275,8 +424,6 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                                 </Badge>
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground text-sm mt-1">
-                                <span className="font-mono bg-muted px-2 py-0.5 rounded text-xs">#{id.slice(-6).toUpperCase()}</span>
-                                <span>•</span>
                                 <span>Created {data.createdAt ? format(new Date(data.createdAt), "PPP") : "Unknown"}</span>
                             </div>
                         </div>
@@ -284,9 +431,11 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
 
                     <div className="flex items-center gap-3">
                         <Badge variant="outline" className={`px-4 py-1.5 text-sm font-medium border capitalize ${getStatusColor(data.status)}`}>
+                            <span className="font-mono px-2 py-0.5 rounded text-sm">#{id.slice(-6).toUpperCase()}</span>
+                            <span className="pr-2">•</span>
                             {data.status?.replace('_', ' ')}
                         </Badge>
-                        {renderActionButtons()}
+
                     </div>
                 </div>
 
@@ -334,6 +483,42 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Main Content */}
                     <div className="md:col-span-2 space-y-6">
+                        {/* Project & Vendor */}
+                        <Card className="shadow-sm border-muted-foreground/20">
+                            <CardHeader className="bg-muted/30 pb-4">
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <Building className="h-5 w-5 text-primary" />
+                                    Project & Vendor
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-6 space-y-6">
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <p className="text-sm font-medium text-muted-foreground">Project</p>
+                                        <div className="p-3 bg-muted/40 rounded-lg border border-border/50">
+                                            <p className="font-semibold text-sm sm:text-base">
+                                                {typeof data.project === 'object' ? data.project?.name : "Project ID"}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground mt-1 truncate font-mono">
+                                                {typeof data.project === 'object' ? data.project?.code : data.project_id}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <p className="text-sm font-medium text-muted-foreground">Vendor / Beneficiary</p>
+                                        <div className="p-3 bg-muted/40 rounded-lg border border-border/50">
+                                            <p className="font-semibold text-sm sm:text-base">
+                                                {typeof data.provider_id === 'object' ? data.provider_id?.name : "Provider ID"}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground mt-1 truncate font-mono">
+                                                {typeof data.provider_id === 'object' ? data.provider_id?._id : data.provider_id}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
                         {/* Financial Details */}
                         <Card className="shadow-sm border-muted-foreground/20 overflow-hidden">
                             <CardHeader className="bg-muted/30 pb-4">
@@ -366,43 +551,11 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                                     </div>
                                 </div>
                             </CardContent>
+                            <CardFooter className="flex mt-2 pb-2 justify-end">
+                                {renderActionButtons()}
+                            </CardFooter>
                         </Card>
 
-                        {/* Project & Vendor */}
-                        <Card className="shadow-sm border-muted-foreground/20">
-                            <CardHeader className="bg-muted/30 pb-4">
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <Building className="h-5 w-5 text-primary" />
-                                    Project & Vendor
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="pt-6 space-y-6">
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <p className="text-sm font-medium text-muted-foreground">Project</p>
-                                        <div className="p-3 bg-muted/40 rounded-lg border border-border/50">
-                                            <p className="font-semibold text-sm sm:text-base">
-                                                {typeof data.project_id === 'object' ? data.project_id?.name : "Project ID"}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground mt-1 truncate font-mono">
-                                                {typeof data.project_id === 'object' ? data.project_id?._id : data.project_id}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <p className="text-sm font-medium text-muted-foreground">Vendor / Beneficiary</p>
-                                        <div className="p-3 bg-muted/40 rounded-lg border border-border/50">
-                                            <p className="font-semibold text-sm sm:text-base">
-                                                {typeof data.provider_id === 'object' ? data.provider_id?.name : "Provider ID"}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground mt-1 truncate font-mono">
-                                                {typeof data.provider_id === 'object' ? data.provider_id?._id : data.provider_id}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
                     </div>
 
                     {/* Sidebar / Meta Details */}
@@ -437,11 +590,21 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                                     </div>
 
                                     <div className="flex items-start gap-3">
+                                        <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-medium">Payment Date</p>
+                                            <p className="text-sm text-foreground">
+                                                {data.payment_date ? format(new Date(data.payment_date), "PPP") : "-"}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3">
                                         <User className="h-4 w-4 text-muted-foreground mt-0.5" />
                                         <div>
                                             <p className="text-sm font-medium">Created By</p>
                                             <p className="text-sm text-foreground break-all">
-                                                {data.userIdCreator || "-"}
+                                                {data.created_by.email || "-"}
                                             </p>
                                         </div>
                                     </div>

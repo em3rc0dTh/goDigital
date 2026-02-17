@@ -7,6 +7,7 @@ import {
     businessUnits,
     businessUnitTreasurers,
     providers,
+    bankAccounts,
 } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { sendEmail } from "@/lib/mailgun";
@@ -89,6 +90,14 @@ export class PaymentRequestService {
             }
         }
 
+        const bankAccount = request.debitedAccountId
+            ? await db
+                .select()
+                .from(bankAccounts)
+                .where(eq(bankAccounts.id, request.debitedAccountId))
+                .then((res) => res[0])
+            : null;
+
         return {
             request,
             project,
@@ -98,10 +107,11 @@ export class PaymentRequestService {
             projectOwner,
             admin,
             treasurers,
+            bankAccount,
         };
     }
 
-    static async approve(id: string, approverId: string) {
+    static async approve(id: string, approverId: string, data: { notes?: string } = {}) {
         const { request, creator, projectOwner, admin } = await this.getDetails(id);
 
         if (request.status !== "pending") {
@@ -116,6 +126,7 @@ export class PaymentRequestService {
             .set({
                 status: "approved",
                 approvedBy: approverId,
+                approvalNotes: data.notes,
                 updatedAt: new Date(),
             })
             .where(eq(paymentRequests.id, id));
@@ -160,7 +171,7 @@ export class PaymentRequestService {
         return { success: true };
     }
 
-    static async authorize(id: string, authorizerId: string) {
+    static async authorize(id: string, authorizerId: string, data: { notes?: string, paymentDate?: Date, debitedAccountId?: string } = {}) {
         const { request, creator, admin, treasurers } = await this.getDetails(id);
 
         if (request.status !== "approved") {
@@ -172,6 +183,9 @@ export class PaymentRequestService {
             .set({
                 status: "authorized",
                 authorizedBy: authorizerId,
+                authorizationNotes: data.notes,
+                paymentDate: data.paymentDate,
+                debitedAccountId: data.debitedAccountId,
                 updatedAt: new Date(),
             })
             .where(eq(paymentRequests.id, id));
@@ -216,21 +230,22 @@ export class PaymentRequestService {
         return { success: true };
     }
 
-    static async pay(id: string, payerId: string, paymentProof: string) {
+    static async pay(id: string, payerId: string, data: { paymentProof: string, notes?: string }) {
         const { request, creator, treasurers } = await this.getDetails(id);
 
         if (request.status !== "authorized") {
             throw new Error("Request must be authorized to be paid.");
         }
 
-        if (!paymentProof) throw new Error("Payment proof is required.");
+        if (!data.paymentProof) throw new Error("Payment proof is required.");
 
         await db
             .update(paymentRequests)
             .set({
                 status: "paid",
                 paidBy: payerId,
-                paymentProof,
+                paymentProof: data.paymentProof,
+                paymentNotes: data.notes,
                 updatedAt: new Date(),
             })
             .where(eq(paymentRequests.id, id));
@@ -243,9 +258,9 @@ export class PaymentRequestService {
             await sendEmail({
                 to: creator.email,
                 subject,
-                html: `<p>Your payment request has been paid. Voucher: <a href="${paymentProof}">View Voucher</a></p>`,
+                html: `<p>Your payment request has been paid. Voucher: <a href="${data.paymentProof}">View Voucher</a></p>`,
                 replyTo: "no-reply@godigital.com",
-                text: `Your payment request has been paid. Voucher: ${paymentProof}`,
+                text: `Your payment request has been paid. Voucher: ${data.paymentProof}`,
             });
         }
 
@@ -267,7 +282,7 @@ export class PaymentRequestService {
         return { success: true };
     }
 
-    static async reject(id: string, rejectorId: string) {
+    static async reject(id: string, rejectorId: string, data: { reason: string }) {
         const { request, creator } = await this.getDetails(id);
 
         if (request.status === "paid" || request.status === "rejected") {
@@ -275,11 +290,14 @@ export class PaymentRequestService {
             // However, rejecting a paid request implies refund or voiding. I'll allow it but update db.
         }
 
+        if (!data.reason) throw new Error("Reason for rejection is required.");
+
         await db
             .update(paymentRequests)
             .set({
                 status: "rejected",
                 rejectedBy: rejectorId,
+                rejectionReason: data.reason,
                 updatedAt: new Date(),
             })
             .where(eq(paymentRequests.id, id));

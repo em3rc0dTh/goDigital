@@ -491,14 +491,15 @@ export default function PaymentRequestPage() {
                     const d = new Date();
                     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 })(),
-                dueDate: data.deliveryDeadline ? (() => {
-                    const d = new Date(data.deliveryDeadline);
+                dueDate: (data.deliveryDeadline || data.deadlineGet) ? (() => {
+                    const d = new Date(data.deliveryDeadline || data.deadlineGet);
                     return !isNaN(d.getTime())
                         ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
                         : undefined;
                 })() : undefined,
                 notes: data.description || data.notes,
-                status: 'pending'
+                status: 'pending',
+                userIdCreator: data.userIdCreator
             };
             const token = Cookies.get("session_token");
             const tenantDetailId = Cookies.get("tenantDetailId");

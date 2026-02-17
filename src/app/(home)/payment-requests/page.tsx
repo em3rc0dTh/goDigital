@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { format } from "date-fns";
+import { es, enUS } from "date-fns/locale";
 import {
     Table,
     TableBody,
@@ -12,7 +13,7 @@ import {
     TableHeader,
     TableRow
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,20 +21,9 @@ import {
     Loader2,
     Plus,
     Search,
-    FileText,
     Eye,
-    MoreHorizontal,
-    Filter,
-    ArrowUpDown
 } from "lucide-react";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface PaymentRequest {
     _id: string;
@@ -45,16 +35,24 @@ interface PaymentRequest {
     currency: string;
     status: string;
     date: string;
+    dueDate: string;
     createdAt: string;
     purchase_order_id?: any;
 }
 
 export default function PaymentRequestsPage() {
     const router = useRouter();
+    const { t, locale } = useI18n();
     const [data, setData] = useState<PaymentRequest[]>([]);
+
+    const getDateLocale = () => {
+        return locale === 'es' ? es : enUS;
+    };
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [dateFilter, setDateFilter] = useState<string>("");
+    const [dueDateFilter, setDueDateFilter] = useState<string>("");
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
@@ -90,6 +88,12 @@ export default function PaymentRequestsPage() {
         fetchData();
     }, [API_BASE]);
 
+    const parseDateAsLocal = (dateString: string) => {
+        if (!dateString) return null;
+        const [year, month, day] = dateString.split('T')[0].split('-').map(Number);
+        return new Date(year, month - 1, day);
+    };
+
     const getStatusColor = (status: string) => {
         switch (status?.toLowerCase()) {
             case 'approved': return "bg-green-500/15 text-green-700 hover:bg-green-500/25 border-green-200";
@@ -109,7 +113,10 @@ export default function PaymentRequestsPage() {
 
         const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
 
-        return matchesSearch && matchesStatus;
+        const matchesDate = !dateFilter || (item.date && item.date.startsWith(dateFilter));
+        const matchesDueDate = !dueDateFilter || (item.dueDate && item.dueDate.startsWith(dueDateFilter));
+
+        return matchesSearch && matchesStatus && matchesDate && matchesDueDate;
     });
 
     return (
@@ -117,40 +124,76 @@ export default function PaymentRequestsPage() {
             <div className="container max-w-6xl mx-auto px-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">My Payment Requests</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">{t("PaymentRequests.title")}</h1>
                         <p className="text-muted-foreground mt-1">
-                            View and manage your payment requests
+                            {t("PaymentRequests.subtitle")}
                         </p>
                     </div>
                     <Button onClick={() => router.push("/payment-request")} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
                         <Plus className="h-4 w-4" />
-                        New Request
+                        {t("PaymentRequests.newRequest")}
                     </Button>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search by project, provider or ID..."
-                            className="pl-9 bg-background"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                <div className="flex flex-col gap-4 mb-6">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder={t("PaymentRequests.searchPlaceholder")}
+                                className="pl-9 bg-background"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <div className="w-[180px]">
+                            <select
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                            >
+                                <option value="all">{t("PaymentRequests.allStatuses")}</option>
+                                <option value="pending">{t("PaymentRequestDetail.status.pending")}</option>
+                                <option value="approved">{t("PaymentRequestDetail.status.approved")}</option>
+                                <option value="authorized">{t("PaymentRequestDetail.status.authorized")}</option>
+                                <option value="paid">{t("PaymentRequestDetail.status.paid")}</option>
+                                <option value="rejected">{t("PaymentRequestDetail.status.rejected")}</option>
+                            </select>
+                        </div>
                     </div>
-                    <div className="w-[180px]">
-                        <select
-                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                        >
-                            <option value="all">All Statuses</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="authorized">Authorized</option>
-                            <option value="paid">Paid</option>
-                            <option value="rejected">Rejected</option>
-                        </select>
+
+                    <div className="flex flex-wrap gap-4 items-center">
+                        <div className="flex items-center gap-2 border rounded-md px-3 h-10 bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                            <span className="text-sm font-medium whitespace-nowrap text-muted-foreground">{t("PaymentRequests.filterByDate")}:</span>
+                            <input
+                                type="date"
+                                className="bg-transparent text-sm focus:outline-none h-full py-1 text-foreground"
+                                value={dateFilter}
+                                onChange={(e) => setDateFilter(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex items-center gap-2 border rounded-md px-3 h-10 bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                            <span className="text-sm font-medium whitespace-nowrap text-muted-foreground">{t("PaymentRequests.filterByDueDate")}:</span>
+                            <input
+                                type="date"
+                                className="bg-transparent text-sm focus:outline-none h-full py-1 text-foreground"
+                                value={dueDateFilter}
+                                onChange={(e) => setDueDateFilter(e.target.value)}
+                            />
+                        </div>
+                        {(dateFilter || dueDateFilter) && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    setDateFilter("");
+                                    setDueDateFilter("");
+                                }}
+                                className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                            >
+                                {t("PaymentRequests.clearFilter")}
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -159,12 +202,13 @@ export default function PaymentRequestsPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/40 hover:bg-muted/40">
-                                    <TableHead className="w-[100px]">ID</TableHead>
-                                    <TableHead>Project</TableHead>
-                                    <TableHead>Provider</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead className="text-right">Amount</TableHead>
-                                    <TableHead className="w-[120px]">Status</TableHead>
+                                    <TableHead className="w-[100px]">{t("PaymentRequests.table.id")}</TableHead>
+                                    <TableHead>{t("PaymentRequests.table.project")}</TableHead>
+                                    <TableHead>{t("PaymentRequests.table.provider")}</TableHead>
+                                    <TableHead>{t("PaymentRequests.table.date")}</TableHead>
+                                    <TableHead>{t("PaymentRequests.table.dueDate")}</TableHead>
+                                    <TableHead className="text-right">{t("PaymentRequests.table.amount")}</TableHead>
+                                    <TableHead className="w-[120px]">{t("PaymentRequests.table.status")}</TableHead>
                                     <TableHead className="w-[50px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -174,14 +218,14 @@ export default function PaymentRequestsPage() {
                                         <TableCell colSpan={7} className="h-32 text-center">
                                             <div className="flex flex-col items-center justify-center text-muted-foreground">
                                                 <Loader2 className="h-6 w-6 animate-spin mb-2" />
-                                                Loading requests...
+                                                {t("PaymentRequests.table.loading")}
                                             </div>
                                         </TableCell>
                                     </TableRow>
                                 ) : filteredData.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                                            No payment requests found
+                                            {t("PaymentRequests.table.empty")}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -197,14 +241,17 @@ export default function PaymentRequestsPage() {
                                                 {typeof item.provider_id === 'object' ? item.provider_id?.name : 'Unknown Provider'}
                                             </TableCell>
                                             <TableCell className="text-muted-foreground text-sm">
-                                                {item.date || (item.createdAt ? format(new Date(item.createdAt), "MMM d, yyyy") : "-")}
+                                                {item.date ? format(parseDateAsLocal(item.date) as Date, "PPP", { locale: getDateLocale() }) : "-"}
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground text-sm">
+                                                {item.dueDate ? format(parseDateAsLocal(item.dueDate) as Date, "PPP", { locale: getDateLocale() }) : "-"}
                                             </TableCell>
                                             <TableCell className="text-right font-medium">
                                                 {item.currency} {item.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className={`capitalize ${getStatusColor(item.status)}`}>
-                                                    {item.status}
+                                                    {t(`PaymentRequestDetail.status.${item.status.toLowerCase()}`) || item.status}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>

@@ -38,6 +38,12 @@ interface AccountsTabProps {
   updateHolder: string;
   setUpdateHolder: (v: string) => void;
   updateNumber: string;
+  // 🆕 Business Units
+  businessUnits: any[];
+  assignedBUs: string[];
+  setAssignedBUs: (v: string[]) => void;
+  updateAssignedBUs: string[];
+  setUpdateAssignedBUs: (v: string[]) => void;
 }
 
 export function AccountsTab({
@@ -68,6 +74,11 @@ export function AccountsTab({
   updateHolder,
   setUpdateHolder,
   updateNumber,
+  businessUnits,
+  assignedBUs,
+  setAssignedBUs,
+  updateAssignedBUs,
+  setUpdateAssignedBUs,
 }: AccountsTabProps) {
   const BANKS = [
     "BCP",
@@ -173,6 +184,32 @@ export function AccountsTab({
                 ref={bankType}
                 placeholder={t("Extract.Settings.Accounts.accountTypePlaceholder")}
               />
+
+              <div className="col-span-2 space-y-2 border p-3 rounded-md">
+                <label className="text-sm font-medium">{t("Assign Business Units")}</label>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                  {businessUnits.map((bu) => (
+                    <div key={bu._id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`bu-${bu._id}`}
+                        checked={assignedBUs.includes(bu._id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setAssignedBUs([...assignedBUs, bu._id]);
+                          } else {
+                            setAssignedBUs(assignedBUs.filter(id => id !== bu._id));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <label htmlFor={`bu-${bu._id}`} className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                        {bu.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
             <Button type="submit">{t("Extract.Settings.Accounts.submit")}</Button>
           </form>
@@ -243,6 +280,32 @@ export function AccountsTab({
                 onChange={(e) => setUpdateAccountType(e.target.value)}
                 placeholder={t("Extract.Settings.Accounts.type")}
               />
+
+              <div className="col-span-2 space-y-2 border p-3 rounded-md">
+                <label className="text-sm font-medium">{t("Assign Business Units")}</label>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                  {businessUnits.map((bu) => (
+                    <div key={`update-bu-${bu._id}`} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`update-bu-${bu._id}`}
+                        checked={updateAssignedBUs.includes(bu._id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setUpdateAssignedBUs([...updateAssignedBUs, bu._id]);
+                          } else {
+                            setUpdateAssignedBUs(updateAssignedBUs.filter(id => id !== bu._id));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <label htmlFor={`update-bu-${bu._id}`} className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                        {bu.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
             <Button onClick={saveAccountUpdates}>{t("Extract.Settings.Accounts.save")}</Button>
           </CardContent>

@@ -15,7 +15,12 @@ export async function PUT(
     }
 
     try {
-        await PaymentRequestService.authorize(id, userId);
+        const body = await request.json().catch(() => ({}));
+        await PaymentRequestService.authorize(id, userId, {
+            notes: body.notes,
+            paymentDate: body.payment_date ? new Date(body.payment_date) : undefined,
+            debitedAccountId: body.debited_bank_account
+        });
         const { request: r } = await PaymentRequestService.getDetails(id);
         return NextResponse.json(r);
     } catch (error: any) {

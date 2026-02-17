@@ -23,7 +23,6 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
   const [emailSetups, setEmailSetups] = useState<any[]>([]);
   const [imapConfig, setImapConfig] = useState<any>(null);
   const [statusMessage, setStatusMessage] = useState("");
-
   // 🆕 Estado para el dbName del tenant activo
   const [tenantDbName, setTenantDbName] = useState<string>("");
 
@@ -59,9 +58,34 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
   const IMAP_BASE =
     process.env.NEXT_PUBLIC_IMAP_API_BASE || "/imap";
   // 🆕 Cargar dbName del tenant activo
+  const [businessUnits, setBusinessUnits] = useState<any[]>([]);
+  const [assignedBUs, setAssignedBUs] = useState<string[]>([]);
+  const [updateAssignedBUs, setUpdateAssignedBUs] = useState<string[]>([]);
+
   useEffect(() => {
     loadTenantDbName();
+    loadBusinessUnits();
   }, []);
+
+  async function loadBusinessUnits() {
+    try {
+      const token = Cookies.get("session_token");
+      const tenantDetailId = Cookies.get("tenantDetailId");
+      const res = await fetch(`${API_BASE}/business-units`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "x-tenant-detail-id": tenantDetailId || "",
+        },
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBusinessUnits(data);
+      }
+    } catch (e) {
+      console.error("Failed to load BUs", e);
+    }
+  }
 
   useEffect(() => {
     if (tenantDbName) {
@@ -209,6 +233,12 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     setUpdateNumber(account.account_number || "");
     setUpdateCurrency(account.currency || null);
     setUpdateAccountType(account.account_type || null);
+
+    // Ensure we handle both populated objects and ID strings
+    const assignedIds = (account.assigned_bu || []).map((bu: any) =>
+      (typeof bu === 'object' && bu !== null && bu._id) ? bu._id : bu
+    );
+    setUpdateAssignedBUs(assignedIds);
   }
 
   const selectAccount = (id: string) => {
@@ -246,6 +276,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       currency,
       account_type,
       bank_account_type,
+      assigned_bu: assignedBUs,
       tenantId: Cookies.get("tenantId"),
     };
     console.log(payload)
@@ -274,6 +305,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       setBankName(null);
       setBankCurrency(null);
       setBankAccountType(null);
+      setAssignedBUs([]);
 
       await loadAccountsFromDB();
       selectAccount(saved.id);
@@ -309,6 +341,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       account_holder: updateHolder.trim() || "",
       currency: updateCurrency || "",     // ✅ DESDE STATE DE UPDATE
       account_type: updateAccountType || "",
+      assigned_bu: updateAssignedBUs,
     };
 
     console.log("Payload:", payload);
@@ -712,6 +745,11 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
           updateHolder={updateHolder}
           setUpdateHolder={setUpdateHolder}
           updateNumber={updateNumber}
+          businessUnits={businessUnits}
+          assignedBUs={assignedBUs}
+          setAssignedBUs={setAssignedBUs}
+          updateAssignedBUs={updateAssignedBUs}
+          setUpdateAssignedBUs={setUpdateAssignedBUs}
         />
       )}
 

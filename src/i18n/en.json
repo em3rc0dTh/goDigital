@@ -661,6 +661,11 @@
             "issueDate": "Issue Date",
             "dueDate": "Due Date",
             "createdBy": "Created By",
+            "paymentDate": "Payment Date",
+            "notes": "Notes",
+            "approvalNotes": "Approval Notes",
+            "authorizationNotes": "Authorization Notes",
+            "paymentNotes": "Payment Notes",
             "description": "Description / Notes",
             "noNotes": "No additional notes provided."
         },
@@ -670,6 +675,27 @@
             "authorized": "Authorized",
             "paid": "Paid",
             "rejected": "Rejected"
+        }
+    },
+    "PaymentRequests": {
+        "title": "My Payment Requests",
+        "subtitle": "View and manage your payment requests",
+        "newRequest": "New Request",
+        "searchPlaceholder": "Search by project, provider or ID...",
+        "allStatuses": "All Statuses",
+        "filterByDate": "Filter by Date",
+        "filterByDueDate": "Filter by Due Date",
+        "clearFilter": "Clear Filter",
+        "table": {
+            "id": "ID",
+            "project": "Project",
+            "provider": "Provider",
+            "date": "Date",
+            "dueDate": "Due Date",
+            "amount": "Amount",
+            "status": "Status",
+            "loading": "Loading requests...",
+            "empty": "No payment requests found"
         }
     }
 }

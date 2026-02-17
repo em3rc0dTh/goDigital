@@ -15,7 +15,8 @@ export async function PUT(
     }
 
     try {
-        await PaymentRequestService.reject(id, userId);
+        const body = await request.json().catch(() => ({}));
+        await PaymentRequestService.reject(id, userId, { reason: body.reason });
         const { request: r } = await PaymentRequestService.getDetails(id);
         return NextResponse.json(r);
     } catch (error: any) {

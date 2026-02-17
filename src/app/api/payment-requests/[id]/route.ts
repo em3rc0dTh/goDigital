@@ -16,6 +16,7 @@ export async function GET(
             project_id: project ? { _id: project.id, name: project.name } : r.projectId,
             provider_id: provider ? { _id: provider.id, name: provider.name } : r.providerId,
             userIdCreator: creator?.email || r.creatorId,
+            created_by: creator ? { email: creator.email, _id: creator.id, name: creator.name } : { email: r.creatorId },
         };
 
         return NextResponse.json(data);

@@ -15,7 +15,8 @@ export async function PUT(
     }
 
     try {
-        await PaymentRequestService.approve(id, userId);
+        const body = await request.json().catch(() => ({}));
+        await PaymentRequestService.approve(id, userId, { notes: body.notes });
         const { request: r } = await PaymentRequestService.getDetails(id);
         return NextResponse.json(r);
     } catch (error: any) {

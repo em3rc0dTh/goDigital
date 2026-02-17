@@ -157,10 +157,10 @@ export default function PaymentRequestDetailPage() {
                                         <p className="text-sm font-medium text-muted-foreground">{t("PaymentRequestDetail.fields.project")}</p>
                                         <div className="p-3 bg-muted/40 rounded-lg border border-border/50">
                                             <p className="font-semibold text-sm sm:text-base">
-                                                {typeof data.project_id === 'object' ? data.project_id?.name : "Project ID"}
+                                                {typeof data.project === 'object' ? data.project?.name : "Project ID"}
                                             </p>
                                             <p className="text-xs text-muted-foreground mt-1 truncate font-mono">
-                                                {typeof data.project_id === 'object' ? data.project_id?._id : data.project_id}
+                                                {typeof data.project === 'object' ? data.project?.code : data.project_id}
                                             </p>
                                         </div>
                                     </div>
@@ -246,11 +246,21 @@ export default function PaymentRequestDetailPage() {
                                     </div>
 
                                     <div className="flex items-start gap-3">
+                                        <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-medium">{t("PaymentRequestDetail.fields.paymentDate")}</p>
+                                            <p className="text-sm text-foreground">
+                                                {data.payment_date ? format(new Date(data.payment_date), "PPP") : "-"}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3">
                                         <User className="h-4 w-4 text-muted-foreground mt-0.5" />
                                         <div>
                                             <p className="text-sm font-medium">{t("PaymentRequestDetail.fields.createdBy")}</p>
                                             <p className="text-sm text-foreground break-all">
-                                                {data.userIdCreator || "-"}
+                                                {data.created_by.email || "-"}
                                             </p>
                                         </div>
                                     </div>
@@ -260,9 +270,49 @@ export default function PaymentRequestDetailPage() {
 
                                 <div>
                                     <p className="text-sm font-medium mb-2">{t("PaymentRequestDetail.fields.description")}</p>
-                                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                        {data.notes || t("PaymentRequestDetail.fields.noNotes")}
-                                    </p>
+                                    <div className="space-y-4">
+                                        {data.notes && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{t("PaymentRequestDetail.fields.notes")}</p>
+                                                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-muted/30 p-2 rounded-md border border-border/50">
+                                                    {data.notes}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {data.approvalNotes && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-green-600/80 uppercase mb-1">{t("PaymentRequestDetail.fields.approvalNotes")}</p>
+                                                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-green-50/50 p-2 rounded-md border border-green-100 dark:border-green-900/20">
+                                                    {data.approvalNotes}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {data.authorizationNotes && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-blue-600/80 uppercase mb-1">{t("PaymentRequestDetail.fields.authorizationNotes")}</p>
+                                                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-blue-50/50 p-2 rounded-md border border-blue-100 dark:border-blue-900/20">
+                                                    {data.authorizationNotes}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {data.paymentNotes && (
+                                            <div>
+                                                <p className="text-xs font-semibold text-purple-600/80 uppercase mb-1">{t("PaymentRequestDetail.fields.paymentNotes")}</p>
+                                                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-purple-50/50 p-2 rounded-md border border-purple-100 dark:border-purple-900/20">
+                                                    {data.paymentNotes}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {!data.notes && !data.approvalNotes && !data.authorizationNotes && !data.paymentNotes && (
+                                            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                                {t("PaymentRequestDetail.fields.noNotes")}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

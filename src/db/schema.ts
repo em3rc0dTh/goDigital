@@ -173,9 +173,15 @@ export const paymentRequests = pgTable("payment_request", {
   status: text("status").default("pending"), // pending, approved, authorized, paid, rejected
   paymentProof: text("payment_proof"), // URL to voucher
   approvedBy: text("approved_by").references(() => users.id), // Project Owner
+  approvalNotes: text("approval_notes"),
   authorizedBy: text("authorized_by").references(() => users.id), // BU Admin
+  authorizationNotes: text("authorization_notes"),
+  paymentDate: timestamp("payment_date"),
+  debitedAccountId: uuid("debited_account_id").references(() => bankAccounts.id),
   paidBy: text("paid_by").references(() => users.id), // Treasurer
+  paymentNotes: text("payment_notes"),
   rejectedBy: text("rejected_by").references(() => users.id), // Any
+  rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

@@ -22,7 +22,7 @@ export async function PUT(
             return NextResponse.json({ error: "Multiple payment proof required" }, { status: 400 });
         }
 
-        await PaymentRequestService.pay(id, userId, payment_proof);
+        await PaymentRequestService.pay(id, userId, { paymentProof: payment_proof, notes: body.notes });
         const { request: r } = await PaymentRequestService.getDetails(id);
         return NextResponse.json(r);
     } catch (error: any) {

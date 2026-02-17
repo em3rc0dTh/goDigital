@@ -662,6 +662,11 @@
             "issueDate": "Fecha de Emisión",
             "dueDate": "Fecha de Vencimiento",
             "createdBy": "Creado por",
+            "paymentDate": "Fecha de Pago",
+            "notes": "Notas",
+            "approvalNotes": "Notas de Aprobación",
+            "authorizationNotes": "Notas de Autorización",
+            "paymentNotes": "Notas de Pago",
             "description": "Descripción / Notas",
             "noNotes": "No se proporcionaron notas adicionales."
         },
@@ -671,6 +676,27 @@
             "authorized": "Autorizado",
             "paid": "Pagado",
             "rejected": "Rechazado"
+        }
+    },
+    "PaymentRequests": {
+        "title": "Mis Solicitudes de Pago",
+        "subtitle": "Ve y gestiona tus solicitudes de pago",
+        "newRequest": "Nueva Solicitud",
+        "searchPlaceholder": "Buscar por proyecto, proveedor o ID...",
+        "allStatuses": "Todos los Estados",
+        "filterByDate": "Filtrar por Fecha",
+        "filterByDueDate": "Filtrar por Vencimiento",
+        "clearFilter": "Limpiar Filtro",
+        "table": {
+            "id": "ID",
+            "project": "Proyecto",
+            "provider": "Proveedor",
+            "date": "Fecha",
+            "dueDate": "Vencimiento",
+            "amount": "Monto",
+            "status": "Estado",
+            "loading": "Cargando solicitudes...",
+            "empty": "No se encontraron solicitudes de pago"
         }
     }
 }
