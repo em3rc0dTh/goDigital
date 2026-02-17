@@ -10,7 +10,7 @@ export const ObjectFieldTemplate = (props: ObjectFieldTemplateProps) => {
             {props.description && (
                 <p className="text-sm text-gray-500 mb-4">{props.description}</p>
             )}
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-2">
                 {props.properties.map((element) => (
                     <div key={element.name} className="w-full">
                         {element.content}

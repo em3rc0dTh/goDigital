@@ -12,8 +12,43 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { useI18n } from "@/i18n/I18nProvider";
+function StepShell({ children, step, total = 4 }: { children: React.ReactNode; step: number; total?: number }) {
+    return (
+        <div className="h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden">
+            <div className="flex-1 min-h-0 flex flex-col justify-center container max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6">
+                {children}
+            </div>
+            <div className="shrink-0 pb-3 text-center text-xs text-gray-500">
+                Step {step} of {total}
+            </div>
+        </div>
+    );
+}
+
+function PageHeader({ icon: Icon, title, subtitle }: { icon: any; title: string; subtitle?: string }) {
+    return (
+        <div className="mb-4 space-y-3 shrink-0">
+            <div className="flex items-center gap-3">
+                <div className="relative shrink-0">
+                    <div className="absolute inset-0 bg-primary/20 blur-md rounded-xl" />
+                    <div className="relative p-2 sm:p-2.5 bg-primary/10 rounded-xl border border-primary/20">
+                        <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                    </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight truncate">{title}</h1>
+                    {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
+                </div>
+            </div>
+            <Separator />
+        </div>
+    );
+}
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
 export default function PaymentRequestPage() {
+    const { t } = useI18n();
     // Step management (0 = project selection, then 1-4 as before)
     const [step, setStep] = useState(0);
     const [selectedProject, setSelectedProject] = useState<any>(null);
@@ -51,7 +86,6 @@ export default function PaymentRequestPage() {
         };
     });
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
     // Load projects on initial mount
     useEffect(() => {
@@ -74,11 +108,11 @@ export default function PaymentRequestPage() {
                     const activeProjects = data.filter((p: any) => p.status === 'active');
                     setProjects(activeProjects);
                 } else {
-                    toast.error("Failed to load projects.");
+                    toast.error(t('PaymentRequestForm.toasts.projectsLoadError'));
                 }
             } catch (error) {
                 console.error(error);
-                toast.error("Failed to load projects.");
+                toast.error(t('PaymentRequestForm.toasts.projectsLoadError'));
             } finally {
                 setLoadingProjects(false);
             }
@@ -86,10 +120,10 @@ export default function PaymentRequestPage() {
         const userEmail = Cookies.get("userEmail");
         setUserEmail(userEmail || "");
         fetchProjects();
-    }, []);
+    }, [t]);
 
     // Determine which form schema to load
-    const getFormName = () => {
+    const getFormName = React.useCallback(() => {
         if (hasFiles === true) {
             return "payment_request_with_files";
         } else if (hasFiles === false && personType === "natural") {
@@ -98,7 +132,7 @@ export default function PaymentRequestPage() {
             return "payment_request_legal_person";
         }
         return null;
-    };
+    }, [hasFiles, personType]);
 
     // Fetch data when form type is determined
     useEffect(() => {
@@ -125,25 +159,25 @@ export default function PaymentRequestPage() {
                     const data = await schemaRes.json();
                     setSchemaData(data);
                 } else {
-                    toast.error(`Form schema '${formName}' not found.`);
+                    toast.error(t('PaymentRequestForm.toasts.schemaNotFound', { name: formName }));
                 }
 
                 if (providersRes.ok) {
                     const data = await providersRes.json();
                     setProviders(data);
                 } else {
-                    toast.error("Providers not found.");
+                    toast.error(t('PaymentRequestForm.toasts.providersNotFound'));
                 }
             } catch (error) {
                 console.error(error);
-                toast.error("Failed to load form data.");
+                toast.error(t('PaymentRequestForm.toasts.formDataLoadError'));
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [hasFiles, personType, API_BASE]);
+    }, [getFormName, t]);
 
     const handleProjectSelect = (project: any) => {
         setSelectedProject(project);
@@ -334,8 +368,8 @@ export default function PaymentRequestPage() {
             }));
 
             setFileProcessed(true);
-            toast.success("Files processed successfully!", {
-                description: "Data has been extracted and populated in the form"
+            toast.success(t('PaymentRequestForm.toasts.fileProcessSuccess'), {
+                description: t('PaymentRequestForm.toasts.fileProcessSuccessDesc')
             });
 
             // Move to form view
@@ -343,8 +377,8 @@ export default function PaymentRequestPage() {
 
         } catch (error) {
             console.error('File upload error:', error);
-            toast.error("Failed to process files", {
-                description: "Please try again or enter data manually"
+            toast.error(t('PaymentRequestForm.toasts.fileProcessError'), {
+                description: t('PaymentRequestForm.toasts.fileProcessErrorDesc')
             });
         } finally {
             setIsProcessing(false);
@@ -519,14 +553,14 @@ export default function PaymentRequestPage() {
                 throw new Error(errorData.error || "Failed to submit payment request");
             }
 
-            toast.success("Payment request submitted successfully!", {
-                description: "Your request has been sent for approval"
+            toast.success(t('PaymentRequestForm.toasts.submitSuccess'), {
+                description: t('PaymentRequestForm.toasts.submitSuccessDesc')
             });
 
             resetForm();
         } catch (error: any) {
             console.error("Submission error:", error);
-            toast.error("Submission failed", {
+            toast.error(t('PaymentRequestForm.toasts.submitError'), {
                 description: error.message
             });
         } finally {
@@ -555,149 +589,162 @@ export default function PaymentRequestPage() {
         setCurrentPage(1);
     }, [searchTerm]);
 
+    const getTodayLocalISO = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+
+    const formatDateDisplay = (iso: string) => {
+        if (!iso) return "";
+        const [y, m, d] = iso.split("-");
+        return `${d}/${m}/${y}`;
+    };
+
     // Step 0: Project Selection
     if (step === 0) {
         if (loadingProjects) {
             return (
-                <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
-                    <div className="relative">
-                        <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full"></div>
-                        <Loader2 className="relative h-10 w-10 sm:h-12 sm:w-12 animate-spin text-primary mb-4" />
-                    </div>
-                    <p className="text-sm sm:text-base text-muted-foreground mt-4 text-center px-4">
-                        Loading projects...
-                    </p>
+                <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/30">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground mt-4">{t('PaymentRequestForm.step1.loading')}</p>
                 </div>
             );
         }
 
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-                <div className="container max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-10">
-                    <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <div className="h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden">
+                <div className="flex flex-col flex-1 min-h-0 container max-w-4xl mx-auto px-3 sm:px-4 md:px-6 pt-4 sm:pt-6 pb-2">
+
+                    {/* Page header */}
+                    <div className="shrink-0 mb-4 space-y-3">
+                        <div className="flex items-center gap-3">
                             <div className="relative shrink-0">
-                                <div className="absolute inset-0 bg-primary/20 blur-md rounded-xl"></div>
-                                <div className="relative p-2 sm:p-3 bg-primary/10 rounded-xl border border-primary/20">
-                                    <FolderKanban className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+                                <div className="absolute inset-0 bg-primary/20 blur-md rounded-xl" />
+                                <div className="relative p-2 sm:p-2.5 bg-primary/10 rounded-xl border border-primary/20">
+                                    <FolderKanban className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                                 </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words">
-                                    Select Project
-                                </h1>
-                                <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                                    Choose a project to create a payment request
-                                </p>
+                                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight truncate">{t('PaymentRequestForm.step1.title')}</h1>
+                                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{t('PaymentRequestForm.step1.subtitle')}</p>
                             </div>
                         </div>
                         <Separator />
                     </div>
 
-                    <Card className="shadow-lg sm:shadow-xl border-2">
-                        <CardHeader className="space-y-4 pb-6 sm:pb-8 bg-muted/30 px-4 sm:px-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    {/* Main card — fills remaining height */}
+                    <Card className="flex flex-col flex-1 min-h-0 shadow-lg border-2 border-muted">
+                        <CardHeader className="shrink-0 py-4 bg-muted/30 px-4 sm:px-6 border-b border-muted">
+                            <div className="flex items-center gap-3 mb-3">
+                                <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold shrink-0">
+                                    1
+                                </span>
                                 <div>
-                                    <CardTitle className="text-xl sm:text-2xl">Available Projects</CardTitle>
-                                    <CardDescription className="text-sm sm:text-base mt-1">
-                                        Select the project associated with this payment request
+                                    <CardTitle className="text-base sm:text-lg font-semibold">{t('PaymentRequestForm.step1.cardTitle')}</CardTitle>
+                                    <CardDescription className="text-xs sm:text-sm mt-0.5">
+                                        {t('PaymentRequestForm.step1.cardDesc')}
                                     </CardDescription>
                                 </div>
-                                <div className="relative w-full sm:w-72">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        type="search"
-                                        placeholder="Search by name, code or description..."
-                                        className="pl-9 bg-background"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
+                            </div>
+                            {/* Search */}
+                            <div className="relative w-full sm:w-72">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="search"
+                                    placeholder={t('PaymentRequestForm.step1.searchPlaceholder')}
+                                    className="pl-9 bg-background h-9 text-sm"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
                             </div>
                         </CardHeader>
-                        <CardContent className="pt-6 sm:pt-8 px-4 sm:px-6">
+
+                        <CardContent className="flex flex-col flex-1 min-h-0 pt-4 px-4 sm:px-6 pb-4">
                             {paginatedProjects.length === 0 ? (
                                 <Alert>
                                     <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription>
-                                        {searchTerm ? "No projects found match your search criteria." : "No projects available. Please contact your administrator."}
+                                    <AlertDescription className="text-sm">
+                                        {searchTerm ? t('PaymentRequestForm.step1.noProjects') : "No projects available. Please contact your administrator."}
                                     </AlertDescription>
                                 </Alert>
                             ) : (
-                                <>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                                        {paginatedProjects.map((project: any) => (
-                                            <button
-                                                key={project.id || project._id}
-                                                onClick={() => handleProjectSelect(project)}
-                                                className="group relative p-4 sm:p-6 border-2 border-muted hover:border-primary rounded-lg transition-all hover:shadow-lg bg-card text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex flex-col h-full"
-                                            >
-                                                <div className="flex items-start gap-3 w-full">
-                                                    <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors shrink-0">
-                                                        <FolderKanban className="h-5 w-5 text-primary" />
+                                <div className="flex flex-col flex-1 min-h-0">
+                                    {/* Scrollable grid */}
+                                    <div className="flex-1 min-h-0 overflow-y-auto">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-2">
+                                            {paginatedProjects.map((project: any) => (
+                                                <button
+                                                    key={project.id || project._id}
+                                                    onClick={() => handleProjectSelect(project)}
+                                                    className="group flex flex-col gap-3 p-4 rounded-xl border-2 border-muted bg-card hover:border-primary hover:shadow-md transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                                                >
+                                                    <div className="flex items-start gap-3 w-full">
+                                                        <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors shrink-0">
+                                                            <FolderKanban className="h-4 w-4 text-primary" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                                                                {project.name}
+                                                            </h3>
+                                                            {project.description && (
+                                                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                                                                    {project.description}
+                                                                </p>
+                                                            )}
+                                                            {project.code && (
+                                                                <p className="text-xs text-muted-foreground/70 mt-1.5 font-mono">
+                                                                    {project.code}
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h3 className="font-semibold text-sm sm:text-base break-words group-hover:text-primary transition-colors">
-                                                            {project.name}
-                                                        </h3>
-                                                        {project.description && (
-                                                            <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">
-                                                                {project.description}
-                                                            </p>
-                                                        )}
-                                                        {project.code && (
-                                                            <p className="text-xs text-muted-foreground mt-2">
-                                                                Code: {project.code}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        ))}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
 
-                                    {/* Pagination Controls */}
+                                    {/* Pagination — pinned at bottom of card */}
                                     {totalPages > 1 && (
-                                        <div className="flex flex-col-reverse sm:flex-row items-center justify-between border-t border-border pt-4 gap-4">
-                                            <p className="text-sm text-muted-foreground">
-                                                Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredProjects.length)} of {filteredProjects.length} projects
+                                        <div className="shrink-0 flex flex-col-reverse sm:flex-row items-center justify-between border-t border-muted pt-3 mt-3 gap-3">
+                                            <p className="text-xs text-muted-foreground">
+                                                {t('PaymentRequestForm.step1.pagination', {
+                                                    start: ((currentPage - 1) * ITEMS_PER_PAGE) + 1,
+                                                    end: Math.min(currentPage * ITEMS_PER_PAGE, filteredProjects.length),
+                                                    total: filteredProjects.length
+                                                })}
                                             </p>
-                                            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                                            <div className="flex items-center gap-2">
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                     disabled={currentPage === 1}
-                                                    className="h-8"
+                                                    className="h-8 text-xs"
                                                 >
-                                                    <ChevronLeft className="h-4 w-4 mr-2" />
-                                                    Previous
+                                                    <ChevronLeft className="h-3.5 w-3.5 mr-1" />{t('PaymentRequestForm.step1.previous')}
                                                 </Button>
-                                                <span className="text-sm font-medium mx-2 sm:hidden">
-                                                    Page {currentPage} of {totalPages}
+                                                <span className="text-xs text-muted-foreground px-1 tabular-nums">
+                                                    {currentPage} / {totalPages}
                                                 </span>
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                                     disabled={currentPage === totalPages}
-                                                    className="h-8"
+                                                    className="h-8 text-xs"
                                                 >
-                                                    Next
-                                                    <ChevronRight className="h-4 w-4 ml-2" />
+                                                    {t('PaymentRequestForm.step1.next')}<ChevronRight className="h-3.5 w-3.5 ml-1" />
                                                 </Button>
                                             </div>
                                         </div>
                                     )}
-                                </>
+                                </div>
                             )}
                         </CardContent>
                     </Card>
-
-                    <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-500">
-                        Step 1 of 4
-                    </div>
                 </div>
+
+                <div className="shrink-0 pb-3 text-center text-xs text-gray-500">{t('PaymentRequestForm.step1.step')}</div>
             </div>
         );
     }
@@ -705,234 +752,249 @@ export default function PaymentRequestPage() {
     // Step 1: Files Question
     if (step === 1) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-                <div className="container max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-10">
-                    <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                            <div className="relative shrink-0">
-                                <div className="absolute inset-0 bg-primary/20 blur-md rounded-xl"></div>
-                                <div className="relative p-2 sm:p-3 bg-primary/10 rounded-xl border border-primary/20">
-                                    <FileText className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
-                                </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words">
-                                    Payment Request
-                                </h1>
-                                <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                                    Project: <span className="font-medium">{selectedProject?.name}</span>
-                                </p>
+            <StepShell step={2}>
+                <PageHeader icon={FileText} title={t('PaymentRequestForm.step2.title')} subtitle={`Project: ${selectedProject?.name}`} />
+
+                <Card className="shadow-lg border-2 border-muted">
+                    <CardHeader className="py-5 bg-muted/30 px-4 sm:px-6 border-b border-muted">
+                        <div className="flex items-center gap-3">
+                            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold shrink-0">
+                                2
+                            </span>
+                            <div>
+                                <CardTitle className="text-base sm:text-lg font-semibold">{t('PaymentRequestForm.step2.cardTitle')}</CardTitle>
+                                <CardDescription className="text-xs sm:text-sm mt-0.5">
+                                    {t('PaymentRequestForm.step2.cardDesc')}
+                                </CardDescription>
                             </div>
                         </div>
-                        <Separator />
-                    </div>
+                    </CardHeader>
 
-                    <Card className="shadow-lg sm:shadow-xl border-2">
-                        <CardHeader className="space-y-2 pb-6 sm:pb-8 bg-muted/30 px-4 sm:px-6">
-                            <CardTitle className="text-xl sm:text-2xl">Step 2: Document Verification</CardTitle>
-                            <CardDescription className="text-sm sm:text-base">
-                                Does your payment request have files (quotation or purchase order or both)?
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="pt-6 sm:pt-8 px-4 sm:px-6">
-                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                                <button
-                                    onClick={() => handleFilesAnswer(true)}
-                                    className="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
-                                >
-                                    Yes
-                                </button>
-                                <button
-                                    onClick={() => handleFilesAnswer(false)}
-                                    className="w-full sm:flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
-                                >
-                                    No
-                                </button>
-                            </div>
+                    <CardContent className="pt-6 px-4 sm:px-6 pb-6 space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Yes option */}
+                            <button
+                                onClick={() => handleFilesAnswer(true)}
+                                className="group relative flex flex-col items-center justify-center gap-2 p-5 sm:p-6 rounded-xl border-2 border-muted bg-card hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                            >
+                                <div className="p-2.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                                    <Upload className="h-5 w-5 text-primary" />
+                                </div>
+                                <span className="font-semibold text-sm">{t('PaymentRequestForm.step2.yes')}</span>
+                                <span className="text-xs text-muted-foreground text-center leading-relaxed">
+                                    {t('PaymentRequestForm.step2.yesDesc')}
+                                </span>
+                            </button>
+
+                            {/* No option */}
+                            <button
+                                onClick={() => handleFilesAnswer(false)}
+                                className="group relative flex flex-col items-center justify-center gap-2 p-5 sm:p-6 rounded-xl border-2 border-muted bg-card hover:border-foreground hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-2"
+                            >
+                                <div className="p-2.5 rounded-lg bg-muted group-hover:bg-muted/80 transition-colors">
+                                    <FileText className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                </div>
+                                <span className="font-semibold text-sm">{t('PaymentRequestForm.step2.no')}</span>
+                                <span className="text-xs text-muted-foreground text-center leading-relaxed">
+                                    {t('PaymentRequestForm.step2.noDesc')}
+                                </span>
+                            </button>
+                        </div>
+
+                        <div className="pt-1 border-t border-muted">
                             <button
                                 onClick={resetForm}
-                                className="w-full mt-4 text-xs sm:text-sm text-gray-600 hover:text-gray-800 underline py-2"
+                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
                             >
-                                ← Change project
+                                <ChevronLeft className="h-3 w-3" />
+                                {t('PaymentRequestForm.step2.changeProject')}
                             </button>
-                        </CardContent>
-                    </Card>
-
-                    <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-500">
-                        Step 2 of 4
-                    </div>
-                </div>
-            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </StepShell>
         );
     }
 
     // Step 2: Person Type Selection
     if (step === 2) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-                <div className="container max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-10">
-                    <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                            <div className="relative shrink-0">
-                                <div className="absolute inset-0 bg-primary/20 blur-md rounded-xl"></div>
-                                <div className="relative p-2 sm:p-3 bg-primary/10 rounded-xl border border-primary/20">
-                                    <FileText className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
-                                </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words">
-                                    Payment Request
-                                </h1>
-                                <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                                    Project: <span className="font-medium">{selectedProject?.name}</span>
-                                </p>
+            <StepShell step={3}>
+                <PageHeader icon={FileText} title={t('PaymentRequestForm.step4.manual')} subtitle={`Project: ${selectedProject?.name}`} />
+
+                <Card className="shadow-lg border-2 border-muted">
+                    <CardHeader className="py-5 bg-muted/30 px-4 sm:px-6 border-b border-muted">
+                        <div className="flex items-center gap-3">
+                            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold shrink-0">
+                                3
+                            </span>
+                            <div>
+                                <CardTitle className="text-base sm:text-lg font-semibold">{t('PaymentRequestForm.personType.cardTitle')}</CardTitle>
+                                <CardDescription className="text-xs sm:text-sm mt-0.5">
+                                    {t('PaymentRequestForm.personType.cardDesc')}
+                                </CardDescription>
                             </div>
                         </div>
-                        <Separator />
-                    </div>
+                    </CardHeader>
 
-                    <Card className="shadow-lg sm:shadow-xl border-2">
-                        <CardHeader className="space-y-2 pb-6 sm:pb-8 bg-muted/30 px-4 sm:px-6">
-                            <CardTitle className="text-xl sm:text-2xl">Step 3: Select Person Type</CardTitle>
-                            <CardDescription className="text-sm sm:text-base">
-                                Please select the type of person for this payment request
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="pt-6 sm:pt-8 px-4 sm:px-6 space-y-3 sm:space-y-4">
-                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                                <button
-                                    onClick={() => handlePersonType("natural")}
-                                    className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
-                                >
-                                    Natural Person
-                                </button>
-                                <button
-                                    onClick={() => handlePersonType("legal")}
-                                    className="w-full sm:flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
-                                >
-                                    Legal Person
-                                </button>
-                            </div>
+                    <CardContent className="pt-6 px-4 sm:px-6 pb-6 space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Natural Person */}
+                            <button
+                                onClick={() => handlePersonType("natural")}
+                                className="group relative flex flex-col items-start gap-3 p-5 sm:p-6 rounded-xl border-2 border-muted bg-card hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-left"
+                            >
+                                <div className="p-2.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                                    {/* Person icon inline */}
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-sm">{t('PaymentRequestForm.personType.natural')}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                                        {t('PaymentRequestForm.personType.naturalDesc')}
+                                    </p>
+                                </div>
+                            </button>
+
+                            {/* Legal Person */}
+                            <button
+                                onClick={() => handlePersonType("legal")}
+                                className="group relative flex flex-col items-start gap-3 p-5 sm:p-6 rounded-xl border-2 border-muted bg-card hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-left"
+                            >
+                                <div className="p-2.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                                    {/* Building icon inline */}
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18M15 3v18M3 9h18M3 15h18" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-sm">{t('PaymentRequestForm.personType.legal')}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                                        {t('PaymentRequestForm.personType.legalDesc')}
+                                    </p>
+                                </div>
+                            </button>
+                        </div>
+
+                        <div className="pt-1 border-t border-muted">
                             <button
                                 onClick={resetForm}
-                                className="w-full mt-2 sm:mt-4 text-xs sm:text-sm text-gray-600 hover:text-gray-800 underline py-2"
+                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
                             >
-                                ← Go back
+                                <ChevronLeft className="h-3 w-3" />
+                                {t('PaymentRequestForm.personType.goBack')}
                             </button>
-                        </CardContent>
-                    </Card>
-
-                    <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-500">
-                        Step 3 of 4
-                    </div>
-                </div>
-            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </StepShell>
         );
     }
 
     // Step 3: File Upload (only when hasFiles === true)
     if (step === 3 && hasFiles === true) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-                <div className="container max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-10">
-                    <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                            <div className="relative shrink-0">
-                                <div className="absolute inset-0 bg-primary/20 blur-md rounded-xl"></div>
-                                <div className="relative p-2 sm:p-3 bg-primary/10 rounded-xl border border-primary/20">
-                                    <Upload className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
-                                </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words">
-                                    Upload Documents
-                                </h1>
-                                <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                                    Project: <span className="font-medium">{selectedProject?.name}</span>
-                                </p>
+            <StepShell step={3}>
+                <PageHeader icon={Upload} title={t('PaymentRequestForm.step3.title')} subtitle={`Project: ${selectedProject?.name}`} />
+
+                <Card className="shadow-lg border-2 border-muted">
+                    <CardHeader className="py-5 bg-muted/30 px-4 sm:px-6 border-b border-muted">
+                        <div className="flex items-center gap-3">
+                            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold shrink-0">
+                                3
+                            </span>
+                            <div>
+                                <CardTitle className="text-base sm:text-lg font-semibold">{t('PaymentRequestForm.step3.cardTitle')}</CardTitle>
+                                <CardDescription className="text-xs sm:text-sm mt-0.5">
+                                    {t('PaymentRequestForm.step3.cardDesc')}
+                                </CardDescription>
                             </div>
                         </div>
-                        <Separator />
-                    </div>
+                    </CardHeader>
 
-                    <Card className="shadow-lg sm:shadow-xl border-2">
-                        <CardHeader className="space-y-2 pb-6 sm:pb-8 bg-muted/30 px-4 sm:px-6">
-                            <CardTitle className="text-xl sm:text-2xl">Step 3: Upload Files</CardTitle>
-                            <CardDescription className="text-sm sm:text-base">
-                                Upload your quotation or purchase order. Our AI will extract the information automatically.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="pt-6 sm:pt-8 px-4 sm:px-6 space-y-4">
-                            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 sm:p-12 text-center hover:border-primary/50 transition-colors">
-                                <input
-                                    type="file"
-                                    id="file-upload"
-                                    multiple
-                                    accept=".pdf,.jpg,.jpeg,.png"
-                                    onChange={handleFileUpload}
-                                    disabled={isProcessing}
-                                    className="hidden"
-                                />
-                                <label htmlFor="file-upload" className="cursor-pointer">
-                                    {isProcessing ? (
-                                        <div className="flex flex-col items-center gap-4">
-                                            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                                            <p className="text-sm text-muted-foreground">Processing files...</p>
+                    <CardContent className="pt-6 px-4 sm:px-6 pb-6 space-y-4">
+                        {/* Drop zone */}
+                        <div className={`relative rounded-xl border-2 border-dashed transition-colors duration-200 ${isProcessing
+                            ? "border-primary/40 bg-primary/5"
+                            : uploadedFiles.length > 0
+                                ? "border-emerald-400/60 bg-emerald-50/50 dark:bg-emerald-950/20"
+                                : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30"
+                            }`}>
+                            <input
+                                type="file"
+                                id="file-upload"
+                                multiple
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                onChange={handleFileUpload}
+                                disabled={isProcessing}
+                                className="hidden"
+                            />
+                            <label htmlFor="file-upload" className={`flex flex-col items-center justify-center gap-3 p-10 sm:p-14 text-center ${isProcessing ? "cursor-wait" : "cursor-pointer"}`}>
+                                {isProcessing ? (
+                                    <>
+                                        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                                        <div>
+                                            <p className="font-medium text-sm">{t('PaymentRequestForm.step3.processing')}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">{t('PaymentRequestForm.step3.extracting')}</p>
                                         </div>
-                                    ) : uploadedFiles.length > 0 ? (
-                                        <div className="flex flex-col items-center gap-4">
-                                            <CheckCircle2 className="h-12 w-12 text-green-600" />
-                                            <div>
-                                                <p className="font-medium">{uploadedFiles.length} file(s) uploaded</p>
-                                                <p className="text-sm text-muted-foreground mt-1">
-                                                    {uploadedFiles.map(f => f.name).join(', ')}
-                                                </p>
-                                            </div>
+                                    </>
+                                ) : uploadedFiles.length > 0 ? (
+                                    <>
+                                        <div className="p-3 rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+                                            <CheckCircle2 className="h-8 w-8 text-emerald-600" />
                                         </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center gap-4">
-                                            <Upload className="h-12 w-12 text-muted-foreground" />
-                                            <div>
-                                                <p className="font-medium">Click to upload files</p>
-                                                <p className="text-sm text-muted-foreground mt-1">
-                                                    PDF, JPG, or PNG (max 10MB each)
-                                                </p>
-                                            </div>
+                                        <div>
+                                            <p className="font-semibold text-sm text-emerald-700 dark:text-emerald-400">
+                                                {t('PaymentRequestForm.step3.filesReady', { count: uploadedFiles.length, s: uploadedFiles.length > 1 ? "s" : "" })}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto truncate">
+                                                {uploadedFiles.map(f => f.name).join(", ")}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground/60 mt-2">{t('PaymentRequestForm.step3.clickToReplace')}</p>
                                         </div>
-                                    )}
-                                </label>
-                            </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="p-3 rounded-full bg-muted">
+                                            <Upload className="h-8 w-8 text-muted-foreground" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-sm">{t('PaymentRequestForm.step3.clickToUpload')}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">{t('PaymentRequestForm.step3.uploadDesc')}</p>
+                                        </div>
+                                    </>
+                                )}
+                            </label>
+                        </div>
 
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <button
-                                    onClick={resetForm}
-                                    className="w-full sm:flex-1 text-sm text-gray-600 hover:text-gray-800 underline py-2"
-                                >
-                                    ← Go back
-                                </button>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-500">
-                        Step 3 of 4
-                    </div>
-                </div>
-            </div>
+                        <div className="pt-1 border-t border-muted">
+                            <button
+                                onClick={resetForm}
+                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                            >
+                                <ChevronLeft className="h-3 w-3" />
+                                {t('PaymentRequestForm.step3.goBack')}
+                            </button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </StepShell>
         );
     }
 
     // Step 4: Form Display - Loading
     if (loading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
-                <div className="relative">
-                    <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full"></div>
-                    <Loader2 className="relative h-10 w-10 sm:h-12 sm:w-12 animate-spin text-primary mb-4" />
+            <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 gap-4">
+                <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-                <p className="text-sm sm:text-base text-muted-foreground mt-4 text-center px-4">
-                    Loading payment request form...
-                </p>
+                <div className="text-center">
+                    <p className="text-sm font-medium">{t('PaymentRequestForm.step4.loadingForm')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t('PaymentRequestForm.step4.preparing')}</p>
+                </div>
             </div>
         );
     }
@@ -940,21 +1002,34 @@ export default function PaymentRequestPage() {
     // Step 4: Form Display - Error
     if (!schemaData || !enrichedSchema) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
-                <Card className="max-w-lg w-full border-destructive/50">
-                    <CardContent className="pt-6 px-4 sm:px-6">
-                        <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription className="text-sm">
-                                Form configuration not found. Please contact your administrator.
+            <div className="h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
+                <Card className="max-w-md w-full border-2 border-muted shadow-lg">
+                    <CardHeader className="py-5 bg-muted/30 px-4 sm:px-6 border-b border-muted">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-destructive/10 border border-destructive/20 shrink-0">
+                                <AlertCircle className="h-4 w-4 text-destructive" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-base font-semibold">{t('PaymentRequestForm.step4.configError')}</CardTitle>
+                                <CardDescription className="text-xs mt-0.5">{t('PaymentRequestForm.step4.unableToLoad')}</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="pt-5 px-4 sm:px-6 pb-5 space-y-4">
+                        <Alert variant="destructive" className="border-destructive/30 bg-destructive/5">
+                            <AlertDescription className="text-xs sm:text-sm">
+                                {t('PaymentRequestForm.step4.contactAdmin')}
                             </AlertDescription>
                         </Alert>
-                        <button
-                            onClick={resetForm}
-                            className="w-full mt-4 text-xs sm:text-sm text-gray-600 hover:text-gray-800 underline py-2"
-                        >
-                            ← Start over
-                        </button>
+                        <div className="pt-1 border-t border-muted">
+                            <button
+                                onClick={resetForm}
+                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                            >
+                                <ChevronLeft className="h-3 w-3" />
+                                {t('PaymentRequestForm.step4.startOver')}
+                            </button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -963,127 +1038,132 @@ export default function PaymentRequestPage() {
 
     // Step 4: Form Display - Main Form
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-            <div className="container max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-10">
-                <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+        <div className="h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden">
+            <div className="flex flex-col flex-1 min-h-0 container max-w-5xl mx-auto px-3 sm:px-4 md:px-6 pt-4 sm:pt-5 pb-2">
+
+                {/* Fixed page header */}
+                <div className="shrink-0 mb-3 space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                             <div className="relative shrink-0">
-                                <div className="absolute inset-0 bg-primary/20 blur-md rounded-xl"></div>
-                                <div className="relative p-2 sm:p-3 bg-primary/10 rounded-xl border border-primary/20">
-                                    <FileText className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+                                <div className="absolute inset-0 bg-primary/20 blur-md rounded-xl" />
+                                <div className="relative p-2 sm:p-2.5 bg-primary/10 rounded-xl border border-primary/20">
+                                    <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                                 </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words">
-                                    Payment Request
-                                </h1>
-                                <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1 break-words">
-                                    Project: <span className="font-medium">{selectedProject?.name}</span>
-                                </p>
-                                <p className="text-xs sm:text-sm text-muted-foreground">
-                                    {hasFiles
-                                        ? fileProcessed ? "Review Extracted Data" : "Payment Request with Files"
-                                        : `Payment Request - ${personType === "natural" ? "Natural" : "Legal"} Person`}
-                                </p>
+                            <div className="min-w-0">
+                                <h1 className="text-lg sm:text-2xl font-bold tracking-tight truncate">{t('PaymentRequestForm.step4.title')}</h1>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+                                    <p className="text-xs text-muted-foreground truncate">
+                                        {t('PaymentRequestForm.step4.project')} <span className="font-medium">{selectedProject?.name}</span>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('PaymentRequestForm.step4.date')} <span className="font-medium">{formatDateDisplay(formData.issueDate || getTodayLocalISO())}</span>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground hidden sm:inline truncate">
+                                        {hasFiles
+                                            ? fileProcessed ? t('PaymentRequestForm.step4.reviewData') : t('PaymentRequestForm.step4.withFiles')
+                                            : `${personType === "natural" ? t('PaymentRequestForm.step4.naturalPerson') : t('PaymentRequestForm.step4.legalPerson')}`}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <Badge variant="outline" className="w-fit self-start lg:self-center text-xs">
-                            <Info className="h-3 w-3 mr-1" />
-                            Required fields marked
+                        <Badge variant="outline" className="shrink-0 text-xs">
+                            <Info className="h-3 w-3 mr-1" />{t('PaymentRequestForm.step4.requiredFields')}
                         </Badge>
                     </div>
                     <Separator />
                 </div>
 
-                {fileProcessed && (
-                    <Alert className="mb-6 bg-green-50 border-green-200">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <AlertDescription className="text-sm text-green-800">
-                            Data successfully extracted from uploaded files. Please review and confirm the information below.
-                        </AlertDescription>
-                    </Alert>
-                )}
+                {/* Scrollable area */}
+                <div className="flex-1 min-h-0 overflow-y-auto space-y-3">
 
-                <Card className="shadow-lg sm:shadow-xl border-2 relative overflow-hidden">
-                    {isSubmitting && (
-                        <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-200">
-                            <div className="relative mb-4">
-                                <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full"></div>
-                                <Loader2 className="relative h-12 w-12 animate-spin text-primary" />
-                            </div>
-                            <h3 className="text-lg font-semibold mb-1">Processing Payment Request</h3>
-                            <p className="text-sm text-muted-foreground max-w-xs">
-                                We are saving your request and sending email notifications to the project owner.
-                            </p>
-                        </div>
+                    {/* AI extraction notice */}
+                    {fileProcessed && (
+                        <Alert className="bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <AlertDescription className="text-xs sm:text-sm text-emerald-800 dark:text-emerald-300">
+                                {t('PaymentRequestForm.step4.successAlert')}
+                            </AlertDescription>
+                        </Alert>
                     )}
 
-                    <CardHeader className="space-y-2 pb-6 sm:pb-8 bg-muted/30 px-4 sm:px-6">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                                <CardTitle className="text-xl sm:text-2xl break-words">Request Details</CardTitle>
-                                <CardDescription className="mt-1.5 text-xs sm:text-sm break-words">
-                                    {hasFiles
-                                        ? "Review and confirm the automatically extracted information"
-                                        : "Complete all required information to process your payment request"}
-                                </CardDescription>
+                    {/* Main form card */}
+                    <Card className="shadow-lg border-2 border-muted relative overflow-hidden">
+
+                        {/* Submitting overlay */}
+                        {isSubmitting && (
+                            <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+                                <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20 mb-4">
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                </div>
+                                <h3 className="text-base font-semibold mb-1">{t('PaymentRequestForm.step4.processingTitle')}</h3>
+                                <p className="text-xs text-muted-foreground max-w-xs">
+                                    {t('PaymentRequestForm.step4.processingDesc')}
+                                </p>
                             </div>
-                        </div>
-                    </CardHeader>
+                        )}
 
-                    <CardContent className="pt-6 sm:pt-8 space-y-6 sm:space-y-8 px-4 sm:px-6">
-                        <SchemaForm
-                            schema={enrichedSchema}
-                            uiSchema={enhancedUiSchema || schemaData.uiSchema}
-                            formData={formData}
-                            onChange={handleFormChange}
-                            onSubmit={handleSubmit}
-                        >
-                            <div className="mt-6">
-                                <Button
-                                    type="submit"
-                                    className="w-full sm:w-auto min-w-[200px] h-11 text-base shadow-md hover:shadow-lg transition-all"
-                                    disabled={isSubmitting}
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Submitting...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Submit Payment Request
-                                            <CheckCircle2 className="ml-2 h-4 w-4" />
-                                        </>
-                                    )}
-                                </Button>
+                        <CardHeader className="py-5 bg-muted/30 px-4 sm:px-6 border-b border-muted">
+                            <div className="flex items-center gap-3">
+                                <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold shrink-0">
+                                    4
+                                </span>
+                                <div>
+                                    <CardTitle className="text-base sm:text-lg font-semibold">{t('PaymentRequestForm.step4.cardTitle')}</CardTitle>
+                                    <CardDescription className="text-xs sm:text-sm mt-0.5">
+                                        {hasFiles
+                                            ? t('PaymentRequestForm.step4.cardDescWithFiles')
+                                            : t('PaymentRequestForm.step4.cardDescManual')}
+                                    </CardDescription>
+                                </div>
                             </div>
-                        </SchemaForm>
+                        </CardHeader>
 
-                        <button
-                            onClick={resetForm}
-                            className="text-xs sm:text-sm text-gray-600 hover:text-gray-800 underline py-2"
-                            disabled={isSubmitting}
-                        >
-                            ← Start over
-                        </button>
-                    </CardContent>
-                </Card>
+                        <CardContent className="pt-2 px-4 sm:px-6 pb-6">
+                            <SchemaForm
+                                schema={enrichedSchema}
+                                uiSchema={enhancedUiSchema || schemaData.uiSchema}
+                                formData={formData}
+                                onChange={handleFormChange}
+                                onSubmit={handleSubmit}
+                            >
+                                <div className="mt-6 pt-4 border-t border-muted flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                                    <Button
+                                        type="submit"
+                                        className="w-full sm:w-auto min-w-[200px] h-10 text-sm shadow-md hover:shadow-lg transition-all"
+                                        disabled={isSubmitting}
+                                    >
+                                        {isSubmitting ? (
+                                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('PaymentRequestForm.step4.submitting')}</>
+                                        ) : (
+                                            <>{t('PaymentRequestForm.step4.submit')}<CheckCircle2 className="ml-2 h-4 w-4" /></>
+                                        )}
+                                    </Button>
+                                    <button
+                                        onClick={resetForm}
+                                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                                        disabled={isSubmitting}
+                                    >
+                                        <ChevronLeft className="h-3 w-3" />
+                                        {t('PaymentRequestForm.step4.startOver')}
+                                    </button>
+                                </div>
+                            </SchemaForm>
+                        </CardContent>
+                    </Card>
 
-                <div className="mt-6 sm:mt-8 space-y-4">
-                    <Alert className="bg-muted/50">
-                        <Info className="h-4 w-4 shrink-0" />
-                        <AlertDescription className="text-xs sm:text-sm break-words">
-                            All payment requests are subject to review and approval. You will receive a notification once your request has been processed.
+                    {/* Info footer */}
+                    <Alert className="bg-muted/40 border-muted [&>svg]:translate-y-0 [&>svg]:top-auto">
+                        <Info className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <AlertDescription className="text-xs text-muted-foreground leading-normal">
+                            {t('PaymentRequestForm.step4.infoAlert')}
                         </AlertDescription>
                     </Alert>
                 </div>
-
-                <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-500">
-                    Step 4 of 4
-                </div>
             </div>
+
+            <div className="shrink-0 pb-3 text-center text-xs text-gray-500">{t('PaymentRequestForm.step4.step')}</div>
         </div>
     );
 }
