@@ -18,7 +18,8 @@
     },
     "Common": {
         "cancel": "Cancel",
-        "close": "Close"
+        "close": "Close",
+        "apply": "Apply"
     },
     "Auth": {
         "Tabs": {
@@ -171,6 +172,7 @@
             "Billing": "Billing",
             "BankExtract": "Bank Extract",
             "PaymentRequest": "Payment Request",
+            "OutflowManagement": "Outflow Management",
             "BusinessUnits": "Business Units"
         },
         "bottom": {
@@ -721,16 +723,21 @@
             }
         },
         "searchPlaceholder": "Search by project, provider or ID...",
+        "filters": "Filters",
+        "filtersDescription": "Refine your payment requests list.",
         "allStatuses": "All Statuses",
         "filterByDate": "Filter by Date",
-        "filterByDueDate": "Filter by Due Date",
+        "filterByCreatedDate": "Filter by Created Date",
+        "filterByDueDate": "Filter by Deadline Date",
+        "filterByScheduledDate": "Filter by Scheduled Date",
         "clearFilter": "Clear Filter",
         "table": {
             "id": "ID",
             "project": "Project",
             "provider": "Provider",
-            "date": "Date",
+            "date": "Created Date",
             "dueDate": "Due Date",
+            "scheduledDate": "Scheduled Date",
             "amount": "Amount",
             "currency": "Currency",
             "status": "Status",
@@ -835,5 +842,36 @@
             "submitSuccessDesc": "Your request has been sent for approval",
             "submitError": "Submission failed"
         }
+    },
+    "Outflow": {
+        "title": "Outflow Management",
+        "paymentRequest": {
+            "title": "Payment Request",
+            "description": "Request a payment to a provider linked to a project or purchase order."
+        },
+        "expenseRequest": {
+            "title": "Expense Request",
+            "description": "Submit a reimbursable expense for approval and processing."
+        },
+        "administrativePayment": {
+            "title": "Administrative Payment",
+            "description": "Register an administrative payment outside of project scope."
+        },
+        "tabs": {
+            "dashboard": "Outflow Board",
+            "dashboardShort": "Dashboard",
+            "calendar": "Payment Calendar",
+            "calendarShort": "Calendar",
+            "new": "New"
+        },
+        "calendar": {
+            "title": "Payment Calendar",
+            "description": "View your payment requests organised by due date."
+        },
+        "newRequest": {
+            "title": "New Outflow Request",
+            "subtitle": "Select the type of request you'd like to create."
+        },
+        "getStarted": "Get started"
     }
 }

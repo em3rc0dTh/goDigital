@@ -54,7 +54,18 @@ export default function Sidebar() {
     // { icon: Coins, label: t("Sidebar.menu.Tokens"), link: "/tokens" },
     // { icon: CreditCard, label: t("Sidebar.menu.Billing"), link: "/billing" },
     { icon: Landmark, label: t("Sidebar.menu.BankExtract"), link: "/extract" },
-    { icon: ScrollText, label: t("Sidebar.menu.PaymentRequest"), link: "/payment-requests" },
+    {
+      icon: CreditCard,
+      label: t("Sidebar.menu.OutflowManagement"),
+      link: "/outflow-management", // sigue siendo una page
+      children: [
+        {
+          icon: ScrollText,
+          label: t("Sidebar.menu.PaymentRequest"),
+          link: "/payment-requests",
+        },
+      ],
+    },
   ];
 
   const bottomItems = [

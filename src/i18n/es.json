@@ -18,7 +18,8 @@
     },
     "Common": {
         "cancel": "Cancelar",
-        "close": "Cerrar"
+        "close": "Cerrar",
+        "apply": "Aplicar"
     },
     "Auth": {
         "Tabs": {
@@ -171,6 +172,7 @@
             "Billing": "Facturación",
             "BankExtract": "Extracto Bancario",
             "PaymentRequest": "Solicitudes de Pago",
+            "OutflowManagement": "Gestión de Egresos",
             "BusinessUnits": "Unidades de Negocio"
         },
         "bottom": {
@@ -722,16 +724,21 @@
             }
         },
         "searchPlaceholder": "Buscar por proyecto, proveedor o ID...",
+        "filters": "Filtros",
+        "filtersDescription": "Refina tu lista de solicitudes de pago.",
         "allStatuses": "Todos los Estados",
         "filterByDate": "Filtrar por Fecha",
-        "filterByDueDate": "Filtrar por Vencimiento",
+        "filterByCreatedDate": "Filtrar por Fecha de Creación",
+        "filterByDueDate": "Filtrar por Fecha de Vencimiento",
+        "filterByScheduledDate": "Filtrar por Fecha Programada",
         "clearFilter": "Limpiar Filtro",
         "table": {
             "id": "ID",
             "project": "Proyecto",
             "provider": "Proveedor",
-            "date": "Fecha",
-            "dueDate": "Vencimiento",
+            "date": "Fecha Creación",
+            "dueDate": "Fecha Límite",
+            "scheduledDate": "Fecha Programada",
             "amount": "Monto",
             "currency": "Moneda",
             "status": "Estado",
@@ -836,5 +843,36 @@
             "submitSuccessDesc": "Tu solicitud ha sido enviada para aprobación",
             "submitError": "Error al enviar la solicitud"
         }
+    },
+    "Outflow": {
+        "title": "Gestión de Egresos",
+        "paymentRequest": {
+            "title": "Solicitud de Pago",
+            "description": "Solicita un pago a un proveedor vinculado a un proyecto u orden de compra."
+        },
+        "expenseRequest": {
+            "title": "Solicitud de Gastos",
+            "description": "Envía un gasto reembolsable para aprobación y procesamiento."
+        },
+        "administrativePayment": {
+            "title": "Pago Administrativo",
+            "description": "Registra un pago administrativo fuera del alcance del proyecto."
+        },
+        "tabs": {
+            "dashboard": "Tablero de Egresos",
+            "dashboardShort": "Tablero",
+            "calendar": "Calendario de Pagos",
+            "calendarShort": "Calendario",
+            "new": "Nuevo"
+        },
+        "calendar": {
+            "title": "Calendario de Pagos",
+            "description": "Ve tus solicitudes de pago organizadas por fecha de vencimiento."
+        },
+        "newRequest": {
+            "title": "Nueva Solicitud de Egreso",
+            "subtitle": "Seleccione el tipo de solicitud que le gustaría crear."
+        },
+        "getStarted": "Comenzar"
     }
 }
