@@ -61,6 +61,11 @@ export default function Sidebar() {
       children: [
         {
           icon: ScrollText,
+          label: t("Sidebar.menu.PurchaseOrder"),
+          link: "/purchase-orders",
+        },
+        {
+          icon: ScrollText,
           label: t("Sidebar.menu.PaymentRequest"),
           link: "/payment-requests",
         },

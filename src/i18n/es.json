@@ -173,6 +173,7 @@
             "BankExtract": "Extracto Bancario",
             "PaymentRequest": "Solicitudes de Pago",
             "OutflowManagement": "Gestión de Egresos",
+            "PurchaseOrder": "Órdenes de Compra",
             "BusinessUnits": "Unidades de Negocio"
         },
         "bottom": {
