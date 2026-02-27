@@ -73,7 +73,7 @@ export default function PaymentRequestPage() {
     const ITEMS_PER_PAGE = 9;
     const [userEmail, setUserEmail] = useState(Cookies.get("userEmail") || "");
     // Initialize formData with default values
-    const [formData, setFormData] = useState(() => {
+    const [formData, setFormData] = useState<any>(() => {
         return {
             userIdCreator: userEmail || "",
             amount: 0,
@@ -146,7 +146,7 @@ export default function PaymentRequestPage() {
                 const tenantDetailId = Cookies.get("tenantDetailId");
                 const [schemaRes, providersRes] = await Promise.all([
                     fetch(`${API_BASE}/forms/name/${formName}`),
-                    fetch(`${API_BASE}/entities?vendor_type=provider`, {
+                    fetch(`${API_BASE}/entities`, {
                         headers: {
                             "Authorization": `Bearer ${token}`,
                             "x-tenant-detail-id": tenantDetailId || "",
@@ -164,7 +164,10 @@ export default function PaymentRequestPage() {
 
                 if (providersRes.ok) {
                     const data = await providersRes.json();
-                    setProviders(data);
+                    const filteredProviders = data.filter((p: any) =>
+                        p.vendor_type && ['provider', 'proveedor', 'vendor', 'supplier'].includes(p.vendor_type.toLowerCase())
+                    );
+                    setProviders(filteredProviders);
                 } else {
                     toast.error(t('PaymentRequestForm.toasts.providersNotFound'));
                 }
@@ -181,7 +184,7 @@ export default function PaymentRequestPage() {
 
     const handleProjectSelect = (project: any) => {
         setSelectedProject(project);
-        setFormData(prev => ({
+        setFormData((prev: any) => ({
             ...prev,
             project: project._id || project.id,
             projectName: project.name
@@ -191,7 +194,7 @@ export default function PaymentRequestPage() {
 
     const handleFilesAnswer = (answer: any) => {
         setHasFiles(answer);
-        setFormData(prev => ({ ...prev, hasFiles: answer }));
+        setFormData((prev: any) => ({ ...prev, hasFiles: answer }));
 
         if (answer === true) {
             setStep(3); // Will show file upload step
@@ -202,7 +205,7 @@ export default function PaymentRequestPage() {
 
     const handlePersonType = (type: any) => {
         setPersonType(type);
-        setFormData(prev => ({ ...prev, personType: type }));
+        setFormData((prev: any) => ({ ...prev, personType: type }));
         setStep(4); // Will load form directly for manual entry
     };
 
@@ -418,6 +421,43 @@ export default function PaymentRequestPage() {
         delete newSchema.title;
         delete newSchema.description;
 
+        // "Agregar moneda PEN"
+        if (newSchema.properties?.currency?.enum) {
+            if (!newSchema.properties.currency.enum.includes("PEN")) {
+                newSchema.properties.currency.enum.push("PEN");
+            }
+        }
+
+        // "Agregar honorarios a la lista de tipo de documento para persona natural"
+        if (newSchema.properties?.documentType?.enum) {
+            const docEnum = newSchema.properties.documentType.enum;
+            if (!docEnum.includes("Honorarios")) {
+                docEnum.push("Honorarios");
+            }
+        }
+
+        // "Quitar el full name (solo dejarlo con DNI)..."
+        if (newSchema.properties?.naturalPersonName) {
+            delete newSchema.properties.naturalPersonName;
+            if (newSchema.required) {
+                newSchema.required = newSchema.required.filter((r: string) => r !== 'naturalPersonName');
+            }
+        }
+
+        // "... y cambiar a RUC si se selecciona ruc 10 en el type"
+        if (newSchema.properties?.dni) {
+            if (formData.documentType === "Factura (RUC 10)") {
+                newSchema.properties.dni.title = "RUC 10";
+                // Optionally relax minLength/maxLength if RUC is 11 digits
+                delete newSchema.properties.dni.minLength;
+                delete newSchema.properties.dni.maxLength;
+            } else {
+                newSchema.properties.dni.title = "DNI";
+                newSchema.properties.dni.minLength = 8;
+                newSchema.properties.dni.maxLength = 8;
+            }
+        }
+
         const updateEnum = (key: any, items: any, valueKey: any, labelKey: any) => {
             if (newSchema.properties?.[key]) {
                 const oneOfItems = items
@@ -469,7 +509,7 @@ export default function PaymentRequestPage() {
         }
 
         return newSchema;
-    }, [schemaData, projects, providers]);
+    }, [schemaData, projects, providers, formData.documentType]);
 
     const enhancedUiSchema = React.useMemo(() => {
         if (!schemaData?.uiSchema) return null;

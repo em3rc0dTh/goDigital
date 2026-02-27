@@ -71,7 +71,7 @@ export default function EntitiesPage() {
         entity_classes: [],
         legal_class: "legal-entity",
         business_type: "",
-        vendor_type: "Proveedor",
+        vendor_type: "provider",
         identifiers: { tax_id: "", national_id: "", registration_number: "" },
         contact: { email: "", phone: "", address: "" },
         is_active: true,
@@ -128,7 +128,7 @@ export default function EntitiesPage() {
                 entity_classes: [],
                 legal_class: "legal-entity",
                 business_type: "",
-                vendor_type: mapTabToType(currentTab) || "Proveedor",
+                vendor_type: mapTabToType(currentTab) || "provider",
                 identifiers: { tax_id: "", national_id: "", registration_number: "" },
                 contact: { email: "", phone: "", address: "" },
                 is_active: true,
@@ -143,9 +143,9 @@ export default function EntitiesPage() {
     // However, in payment-request we saw "Proveedor".
     // I'll stick to a mapping.
     const mapTabToType = (tab: string) => {
-        if (tab === "provider") return "Proveedor";
-        if (tab === "supplier") return "Supplier";
-        if (tab === "vendor") return "Vendor";
+        if (tab === "provider") return "provider";
+        if (tab === "supplier") return "supplier";
+        if (tab === "vendor") return "vendor";
         return "";
     };
 
@@ -232,7 +232,7 @@ export default function EntitiesPage() {
             currentTab === "all" ||
             (currentTab === "provider" && (e.vendor_type?.toLowerCase() === "provider" || e.vendor_type?.toLowerCase() === "proveedor")) ||
             (currentTab === "supplier" && e.vendor_type?.toLowerCase() === "supplier") ||
-            (currentTab === "vendor" && e.vendor_type?.toLowerCase() === "vendor");
+            (currentTab === "vendor" && (e.vendor_type?.toLowerCase() === "vendor" || e.vendor_type?.toLowerCase() === "vendedor"));
 
         return matchesSearch && matchesTab;
     });
@@ -366,9 +366,9 @@ export default function EntitiesPage() {
                                         <SelectValue placeholder={t("Entities.dialog.type")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Proveedor">{t("Entities.dialog.options.provider")}</SelectItem>
-                                        <SelectItem value="Vendor">{t("Entities.dialog.options.vendor")}</SelectItem>
-                                        <SelectItem value="Supplier">{t("Entities.dialog.options.supplier")}</SelectItem>
+                                        <SelectItem value="provider">{t("Entities.dialog.options.provider")}</SelectItem>
+                                        <SelectItem value="vendor">{t("Entities.dialog.options.vendor")}</SelectItem>
+                                        <SelectItem value="supplier">{t("Entities.dialog.options.supplier")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

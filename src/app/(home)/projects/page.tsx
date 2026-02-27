@@ -46,6 +46,7 @@ interface Project {
     startDate?: string; // YYYY-MM-DD
     endDate?: string; // YYYY-MM-DD
     isActive: boolean;
+    isInfinite?: boolean;
 }
 
 interface BusinessUnit {
@@ -73,6 +74,7 @@ export default function ProjectsPage() {
         business_unit_id: "",
         status: "active",
         isActive: true,
+        isInfinite: false,
         startDate: "",
         endDate: "",
     });
@@ -144,6 +146,7 @@ export default function ProjectsPage() {
                 business_unit_id: project.business_unit_id || "",
                 status: project.status || "active",
                 isActive: project.isActive ?? true,
+                isInfinite: project.isInfinite ?? false,
                 startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : "",
                 endDate: project.endDate ? new Date(project.endDate).toISOString().split('T')[0] : "",
             });
@@ -157,6 +160,7 @@ export default function ProjectsPage() {
                 business_unit_id: "",
                 status: "active",
                 isActive: true,
+                isInfinite: false,
                 startDate: "",
                 endDate: "",
             });
@@ -184,6 +188,12 @@ export default function ProjectsPage() {
             if (!payload.endDate) delete payload.endDate;
             if (!payload.projectOwner) delete payload.projectOwner;
             if (!payload.business_unit_id) delete payload.business_unit_id;
+
+            // Clear endDate if the project is infinite
+            if (payload.isInfinite) {
+                delete payload.endDate;
+                payload.endDate = null as any; // or however backend expects null endDate
+            }
 
 
             const response = await fetch(url, {
@@ -413,7 +423,20 @@ export default function ProjectsPage() {
                                     type="date"
                                     value={formData.endDate}
                                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                                    disabled={formData.isInfinite}
                                 />
+                                <div className="flex items-center space-x-2 pt-1">
+                                    <input
+                                        type="checkbox"
+                                        id="isInfinite"
+                                        checked={!!formData.isInfinite}
+                                        onChange={(e) => setFormData({ ...formData, isInfinite: e.target.checked })}
+                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                    <Label htmlFor="isInfinite" className="text-sm font-normal text-muted-foreground cursor-pointer">
+                                        Proyecto sin fin (recurrente)
+                                    </Label>
+                                </div>
                             </div>
                         </div>
 
