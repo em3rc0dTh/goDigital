@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import React, { RefObject, useEffect, useState } from "react";
+import React, { RefObject, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -42,9 +42,8 @@ interface EmailTabProps {
   bankNameEmail: RefObject<HTMLInputElement>;
   serviceTypeEmail: RefObject<HTMLInputElement>;
   bankEmailSender: RefObject<HTMLInputElement>;
-  account: RefObject<HTMLSelectElement>;
   addEmailConfig: (event: React.FormEvent<HTMLFormElement>) => void;
-  addSetupToEmail: (event: React.FormEvent<HTMLFormElement>) => void;
+  addSetupToEmail: (event: React.FormEvent<HTMLFormElement>, accountId?: string) => void;
   updateImapConfig: (user: string, password: string) => void;
   deleteImapConfig: () => void;
   updateEmailSetup: (id: string, updated: EmailSetup) => void;
@@ -61,7 +60,6 @@ export function EmailTab({
   bankNameEmail,
   serviceTypeEmail,
   bankEmailSender,
-  account,
   addEmailConfig,
   addSetupToEmail,
   updateImapConfig,
@@ -95,12 +93,6 @@ export function EmailTab({
       setEditData(null);
     }
   };
-
-  useEffect(() => {
-    if (account.current) {
-      account.current.value = selectedAccount;
-    }
-  }, [selectedAccount]);
 
   const handleSaveImapPass = () => {
     if (newImapPass.trim() && imapConfig?.user) {
@@ -201,7 +193,7 @@ export function EmailTab({
         <CardContent className="space-y-4">
           <form
             onSubmit={(e) => {
-              addSetupToEmail(e);
+              addSetupToEmail(e, selectedAccount);
               setSelectedAccount(""); // o ""
             }}
             className="space-y-4"

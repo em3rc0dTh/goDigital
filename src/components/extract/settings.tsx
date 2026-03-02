@@ -51,7 +51,6 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
   const bankNameEmail = useRef<any>(null);
   const serviceTypeEmail = useRef<any>(null);
   const bankEmailSender = useRef<any>(null);
-  const account = useRef<any>(null);
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
@@ -493,7 +492,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
     }
   }
 
-  async function addSetupToEmail(event: any) {
+  async function addSetupToEmail(event: any, selectedAccountId?: string) {
     event.preventDefault();
 
     if (!tenantDbName) {
@@ -511,7 +510,7 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
       bank_sender: bankEmailSender.current?.value.trim() || "",
       tenant_id: tenantId,
       tenant_detail_id: tenantDetailId,
-      account_id: activeAccount || undefined, // Cuenta activa seleccionada
+      account_id: selectedAccountId || undefined, // Cuenta seleccionada en la pestaña Email
       db_name: tenantDbName,
     };
 
@@ -764,7 +763,6 @@ export default function SettingsView({ activeDatabase }: SettingsViewProps) {
           bankNameEmail={bankNameEmail}
           serviceTypeEmail={serviceTypeEmail}
           bankEmailSender={bankEmailSender}
-          account={account}
           addEmailConfig={addEmailConfig}
           addSetupToEmail={addSetupToEmail}
           updateImapConfig={updateImapConfig}
