@@ -277,7 +277,7 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
                 clearInterval(progressIntervalRef.current);
             }
 
-            console.error("Upload error:", error);
+            console.error("Upload error:", error.message || 'Unknown error');
             const errorMessage = error.message || t("Extract.BankStatement.error");
             setStatus({ type: 'error', message: errorMessage });
             setUploadProgress(0);
