@@ -1,0 +1,879 @@
+{
+    "Login": {
+        "error": {
+            "title": "Error",
+            "generic": "Ocurrió un error"
+        },
+        "success": {
+            "title": "Inicio de sesión exitoso",
+            "selectWorkspace": "Selecciona un workspace"
+        }
+    },
+    "Workspace": {
+        "select": {
+            "title": "Seleccionar Workspace",
+            "description": "Tienes acceso a múltiples workspaces. Elige uno para continuar."
+        },
+        "role": "Rol: {role}"
+    },
+    "Common": {
+        "cancel": "Cancelar",
+        "close": "Cerrar",
+        "apply": "Aplicar"
+    },
+    "Auth": {
+        "Tabs": {
+            "login": "Iniciar Sesión",
+            "signUp": "Registrarse",
+            "reset": "Restablecer Contraseña"
+        },
+        "Labels": {
+            "workEmail": "Correo Electrónico de Trabajo",
+            "password": "Contraseña",
+            "fullName": "Nombre Completo",
+            "confirmPassword": "Confirmar Contraseña"
+        },
+        "Placeholders": {
+            "fullName": "Nombre Completo",
+            "workEmail": "Correo Electrónico de Trabajo",
+            "password": "Contraseña",
+            "confirmPassword": "¿Puedes repetir tu contraseña?",
+            "email": "tu.email@ejemplo.com"
+        },
+        "Buttons": {
+            "login": "Iniciar Sesión →",
+            "loggingIn": "Iniciando sesión...",
+            "signUp": "Registrarse →",
+            "signingUp": "Registrándose...",
+            "resetPasswordLink": "restablecer mi contraseña.",
+            "googleLogin": "Iniciar sesión con Google",
+            "magicLink": "Enviar Enlace Mágico",
+            "resendVerification": "Reenviar Email de Verificación",
+            "goToLogin": "Ir a Iniciar Sesión",
+            "sendResetLink": "Enviar Enlace de Restablecimiento",
+            "sending": "Enviando...",
+            "backToLogin": "Volver a Iniciar Sesión"
+        },
+        "Messages": {
+            "needReset": "Quizás necesite ",
+            "or": "o",
+            "passwordsDoNotMatch": "Las contraseñas no coinciden",
+            "emailNotVerified": "Correo No Verificado",
+            "checkInbox": "Por favor revisa tu bandeja de entrada y verifica tu dirección de correo",
+            "authFailed": "Autenticación Fallida",
+            "accountCreated": "¡Cuenta Creada!",
+            "checkEmailVerify": "Por favor revisa tu correo para verificar tu cuenta",
+            "loginSuccessful": "Inicio de Sesión Exitoso",
+            "selectWorkspace": "Por favor selecciona tu espacio de trabajo",
+            "resendingEmail": "Reenviando email de verificación...",
+            "emailSent": "¡Email Enviado!",
+            "pleaseCheckInbox": "Por favor revisa tu bandeja de entrada",
+            "failedResend": "Fallo al reenviar email",
+            "failedResendDesc": "Fallo al reenviar email de verificación",
+            "googleLoginFailed": "Fallo en Inicio de Sesión con Google",
+            "enterEmailReset": "Ingresa tu email para recibir un enlace de restablecimiento de contraseña",
+            "validEmail": "Por favor ingresa una dirección de email válida",
+            "resetLinkSent": "Si existe una cuenta con este email, recibirás un enlace de restablecimiento pronto.",
+            "resetLinkFailed": "Fallo al enviar enlace. Inténtalo de nuevo.",
+            "networkError": "Error de red. Revisa tu conexión e inténtalo de nuevo.",
+            "rememberPassword": "¿Recuerdas tu contraseña?",
+            "didntReceive": "¿No recibiste el email?",
+            "checkInboxDetail": "Por favor revisa tu bandeja de entrada y haz clic en el enlace de verificación para activar tu cuenta.",
+            "weSentLink": "Hemos enviado un enlace de verificación a"
+        },
+        "Dialogs": {
+            "VerifyEmail": {
+                "title": "Verifica Tu Email"
+            },
+            "SelectWorkspace": {
+                "title": "Seleccionar Workspace",
+                "description": "Tienes acceso a múltiples workspaces. Elige uno para continuar."
+            },
+            "Error": {
+                "title": "Error",
+                "generic": "Ocurrió un error inesperado"
+            }
+        },
+        "LeftContent": {
+            "Login": {
+                "title1": "Consejo Pro:",
+                "title2": "Mantente seguro con control de acceso detallado.",
+                "description": "La fuente de verdad de tu organización para secretos en todos los proyectos, equipos e infraestructura."
+            },
+            "SignUp": {
+                "title1": "Plataforma SecretOps",
+                "title2": "Empieza Ahora",
+                "description": "La fuente de verdad de tu organización para secretos en todos los proyectos.",
+                "subDescription": "Intégralo perfectamente con tus flujos de trabajo existentes."
+            },
+            "ResetPassword": {
+                "title1": "Restablece tu contraseña",
+                "title2": "en solo un par de minutos.",
+                "description": "La fuente de verdad de tu organización para secretos en todos los proyectos."
+            }
+        },
+        "Register": {
+            "title": "Inicia sesión en tu cuenta",
+            "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+            "loginLink": "Iniciar Sesión"
+        },
+        "VerifyEmail": {
+            "title": "Verificando Tu Email",
+            "verifying": "Por favor espera mientras verificamos tu dirección de correo...",
+            "successTitle": "¡Email Verificado!",
+            "selectWorkspace": "Selecciona tu espacio de trabajo:",
+            "continueToWorkspace": "Continuar al Espacio de Trabajo",
+            "redirecting": "Redirigiendo a tu espacio de trabajo en unos segundos...",
+            "failedTitle": "Verificación Fallida",
+            "invalidLinkTitle": "Enlace Inválido",
+            "needHelp": "¿Necesitas ayuda?",
+            "contactSupport": "Contactar Soporte",
+            "messages": {
+                "noToken": "No se proporcionó token de verificación",
+                "success": "¡Tu email ha sido verificado exitosamente!",
+                "failed": "Verificación fallida",
+                "error": "Ocurrió un error durante la verificación"
+            }
+        },
+        "NewResetPassword": {
+            "invalidToken": "Token de restablecimiento inválido o faltante",
+            "fillFields": "Por favor completa todos los campos",
+            "passwordLength": "La contraseña debe tener al menos 8 caracteres",
+            "successRedirect": "¡Contraseña restablecida exitosamente! Redirigiendo al inicio de sesión...",
+            "failedExpired": "Fallo al restablecer contraseña. El enlace puede haber expirado.",
+            "invalidLinkTitle": "Enlace de Restablecimiento Inválido",
+            "invalidLinkDesc": "Este enlace de restablecimiento de contraseña es inválido o ha expirado.",
+            "needNewLink": "¿Necesitas un nuevo enlace?",
+            "requestAnother": "Solicitar otro restablecimiento",
+            "title": "Restablecer Tu Contraseña",
+            "enterNew": "Ingresa tu nueva contraseña abajo",
+            "labelNew": "Nueva Contraseña",
+            "placeholderNew": "Ingresa nueva contraseña",
+            "hintLength": "Debe tener al menos 8 caracteres",
+            "labelConfirm": "Confirmar Contraseña",
+            "placeholderConfirm": "Confirmar nueva contraseña",
+            "btnResetting": "Restableciendo Contraseña...",
+            "btnReset": "Restablecer Contraseña",
+            "remember": "¿Recuerdas tu contraseña?",
+            "needHelp": "¿Necesitas ayuda?",
+            "contactSupport": "Contactar Soporte"
+        }
+    },
+    "Sidebar": {
+        "menu": {
+            "Home": "Inicio",
+            "LaunchPad": "Plataforma de Lanzamiento",
+            "MissionControl": "Centro de Mando",
+            "Projects": "Proyectos",
+            "Entities": "Entidades",
+            "Activity": "Actividad",
+            "Team": "Equipo",
+            "Tokens": "Tokens",
+            "Billing": "Facturación",
+            "BankExtract": "Extracto Bancario",
+            "PaymentRequest": "Solicitudes de Pago",
+            "OutflowManagement": "Gestión de Egresos",
+            "PurchaseOrder": "Órdenes de Compra",
+            "BusinessUnits": "Unidades de Negocio"
+        },
+        "bottom": {
+            "Settings": "Configuración",
+            "LogOut": "Cerrar Sesión"
+        }
+    },
+    "Home": {
+        "title": "Panel de Control",
+        "role": "Rol: {role}",
+        "loadingWorkspace": "Cargando tu espacio de trabajo...",
+        "tryAgain": "Intentar de nuevo",
+        "tabs": {
+            "summary": "Resumen",
+            "detailed": "Detallado"
+        },
+        "repositories": "Repositorios",
+        "noDatabases": "No hay bases de datos aprovisionadas. Por favor completa el flujo de inicio.",
+        "summaryView": {
+            "title": "Vista de Resumen",
+            "description": "Esta vista agrega datos de los {count} repositorios. Agrega analíticas de resumen, insights entre repositorios y resúmenes aquí."
+        },
+        "detailedView": {
+            "noAccounts": "No se encontraron cuentas en esta base de datos. Crea una en Configuración.",
+            "latestTransactions": "Últimas Transacciones",
+            "loading": "Cargando...",
+            "showingTransactions": "Mostrando las últimas {count} transacciones",
+            "transactionsHidden": "Transacciones ocultas"
+        },
+        "errors": {
+            "loadDatabases": "Error al cargar bases de datos. Por favor intenta de nuevo.",
+            "loadAccounts": "Error al cargar cuentas. Por favor intenta de nuevo."
+        }
+    },
+    "GettingStarted": {
+        "title": "Plataforma de Lanzamiento",
+        "searchPlaceholder": "Buscar Atajos, Proyectos, Secretos, etc.",
+        "setupWorkspace": "Configura tu Espacio de Trabajo",
+        "createEntity": "Crear Entidad Comercial",
+        "entityConfigured": "Al menos una Entidad Comercial ya está configurada para este espacio de trabajo.",
+        "createAnother": "Crear otra Entidad Comercial",
+        "form": {
+            "country": "País",
+            "type": "Tipo",
+            "natural": "Persona Natural",
+            "legal": "Persona Jurídica",
+            "taxId": "RUC / ID Tributario",
+            "placeholderTaxId": "RUC o identificador comercial",
+            "email": "Correo Comercial",
+            "domain": "Dominio (opcional)",
+            "submit": "Crear Entidad Comercial →"
+        },
+        "setupProject": "Configura tu primer proyecto",
+        "projectDesc": "Los proyectos son donde defines configuraciones y gestionas secretos para un solo servicio o aplicación.",
+        "defaultEnv": "Los proyectos comienzan con tres entornos predeterminados: Desarrollo, Staging y Producción",
+        "branchConfigs": "Puedes ramificar configuraciones para permitir anulaciones desde las configuraciones raíz",
+        "goToProjects": "Ir a Proyectos →",
+        "setupIntegration": "Configura tu primera integración",
+        "inviteTeammates": "Invitar compañeros",
+        "setupAccount": "Configura tu cuenta",
+        "setupBankAccount": "Configura tu cuenta bancaria",
+        "sidebar": {
+            "joining": "¿Uniéndote al espacio de trabajo de tu equipo?",
+            "joiningDesc": "Algunos de los ítems pueden ya estar completados. Si quieres probar todas las capacidades, crea un nuevo espacio de trabajo personal.",
+            "help": "¿Necesitas más ayuda?",
+            "docs": "Revisa estos documentos relevantes para más información.",
+            "proTip": "Consejo Pro",
+            "projectNaming": "Nombrado de Proyectos",
+            "projectNamingDesc": "Un proyecto debe considerarse un servicio de aplicación encapsulado. Nómbralo según el servicio específico."
+        }
+    },
+    "Setup": {
+        "signOut": "Cerrar sesión",
+        "welcome": "Bienvenido a",
+        "tellUsMore": "Cuéntanos más sobre ti para que podamos mejorar tu experiencia.",
+        "step1": {
+            "title": "Nombra tu espacio de trabajo",
+            "desc": "Dale a tu espacio de trabajo un nombre que represente a tu equipo.",
+            "label": "Nombre del Espacio de Trabajo",
+            "placeholder": "Radar Industries",
+            "next": "Siguiente",
+            "joinExisting": "Me estoy uniendo a un espacio de trabajo existente"
+        },
+        "step2": {
+            "title": "¿Para qué lo usarás?",
+            "desc": "Personaliza tu experiencia.",
+            "personal": "Proyectos Personales",
+            "work": "Proyectos de Trabajo",
+            "notsure": "Aún no estoy seguro",
+            "back": "Atrás"
+        },
+        "step3": {
+            "title": "¿Qué servicio usas?",
+            "desc": "Selecciona cualquier cosa que uses frecuentemente.",
+            "finish": "Finalizar"
+        }
+    },
+    "Extract": {
+        "title": "Extracto Bancario",
+        "subtitle": "Gestiona tus cuentas bancarias y transacciones analizadas",
+        "tryAgain": "Intentar de nuevo",
+        "analytics": "Analíticas",
+        "rawData": "Datos Raw",
+        "consolidatedView": "Vista consolidada de todos los repositorios",
+        "summaryView": "Vista Resumen",
+        "summaryDesc": "Esta vista agrega datos de todos los {count} repositorios.",
+        "summaryPlaceholder": "Agrega analíticas de resumen, perspectivas entre repositorios y resúmenes aquí.",
+        "repositories": "Repositorios",
+        "total": "{count} total",
+        "noDatabases": "No hay bases de datos aprovisionadas. Por favor completa el flujo de lanzamiento.",
+        "tabs": {
+            "webCapture": "Captura Web",
+            "emailCapture": "Captura de Email",
+            "settings": "Configuración",
+            "bankStatements": "Estados de Cuenta",
+            "rawData": "Datos Raw"
+        },
+        "BankStatement": {
+            "title": "Subir Estado de Cuenta",
+            "subtitle": "Sube archivos PDF para extraer transacciones",
+            "upload": "Subir",
+            "uploading": "Subiendo...",
+            "selectFile": "Seleccionar archivo PDF",
+            "dragDrop": "o arrastra y suelta aquí",
+            "success": "Archivo subido exitosamente",
+            "error": "Error al subir archivo",
+            "viewTransactions": "Ver transacciones extraídas",
+            "noFile": "Ningún archivo seleccionado",
+            "removeFile": "Eliminar archivo"
+        },
+        "Transactions": {
+            "title": "Captura Web",
+            "subtitle": "Gestiona y analiza transacciones bancarias",
+            "selectAccount": "Seleccionar Cuenta",
+            "selectAccountDesc": "👆 Selecciona una cuenta bancaria para comenzar",
+            "parse": {
+                "title": "Analizar Transacciones",
+                "desc": "Pega el texto de tu estado de cuenta bancario abajo",
+                "placeholder": "Pega el texto de la transacción aquí...",
+                "button": "Analizar y Guardar",
+                "clear": "Limpiar",
+                "loading": "Cargando..."
+            },
+            "duplicates": {
+                "title": "⚠️ Duplicados ({count})",
+                "export": "Exportar Duplicados"
+            },
+            "stored": {
+                "title": "Transacciones Almacenadas",
+                "desc": "Transacciones guardadas actualmente en la base de datos",
+                "clearAll": "Borrar Todo",
+                "confirmClear": "¿Eliminar todas las {count} transacciones almacenadas?",
+                "cleared": "✅ Todas las transacciones borradas.",
+                "errorClear": "❌ Error borrando transacciones",
+                "export": "Exportar JSON",
+                "noTransactions": "No hay transacciones para borrar."
+            },
+            "dateFilter": {
+                "start": "Fecha Inicio",
+                "end": "Fecha Fin",
+                "remove": "Eliminar Rango",
+                "confirm": "¿Eliminar {count} transacciones en el rango seleccionado?",
+                "removed": "✅ {count} transacciones eliminadas por rango de fecha.",
+                "error": "❌ Error eliminando transacciones",
+                "noMatch": "Ninguna transacción coincidió con el rango seleccionado."
+            },
+            "errors": {
+                "noAccount": "Por favor selecciona una cuenta bancaria primero.",
+                "noText": "❌ No hay texto para analizar.",
+                "currencyMismatch": "❌ Desajuste de moneda: Cuenta es \"{account}\", data es \"{data}\".",
+                "multipleCurrencies": "❌ Múltiples monedas detectadas en el mismo lote.",
+                "noNew": "⚠️ No se encontraron transacciones nuevas o duplicadas.",
+                "saveError": "❌ Error guardando transacciones",
+                "success": "✅ Analizadas {new} nueva(s) transacción(es).",
+                "skipped": "⚠️ {dup} duplicado(s) omitido(s)."
+            }
+        },
+        "Emails": {
+            "title": "Captura de Email",
+            "subtitle": "Correos de transacciones bancarias desde IMAP y Gmail API",
+            "ingestImap": "Ingestar IMAP",
+            "ingestGmail": "Ingestar Gmail",
+            "refresh": "Actualizar",
+            "processing": "Procesando...",
+            "count": "Correos ({count})",
+            "rows": "Filas:",
+            "noEmails": "No se encontraron correos. Usa los botones de ingesta para cargar correos.",
+            "tenantError": "⚠️ Información del inquilino no cargada. Por favor actualiza la página.",
+            "table": {
+                "source": "Fuente",
+                "from": "De",
+                "operation": "Operación",
+                "beneficiary": "Beneficiario",
+                "date": "Fecha",
+                "currency": "Moneda",
+                "amount": "Monto"
+            },
+            "status": {
+                "missingTenant": "❌ Falta información del inquilino",
+                "noDb": "❌ No se pudo cargar el nombre de la base de datos",
+                "loading": "⏳ Cargando correos de ambas fuentes...",
+                "imapFailed": "Falló el endpoint IMAP, continuando solo con Gmail",
+                "noEmails": "ℹ️ No se encontraron correos en ninguna fuente",
+                "loaded": "✅ Cargados {count} correos (IMAP: {imap}, Gmail: {gmail})",
+                "loadTenant": "❌ Error cargando información del inquilino",
+                "loadAccounts": "❌ Error cargando cuentas",
+                "loadEmailSetups": "❌ Error cargando configuración de correos",
+                "loadImapConfig": "❌ Error cargando configuración IMAP"
+            }
+        },
+        "Settings": {
+            "title": "Configuración",
+            "subtitle": "Gestiona tus cuentas bancarias y acceso a correos",
+            "tabs": {
+                "accounts": "Cuentas",
+                "email": "Configuración Email",
+                "forwarding": "Configuración Reenvío"
+            },
+            "Accounts": {
+                "add": "Agregar Cuenta Bancaria",
+                "alias": "Alias",
+                "bank": "Nombre del Banco",
+                "holder": "Nombre del Titular",
+                "number": "Número de Cuenta",
+                "currency": "Moneda",
+                "type": "Tipo",
+                "submit": "Agregar Cuenta",
+                "list": "Lista de Cuentas",
+                "delete": "Eliminar",
+                "saving": "Guardando...",
+                "update": "Actualizar Cuenta Seleccionada",
+                "danger": "Zona de Peligro",
+                "dangerDesc": "Eliminar esta cuenta también eliminará todas las transacciones asociadas",
+                "save": "Guardar Cambios",
+                "accountTypePlaceholder": "Tipo de Cuenta (Ahorros, Corriente...)"
+            },
+            "Email": {
+                "title": "Configuración IMAP",
+                "user": "Usuario",
+                "password": "Password",
+                "host": "Host",
+                "port": "Puerto",
+                "save": "Guardar Configuración",
+                "saving": "Guardando...",
+                "test": "Probar Conexión",
+                "success": "Conexión Exitosa",
+                "lastChecked": "Última verificación: {date}",
+                "configured": "✅ IMAP Configurado",
+                "connectorTitle": "Configuración del Conector de Email",
+                "alias": "Alias (opcional)",
+                "bankName": "Nombre del Banco",
+                "serviceType": "Tipo de Servicio (ej. email)",
+                "sender": "Remitente (ej. noreply@bank.com)",
+                "selectAccount": "Seleccionar una cuenta",
+                "addSetup": "Agregar Configuración",
+                "configuredSetups": "Configuraciones Activas",
+                "editTitle": "Editar Configuración",
+                "updatePass": "Actualizar Password IMAP",
+                "currentEmail": "Email Actual",
+                "newPass": "Nuevo Password",
+                "cancel": "Cancelar",
+                "savePass": "Guardar Password"
+            },
+            "Forwarding": {
+                "title": "Configuración de Reenvío (Gmail)",
+                "desc": "Esta configuración se usa para obtener correos desde la API de Gmail usando una cuenta de servicio o credenciales de usuario.",
+                "entityId": "ID Entidad",
+                "userEmail": "Correo Usuario (Gmail)",
+                "appPassword": "App Password",
+                "save": "Guardar Configuración",
+                "saving": "Guardando...",
+                "configured": "✅ Gmail Configurado",
+                "gmailIntegration": "Integración con Gmail",
+                "connect": "Conectar Gmail",
+                "disconnect": "Desconectar",
+                "connectedAs": "✅ Conectado como {email}",
+                "expires": "Expira: {date}",
+                "connectDesc": "Conecta tu cuenta de Gmail de negocios para habilitar la ingesta automática.",
+                "checking": "Verificando...",
+                "rulesTitle": "Reglas de Reenvío",
+                "rulesDesc": "Configura qué direcciones de correo deben reenviar transacciones a cuentas bancarias específicas.",
+                "active": "Activo",
+                "inactive": "Inactivo",
+                "activate": "Activar",
+                "deactivate": "Desactivar",
+                "refresh": "Actualizar",
+                "deleteConfig": "Eliminar Config",
+                "noRules": "No hay reglas configuradas",
+                "addFirst": "Agregar Primera Regla",
+                "addAnother": "Agregar Otra Regla",
+                "emailAddress": "Dirección de Correo",
+                "forwardTo": "Reenviar a Cuentas ({count} seleccionadas)",
+                "update": "Actualizar Configuración"
+            }
+        }
+    },
+    "Components": {
+        "Pricing": {
+            "title": "Elige tu Plan",
+            "basic": "Básico",
+            "pro": "Pro",
+            "subscribe": "Suscribirse",
+            "loading": "Cargando...",
+            "features": {
+                "f1": "Característica 1",
+                "f2": "Característica 2",
+                "f3": "Característica 3"
+            }
+        }
+    },
+    "Settings": {
+        "General": {
+            "title": "Configuración del Sistema",
+            "language": "Idioma",
+            "english": "Inglés",
+            "spanish": "Español",
+            "description": "Gestiona tus preferencias y configuraciones de la aplicación",
+            "languageDescription": "Elige tu idioma preferido para la interfaz",
+            "theme": "Tema",
+            "themeDescription": "Personaliza la apariencia de tu aplicación",
+            "themeLight": "Claro",
+            "themeDark": "Oscuro",
+            "themeSystem": "Sistema",
+            "comingSoon": "Próximamente"
+        }
+    },
+    "Projects": {
+        "title": "Proyectos",
+        "description": "Gestiona tus proyectos aquí.",
+        "add": "Agregar Proyecto",
+        "searchPlaceholder": "Buscar proyectos...",
+        "status": {
+            "all": "Todos",
+            "active": "Activo",
+            "planned": "Planificado",
+            "onHold": "En Espera",
+            "completed": "Completado",
+            "cancelled": "Cancelado"
+        },
+        "table": {
+            "name": "Nombre",
+            "code": "Código",
+            "status": "Estado",
+            "description": "Descripción",
+            "actions": "Acciones",
+            "noProjects": "No se encontraron proyectos."
+        },
+        "dialog": {
+            "createTitle": "Crear Proyecto",
+            "editTitle": "Editar Proyecto",
+            "createDesc": "Agrega un nuevo proyecto al sistema.",
+            "editDesc": "Actualiza los detalles del proyecto existente.",
+            "name": "Nombre",
+            "code": "Código",
+            "status": "Estado",
+            "startDate": "Fecha Inicio",
+            "endDate": "Fecha Fin",
+            "owner": "Dueño del Proyecto",
+            "businessUnit": "Unidad de Negocio",
+            "description": "Descripción",
+            "cancel": "Cancelar",
+            "save": "Guardar"
+        },
+        "messages": {
+            "created": "Proyecto creado",
+            "updated": "Proyecto actualizado",
+            "deleted": "Proyecto eliminado",
+            "loadError": "Error al cargar proyectos",
+            "saveError": "Error al guardar proyecto",
+            "deleteError": "Error al eliminar proyecto",
+            "confirmDelete": "¿Estás seguro de que deseas eliminar este proyecto?"
+        }
+    },
+    "Entities": {
+        "title": "Entidades",
+        "description": "Gestiona tus vendedores, proveedores y suministradores.",
+        "add": "Agregar Entidad",
+        "searchPlaceholder": "Buscar entidades...",
+        "tabs": {
+            "all": "Todos",
+            "providers": "Proveedores",
+            "vendors": "Vendedores",
+            "suppliers": "Suministradores"
+        },
+        "table": {
+            "name": "Nombre",
+            "taxId": "RUC / Tax ID",
+            "type": "Tipo",
+            "email": "Email",
+            "actions": "Acciones",
+            "noEntities": "No se encontraron entidades."
+        },
+        "dialog": {
+            "createTitle": "Crear Entidad",
+            "editTitle": "Editar Entidad",
+            "createDesc": "Agrega una nueva entidad al sistema.",
+            "editDesc": "Actualiza los detalles de esta entidad.",
+            "name": "Nombre",
+            "type": "Tipo",
+            "legalClass": "Clase Legal",
+            "businessType": "Tipo de Negocio",
+            "identifiers": "Identificadores",
+            "taxId": "RUC / ID Tributario",
+            "nationalId": "DNI / ID Nacional",
+            "contact": "Contacto",
+            "email": "Email",
+            "phone": "Teléfono",
+            "address": "Dirección",
+            "cancel": "Cancelar",
+            "save": "Guardar",
+            "options": {
+                "provider": "Proveedor",
+                "vendor": "Vendedor",
+                "supplier": "Suministrador",
+                "legalEntity": "Persona Jurídica",
+                "naturalEntity": "Persona Natural"
+            }
+        },
+        "messages": {
+            "created": "Entidad creada",
+            "updated": "Entidad actualizada",
+            "deleted": "Entidad eliminada",
+            "loadError": "Error al cargar entidades",
+            "saveError": "Error al guardar entidad",
+            "deleteError": "Error al eliminar entidad",
+            "confirmDelete": "¿Estás seguro de que deseas eliminar esta entidad?"
+        }
+    },
+    "BusinessUnits": {
+        "title": "Unidades de Negocio",
+        "description": "Gestiona tus unidades de negocio aquí.",
+        "add": "Agregar Unidad de Negocio",
+        "searchPlaceholder": "Buscar unidades de negocio...",
+        "table": {
+            "name": "Nombre",
+            "adminEmail": "Email del Administrador",
+            "createdAt": "Creado el",
+            "actions": "Acciones",
+            "noUnits": "No se encontraron unidades de negocio."
+        },
+        "dialog": {
+            "createTitle": "Crear Unidad de Negocio",
+            "editTitle": "Editar Unidad de Negocio",
+            "createDesc": "Agrega una nueva unidad de negocio al sistema.",
+            "editDesc": "Actualiza los detalles de la unidad de negocio existente.",
+            "name": "Nombre",
+            "adminEmail": "Email del Administrador",
+            "cancel": "Cancelar",
+            "save": "Guardar"
+        },
+        "messages": {
+            "created": "Unidad de Negocio creada",
+            "updated": "Unidad de Negocio actualizada",
+            "deleted": "Unidad de Negocio eliminada",
+            "loadError": "Error al cargar unidades de negocio",
+            "saveError": "Error al guardar unidad de negocio",
+            "deleteError": "Error al eliminar unidad de negocio",
+            "confirmDelete": "¿Estás seguro de que deseas eliminar esta unidad de negocio?"
+        }
+    },
+    "PaymentRequestDetail": {
+        "title": "Solicitud de Pago",
+        "loading": "Cargando detalles de la solicitud...",
+        "error": {
+            "title": "Algo salió mal",
+            "goBack": "Volver"
+        },
+        "header": {
+            "created": "Creado"
+        },
+        "statusFlow": {
+            "created": "Creado",
+            "approved": "Aprobado",
+            "authorized": "Autorizado",
+            "paid": "Pagado"
+        },
+        "sections": {
+            "financialDetails": "Detalles Financieros",
+            "projectVendor": "Proyecto y Proveedor",
+            "requestInfo": "Información de la Solicitud"
+        },
+        "fields": {
+            "subtotal": "Monto (Subtotal)",
+            "tax": "Impuesto",
+            "total": "Monto Total",
+            "subjectToApproval": "Sujeto a aprobación",
+            "project": "Proyecto",
+            "vendor": "Proveedor / Beneficiario",
+            "issueDate": "Fecha de Emisión",
+            "dueDate": "Fecha de Vencimiento",
+            "createdBy": "Creado por",
+            "paymentDate": "Fecha de Pago",
+            "notes": "Notas",
+            "approvalNotes": "Notas de Aprobación",
+            "authorizationNotes": "Notas de Autorización",
+            "paymentNotes": "Notas de Pago",
+            "description": "Descripción / Notas",
+            "noNotes": "No se proporcionaron notas adicionales."
+        },
+        "status": {
+            "pending": "Pendiente",
+            "approved": "Aprobado",
+            "authorized": "Autorizado",
+            "paid": "Pagado",
+            "rejected": "Rechazado"
+        }
+    },
+    "PaymentRequests": {
+        "title": "Mis Solicitudes de Pago",
+        "subtitle": "Ve y gestiona tus solicitudes de pago",
+        "newRequest": "Nueva Solicitud",
+        "tabs": {
+            "list": "Vista de Lista",
+            "dashboard": "Tablero de Egresos",
+            "calendar": "Calendario de Pagos"
+        },
+        "calendar": {
+            "title": "Calendario de Pagos",
+            "subtitle": "Ve tus solicitudes de pago por fecha de vencimiento.",
+            "today": "Hoy",
+            "details": "Detalles de Solicitud de Pago",
+            "id": "ID",
+            "project": "Proyecto",
+            "provider": "Proveedor",
+            "dueDate": "Vencimiento",
+            "amount": "Monto",
+            "eventsFor": "Eventos para",
+            "more": "más"
+        },
+        "dashboard": {
+            "title": "Tablero - Flujo de Egresos",
+            "subtitle": "Gestiona tus pagos programados y monitorea la liquidez de cuentas.",
+            "selectDate": "Seleccionar Fecha de Atención:",
+            "pickDate": "Elige una fecha",
+            "analysisTitle": "Análisis de Liquidez vs. Egresos",
+            "analysisDesc": "Comparación visual de saldo de cuenta (Verde) vs. pagos programados (Rojo).",
+            "analysisTip": "Busca barras Rojas extendiéndose más allá de las Verdes para identificar sobregiros.",
+            "availableBalance": "Saldo Disponible",
+            "currentBalance": "Saldo Actual",
+            "scheduledOutflow": "Egreso Programado",
+            "projectedBalance": "Saldo Proyectado",
+            "status": "Estado",
+            "overdraft": "SOBREGIRO",
+            "safe": "SEGURO",
+            "noData": "No se encontraron cuentas o pagos programados para esta fecha.",
+            "tab": {
+                "overview": "Resumen",
+                "details": "Detalle de Cuentas"
+            }
+        },
+        "searchPlaceholder": "Buscar por proyecto, proveedor o ID...",
+        "filters": "Filtros",
+        "filtersDescription": "Refina tu lista de solicitudes de pago.",
+        "allStatuses": "Todos los Estados",
+        "filterByDate": "Filtrar por Fecha",
+        "filterByCreatedDate": "Filtrar por Fecha de Creación",
+        "filterByDueDate": "Filtrar por Fecha de Vencimiento",
+        "filterByScheduledDate": "Filtrar por Fecha Programada",
+        "clearFilter": "Limpiar Filtro",
+        "table": {
+            "id": "ID",
+            "project": "Proyecto",
+            "provider": "Proveedor",
+            "date": "Fecha Creación",
+            "dueDate": "Fecha Límite",
+            "scheduledDate": "Fecha Programada",
+            "amount": "Monto",
+            "currency": "Moneda",
+            "status": "Estado",
+            "loading": "Cargando solicitudes...",
+            "empty": "No se encontraron solicitudes de pago"
+        },
+        "baseAmount": "Monto Base",
+        "totalAmount": "Total con IGV",
+        "rowsPerPage": "Filas por página",
+        "viewDetails": "Ver Detalles"
+    },
+    "PaymentRequestForm": {
+        "title": "Solicitud de Pago",
+        "step1": {
+            "title": "Nueva Solicitud de Pago",
+            "subtitle": "Selecciona un proyecto para comenzar",
+            "cardTitle": "Selección de Proyecto",
+            "cardDesc": "Elige el proyecto con el que se asociará esta solicitud de pago",
+            "searchPlaceholder": "Buscar por nombre, código o descripción...",
+            "noProjects": "No hay proyectos que coincidan con tu búsqueda.",
+            "loading": "Cargando proyectos...",
+            "step": "Paso 0 de 4",
+            "pagination": "{start}–{end} de {total} proyectos",
+            "previous": "Anterior",
+            "next": "Siguiente"
+        },
+        "step2": {
+            "title": "Verificación de Documentos",
+            "subtitle": "¿Tu solicitud de pago incluye archivos de soporte? (cotización, orden de compra o ambos)",
+            "yes": "Sí, tengo archivos",
+            "yesDesc": "Cargar una cotización u orden de compra",
+            "no": "No, ingresar manualmente",
+            "noDesc": "Llenar el formulario sin documentos",
+            "changeProject": "Cambiar proyecto",
+            "step": "Paso 1 de 4",
+            "cardTitle": "Verificación de Documentos",
+            "cardDesc": "¿Tu solicitud de pago incluye archivos de soporte? (cotización, orden de compra o ambos)"
+        },
+        "step3": {
+            "title": "Cargar Documentos",
+            "subtitle": "Sube tu cotización u orden de compra — nuestra IA extraerá la información automáticamente",
+            "cardTitle": "Cargar Archivos",
+            "cardDesc": "Sube tu cotización u orden de compra — nuestra IA extraerá la información automáticamente",
+            "processing": "Procesando archivos...",
+            "extracting": "Extrayendo datos con IA, por favor espera",
+            "filesReady": "{count} archivo{s} listo{s}",
+            "clickToReplace": "Clic para reemplazar",
+            "clickToUpload": "Clic para subir archivos",
+            "uploadDesc": "PDF, JPG o PNG — máx 10 MB cada uno",
+            "goBack": "Volver",
+            "step": "Paso 3 de 4"
+        },
+        "step4": {
+            "title": "Solicitud de Pago",
+            "project": "Proyecto:",
+            "date": "Fecha:",
+            "withFiles": "Revisar Datos Extraídos",
+            "manual": "Solicitud de Pago",
+            "reviewData": "Revisar Datos Extraídos",
+            "legalPerson": "Persona Jurídica",
+            "naturalPerson": "Persona Natural",
+            "requiredFields": "Campos obligatorios marcados",
+            "successAlert": "Datos extraídos exitosamente de los archivos subidos. Por favor revisa y confirma la información abajo.",
+            "processingTitle": "Procesando Solicitud de Pago",
+            "processingDesc": "Guardando tu solicitud y enviando notificaciones por correo al dueño del proyecto.",
+            "cardTitle": "Detalles de la Solicitud",
+            "cardDescWithFiles": "Revisa y confirma la información extraída automáticamente",
+            "cardDescManual": "Completa todos los campos obligatorios para procesar tu solicitud de pago",
+            "submit": "Enviar Solicitud de Pago",
+            "submitting": "Enviando...",
+            "startOver": "Empezar de nuevo",
+            "infoAlert": "Todas las solicitudes de pago están sujetas a revisión y aprobación. Recibirás una notificación una vez que tu solicitud haya sido procesada.",
+            "step": "Paso 4 de 4",
+            "loadingForm": "Cargando formulario",
+            "preparing": "Preparando tu solicitud de pago...",
+            "configError": "Error de Configuración",
+            "unableToLoad": "No se puede cargar el esquema del formulario",
+            "contactAdmin": "Configuración del formulario no encontrada. Por favor contacta a tu administrador."
+        },
+        "personType": {
+            "title": "Clasificación de Proveedor",
+            "subtitle": "Selecciona el tipo legal de la persona o entidad para esta solicitud de pago",
+            "natural": "Persona Natural",
+            "naturalDesc": "Freelancer individual o contratista independiente",
+            "legal": "Persona Jurídica",
+            "legalDesc": "Compañía registrada o entidad corporativa",
+            "goBack": "Volver",
+            "step": "Paso 2 de 4",
+            "cardTitle": "Clasificación de Proveedor",
+            "cardDesc": "Selecciona el tipo legal de la persona o entidad para esta solicitud de pago"
+        },
+        "toasts": {
+            "projectsLoadError": "Error al cargar los proyectos.",
+            "schemaNotFound": "Esquema del formulario '{name}' no encontrado.",
+            "providersNotFound": "Proveedores no encontrados.",
+            "formDataLoadError": "Error al cargar los datos del formulario.",
+            "fileProcessSuccess": "¡Archivos procesados exitosamente!",
+            "fileProcessSuccessDesc": "Los datos han sido extraídos y poblados en el formulario",
+            "fileProcessError": "Error al procesar archivos",
+            "fileProcessErrorDesc": "Por favor intenta de nuevo o ingresa los datos manualmente",
+            "submitSuccess": "¡Solicitud de pago enviada exitosamente!",
+            "submitSuccessDesc": "Tu solicitud ha sido enviada para aprobación",
+            "submitError": "Error al enviar la solicitud"
+        }
+    },
+    "Outflow": {
+        "title": "Gestión de Egresos",
+        "paymentRequest": {
+            "title": "Solicitud de Pago",
+            "description": "Solicita un pago a un proveedor vinculado a un proyecto u orden de compra."
+        },
+        "expenseRequest": {
+            "title": "Solicitud de Gastos",
+            "description": "Envía un gasto reembolsable para aprobación y procesamiento."
+        },
+        "administrativePayment": {
+            "title": "Pago Administrativo",
+            "description": "Registra un pago administrativo fuera del alcance del proyecto."
+        },
+        "tabs": {
+            "dashboard": "Tablero de Egresos",
+            "dashboardShort": "Tablero",
+            "calendar": "Calendario de Pagos",
+            "calendarShort": "Calendario",
+            "new": "Nuevo"
+        },
+        "calendar": {
+            "title": "Calendario de Pagos",
+            "description": "Ve tus solicitudes de pago organizadas por fecha de vencimiento."
+        },
+        "newRequest": {
+            "title": "Nueva Solicitud de Egreso",
+            "subtitle": "Seleccione el tipo de solicitud que le gustaría crear."
+        },
+        "getStarted": "Comenzar"
+    }
+}

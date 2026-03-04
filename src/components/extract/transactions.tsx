@@ -13,15 +13,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { AccountsTable, updateAccount } from "./AccountsTable";
 import { Trash2, Download, Upload, Eye, EyeOff } from "lucide-react";
-import { GenericTable } from "../table/common-table";
 import { BusinessTable, PersonalTable } from "../table/transactionTable";
 import Cookies from "js-cookie";
 import crypto from "crypto";
+import { useI18n } from "@/i18n/I18nProvider";
+
 // O si recibes activeDatabase como prop:
 interface TransactionsProps {
   activeDatabase: string;
 }
 export default function Transactions({ activeDatabase }: TransactionsProps) {
+  const { t } = useI18n(); // Hook usage
   const [accountsState, setAccountsState] = useState<any[]>([]);
   const [activeAccount, setActiveAccount] = useState<string | null>(null);
   const [storedTransactions, setStoredTransactions] = useState<any[]>([]);
@@ -195,32 +197,43 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
     return map[upper] || upper;
   }
 
-  function normalizeDateTime(fechaRaw: string): string {
-    const parts = fechaRaw.split("/");
-    if (parts.length === 3) {
-      const [dd, mm, yyyy] = parts.map((p) => parseInt(p, 10));
-      if (!isNaN(dd) && !isNaN(mm) && !isNaN(yyyy)) {
-        return `${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(
-          2,
-          "0"
-        )}T00:00:00`;
-      }
+  function normalizeDateTime(fechaRaw: string): string | null {
+    if (!fechaRaw) return null;
+
+    const monthMap: Record<string, number> = {
+      ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5,
+      jul: 6, ago: 7, sep: 8, oct: 9, nov: 10, dic: 11,
+    };
+
+    const match = fechaRaw
+      .toLowerCase()
+      .match(/(\d{1,2})\s+(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)\s+(\d{2}):(\d{2})/);
+
+    if (!match) return null;
+
+    const [, dd, mon, hh, mm] = match;
+    const day = Number(dd);
+    const month = monthMap[mon];
+
+    const now = new Date();
+    let year = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    // 🔑 inferencia correcta de año
+    // ej: hoy feb (1) y movimiento dic (11) → año anterior
+    if (month > currentMonth + 1) {
+      year -= 1;
+    }
+    // ej: hoy dic (11) y movimiento ene (0) → año siguiente
+    else if (month < currentMonth - 1) {
+      year += 1;
     }
 
-    const currentYear = new Date().getFullYear();
-    const withYear = `${fechaRaw} ${currentYear}`;
+    const date = new Date(year, month, day, Number(hh), Number(mm), 0);
 
-    const parsed = new Date(withYear);
-    if (!isNaN(parsed.getTime())) {
-      const yyyy = parsed.getFullYear();
-      const mm = String(parsed.getMonth() + 1).padStart(2, "0");
-      const dd = String(parsed.getDate()).padStart(2, "0");
-      const hh = String(parsed.getHours()).padStart(2, "0");
-      const min = String(parsed.getMinutes()).padStart(2, "0");
-      return `${yyyy}-${mm}-${dd}T${hh}:${min}:00`;
-    }
+    if (isNaN(date.getTime())) return null;
 
-    return fechaRaw;
+    return date.toISOString();
   }
 
   const selectAccount = (id: string) => {
@@ -280,8 +293,8 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
       return;
     }
 
-    let startTs = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
-    let endTs = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
+    const startTs = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
+    const endTs = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
 
     const kept: any[] = [];
     const removed: any[] = [];
@@ -440,7 +453,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
         .createHash("sha1")
         .update(JSON.stringify({
           acc: cleanAccNum,
-          fecha: tx.fecha_hora,
+          fecha: tx.operation_date ?? tx.operation_number ?? tx.fecha_hora,
           desc: tx.descripcion,
           monto: tx.monto,
         }))
@@ -641,19 +654,19 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
     accountsState.find((a) => a.id === activeAccount)?.currency || "???";
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 space-y-6 pb-10">
+    <div className="w-full mx-auto space-y-6 pb-10">
       <div className="space-y-1 sm:space-y-2">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
-          Web Capture
+          {t("Extract.Transactions.title")}
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Manage and parse bank transactions
+          {t("Extract.Transactions.subtitle")}
         </p>
       </div>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>Select Account</CardTitle>
+          <CardTitle>{t("Extract.Transactions.selectAccount")}</CardTitle>
         </CardHeader>
         <CardContent>
           <AccountsTable
@@ -668,7 +681,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="pt-4 text-sm sm:text-base">
             <p className="text-blue-900">
-              👆 Select a bank account to get started
+              {t("Extract.Transactions.selectAccountDesc")}
             </p>
           </CardContent>
         </Card>
@@ -679,20 +692,20 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
           <Card>
             <CardHeader>
               <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <span>Parse Transactions</span>
+                <span>{t("Extract.Transactions.parse.title")}</span>
                 <span className="text-xs sm:text-sm font-normal text-muted-foreground">
-                  {isLoading && "Loading..."}
+                  {isLoading && t("Extract.Transactions.parse.loading")}
                 </span>
               </CardTitle>
               <CardDescription className="text-sm">
-                Paste your bank statement text below
+                {t("Extract.Transactions.parse.desc")}
               </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4">
               <Textarea
                 ref={inputTextRef}
-                placeholder="Paste transaction text here..."
+                placeholder={t("Extract.Transactions.parse.placeholder")}
                 className="min-h-[160px] sm:min-h-[200px] font-mono text-xs sm:text-sm"
               />
 
@@ -715,7 +728,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
                   disabled={isLoading}
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Parse & Save
+                  {t("Extract.Transactions.parse.button")}
                 </Button>
 
                 <Button
@@ -725,7 +738,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
                       inputTextRef.current.value = "";
                   }}
                 >
-                  Clear
+                  {t("Extract.Transactions.parse.clear")}
                 </Button>
               </div>
 
@@ -748,7 +761,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
             <Card className="border-yellow-300 bg-yellow-50">
               <CardHeader>
                 <CardTitle className="text-yellow-900 text-sm sm:text-base">
-                  ⚠️ Duplicates ({sessionDuplicates.length})
+                  {t("Extract.Transactions.duplicates.title", { count: sessionDuplicates.length })}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -780,7 +793,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
                   }
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Export Duplicates
+                  {t("Extract.Transactions.duplicates.export")}
                 </Button>
               </CardContent>
             </Card>
@@ -790,7 +803,7 @@ export default function Transactions({ activeDatabase }: TransactionsProps) {
             <Card>
               <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <CardTitle>Stored Transactions</CardTitle>
+                  <CardTitle>{t("Extract.Transactions.stored.title")}</CardTitle>
                   <CardDescription className="mt-1 text-sm">
                     Total: {transactionSummary.count} transactions | Net:{" "}
                     {transactionSummary.net.toFixed(2)}{" "}

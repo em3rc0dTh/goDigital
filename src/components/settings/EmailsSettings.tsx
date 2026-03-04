@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import React, { RefObject, useEffect, useState } from "react";
+import React, { RefObject, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface EmailSetup {
   id?: string;
@@ -41,9 +42,8 @@ interface EmailTabProps {
   bankNameEmail: RefObject<HTMLInputElement>;
   serviceTypeEmail: RefObject<HTMLInputElement>;
   bankEmailSender: RefObject<HTMLInputElement>;
-  account: RefObject<HTMLSelectElement>;
   addEmailConfig: (event: React.FormEvent<HTMLFormElement>) => void;
-  addSetupToEmail: (event: React.FormEvent<HTMLFormElement>) => void;
+  addSetupToEmail: (event: React.FormEvent<HTMLFormElement>, accountId?: string) => void;
   updateImapConfig: (user: string, password: string) => void;
   deleteImapConfig: () => void;
   updateEmailSetup: (id: string, updated: EmailSetup) => void;
@@ -60,7 +60,6 @@ export function EmailTab({
   bankNameEmail,
   serviceTypeEmail,
   bankEmailSender,
-  account,
   addEmailConfig,
   addSetupToEmail,
   updateImapConfig,
@@ -74,6 +73,7 @@ export function EmailTab({
   const [selectedAccount, setSelectedAccount] = useState<string>("");
   const [imapModalOpen, setImapModalOpen] = useState(false);
   const [newImapPass, setNewImapPass] = useState("");
+  const { t } = useI18n(); // Hook usage
 
   const openEditModal = (setup: EmailSetup) => {
     if (!setup.id) {
@@ -94,12 +94,6 @@ export function EmailTab({
     }
   };
 
-  useEffect(() => {
-    if (account.current) {
-      account.current.value = selectedAccount;
-    }
-  }, [selectedAccount]);
-
   const handleSaveImapPass = () => {
     if (newImapPass.trim() && imapConfig?.user) {
       updateImapConfig(imapConfig.user, newImapPass);
@@ -112,12 +106,12 @@ export function EmailTab({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>IMAP Configuration</CardTitle>
+          <CardTitle>{t("Extract.Settings.Email.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={addEmailConfig} className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Email</label>
+              <label className="text-sm font-medium">{t("Extract.Settings.Email.user")}</label>
               <Input
                 ref={emailUser}
                 type="email"
@@ -127,16 +121,16 @@ export function EmailTab({
               />
             </div>
             <div>
-              <label className="text-sm font-medium">Password</label>
+              <label className="text-sm font-medium">{t("Extract.Settings.Email.password")}</label>
               <Input
                 ref={emailPass}
                 type="password"
-                placeholder="App password"
+                placeholder={t("Extract.Settings.Email.password")}
                 required
               />
             </div>
             <Button type="submit" className="w-full">
-              Save IMAP Config
+              {t("Extract.Settings.Email.save")}
             </Button>
           </form>
 
@@ -147,7 +141,7 @@ export function EmailTab({
               </p>
               <div className="flex gap-2">
                 <Button size="sm" onClick={() => setImapModalOpen(true)}>
-                  Update Password
+                  {t("Extract.Settings.Email.updatePass")}
                 </Button>
                 <Button
                   size="sm"
@@ -194,28 +188,28 @@ export function EmailTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>Email Connector Setup</CardTitle>
+          <CardTitle>{t("Extract.Settings.Email.connectorTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <form
             onSubmit={(e) => {
-              addSetupToEmail(e);
+              addSetupToEmail(e, selectedAccount);
               setSelectedAccount(""); // o ""
             }}
             className="space-y-4"
           >
             <div className="grid grid-cols-2 gap-4">
-              <Input ref={aliasEmail} placeholder="Alias (optional)" />
-              <Input ref={bankNameEmail} placeholder="Bank Name" required />
-              <Input ref={serviceTypeEmail} placeholder="Service Type (e.g., email)" required />
-              <Input ref={bankEmailSender} placeholder="Email Sender (e.g., noreply@bank.com)" required />
+              <Input ref={aliasEmail} placeholder={t("Extract.Settings.Email.alias")} />
+              <Input ref={bankNameEmail} placeholder={t("Extract.Settings.Email.bankName")} required />
+              <Input ref={serviceTypeEmail} placeholder={t("Extract.Settings.Email.serviceType")} required />
+              <Input ref={bankEmailSender} placeholder={t("Extract.Settings.Email.sender")} required />
               <div>
                 <Select
                   value={selectedAccount}
                   onValueChange={setSelectedAccount}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an account" />
+                    <SelectValue placeholder={t("Extract.Settings.Email.selectAccount")} />
                   </SelectTrigger>
 
                   <SelectContent>
@@ -232,13 +226,13 @@ export function EmailTab({
 
             </div>
             <Button type="submit" className="w-full">
-              Add Email Setup
+              {t("Extract.Settings.Email.addSetup")}
             </Button>
           </form>
 
           {emailSetups.length > 0 && (
             <div className="mt-4 space-y-2">
-              <h4 className="font-semibold text-sm">Configured Email Setups</h4>
+              <h4 className="font-semibold text-sm">{t("Extract.Settings.Email.configuredSetups")}</h4>
               {emailSetups.map((setup) => (
                 <div
                   key={setup.id}
@@ -284,7 +278,7 @@ export function EmailTab({
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Email Setup</DialogTitle>
+            <DialogTitle>{t("Extract.Settings.Email.editTitle")}</DialogTitle>
           </DialogHeader>
           {editData && (
             <div className="space-y-4">
@@ -349,7 +343,7 @@ export function EmailTab({
       <Dialog open={imapModalOpen} onOpenChange={setImapModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Update IMAP Password</DialogTitle>
+            <DialogTitle>{t("Extract.Settings.Email.updatePass")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>

@@ -4,9 +4,10 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
-import React, { RefObject, useState } from "react";
+import React, { RefObject, useState, useEffect } from "react";
 import { AccountsTable } from "../extract/AccountsTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface AccountsTabProps {
   accounts: any[];
@@ -25,12 +26,24 @@ interface AccountsTabProps {
   bankCurrency: string | null;
   setBankCurrency: (v: string) => void;
   bankType: RefObject<HTMLInputElement>;
-  settingsAlias: RefObject<HTMLInputElement>;
-  settingsBankName: RefObject<HTMLInputElement>;
-  settingsHolder: RefObject<HTMLInputElement>;
-  settingsNumber: RefObject<HTMLInputElement>;
-  settingsCurrency: RefObject<HTMLInputElement>;
-  settingsType: RefObject<HTMLInputElement>;
+  // Update form state
+  updateBankName: string | null;
+  setUpdateBankName: (v: string) => void;
+  updateCurrency: string | null;
+  setUpdateCurrency: (v: string) => void;
+  updateAccountType: string | null;
+  setUpdateAccountType: (v: string) => void;
+  updateAlias: string;
+  setUpdateAlias: (v: string) => void;
+  updateHolder: string;
+  setUpdateHolder: (v: string) => void;
+  updateNumber: string;
+  // 🆕 Business Units
+  businessUnits: any[];
+  assignedBUs: string[];
+  setAssignedBUs: (v: string[]) => void;
+  updateAssignedBUs: string[];
+  setUpdateAssignedBUs: (v: string[]) => void;
 }
 
 export function AccountsTab({
@@ -50,12 +63,22 @@ export function AccountsTab({
   bankCurrency,
   setBankCurrency,
   bankType,
-  settingsAlias,
-  settingsBankName,
-  settingsHolder,
-  settingsNumber,
-  settingsCurrency,
-  settingsType,
+  updateBankName,
+  setUpdateBankName,
+  updateCurrency,
+  setUpdateCurrency,
+  updateAccountType,
+  setUpdateAccountType,
+  updateAlias,
+  setUpdateAlias,
+  updateHolder,
+  setUpdateHolder,
+  updateNumber,
+  businessUnits,
+  assignedBUs,
+  setAssignedBUs,
+  updateAssignedBUs,
+  setUpdateAssignedBUs,
 }: AccountsTabProps) {
   const BANKS = [
     "BCP",
@@ -73,12 +96,17 @@ export function AccountsTab({
     { value: "EUR", label: "EUR" },
   ];
   const [formKey, setFormKey] = useState(0);
+  const { t } = useI18n(); // Hook usage
+
+  useEffect(() => {
+    console.log('[AccountsSettings] Update values changed:', { updateBankName, updateCurrency, updateAccountType });
+  }, [updateBankName, updateCurrency, updateAccountType]);
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Your Bank Accounts</CardTitle>
+          <CardTitle>{t("Extract.Settings.Accounts.list")}</CardTitle>
         </CardHeader>
         <CardContent>
           <AccountsTable
@@ -93,7 +121,7 @@ export function AccountsTab({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5" />
-            Add New Account
+            {t("Extract.Settings.Accounts.add")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -107,10 +135,10 @@ export function AccountsTab({
             className="space-y-4"
           >
             <div className="grid grid-cols-2 gap-4">
-              <Input ref={bankAlias} placeholder="Alias (e.g., Main)" />
+              <Input ref={bankAlias} placeholder={t("Extract.Settings.Accounts.alias")} />
               <Select value={bankName ?? undefined} onValueChange={setBankName}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Bank" />
+                  <SelectValue placeholder={t("Extract.Settings.Accounts.bank")} />
                 </SelectTrigger>
                 <SelectContent>
                   {BANKS.map((bank) => (
@@ -121,27 +149,27 @@ export function AccountsTab({
                 </SelectContent>
               </Select>
 
-              <Input ref={bankHolder} placeholder="Account Holder" required />
+              <Input ref={bankHolder} placeholder={t("Extract.Settings.Accounts.holder")} required />
               <Select
                 value={bankAccountType ?? undefined}
                 onValueChange={setBankAccountType}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Bank Account Type" />
+                  <SelectValue placeholder={t("Extract.Settings.Accounts.type")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Personal">Personal</SelectItem>
-                  <SelectItem value="Business">Business</SelectItem>
+                  <SelectItem value="Personal">{t("GettingStarted.form.natural")}</SelectItem>
+                  <SelectItem value="Business">{t("GettingStarted.form.legal")}</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Input ref={bankNumber} placeholder="Account Number" required />
+              <Input ref={bankNumber} placeholder={t("Extract.Settings.Accounts.number")} required />
               <Select
                 value={bankCurrency ?? undefined}
                 onValueChange={setBankCurrency}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Currency" />
+                  <SelectValue placeholder={t("Extract.Settings.Accounts.currency")} />
                 </SelectTrigger>
                 <SelectContent>
                   {CURRENCIES.map((c) => (
@@ -154,10 +182,36 @@ export function AccountsTab({
 
               <Input
                 ref={bankType}
-                placeholder="Account Type (Savings, Checking...)"
+                placeholder={t("Extract.Settings.Accounts.accountTypePlaceholder")}
               />
+
+              <div className="col-span-2 space-y-2 border p-3 rounded-md">
+                <label className="text-sm font-medium">{t("Assign Business Units")}</label>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                  {businessUnits.map((bu) => (
+                    <div key={bu._id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`bu-${bu._id}`}
+                        checked={assignedBUs.includes(bu._id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setAssignedBUs([...assignedBUs, bu._id]);
+                          } else {
+                            setAssignedBUs(assignedBUs.filter(id => id !== bu._id));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <label htmlFor={`bu-${bu._id}`} className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                        {bu.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <Button type="submit">Add Account</Button>
+            <Button type="submit">{t("Extract.Settings.Accounts.submit")}</Button>
           </form>
         </CardContent>
       </Card>
@@ -165,18 +219,24 @@ export function AccountsTab({
       {activeAccount && (
         <Card>
           <CardHeader>
-            <CardTitle>Update Selected Account</CardTitle>
+            <CardTitle>{t("Extract.Settings.Accounts.update")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Input ref={settingsAlias} placeholder="Alias" />
+              <Input
+                value={updateAlias}
+                onChange={(e) => setUpdateAlias(e.target.value)}
+                placeholder={t("Extract.Settings.Accounts.alias")}
+              />
               <Select
+                key={`bank-${activeAccount}`}
+                value={updateBankName ?? undefined}
                 onValueChange={(v) => {
-                  if (settingsBankName.current) settingsBankName.current.value = v;
+                  setUpdateBankName(v);
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Bank Name" />
+                  <SelectValue placeholder={t("Extract.Settings.Accounts.bank")} />
                 </SelectTrigger>
                 <SelectContent>
                   {BANKS.map((bank) => (
@@ -186,20 +246,26 @@ export function AccountsTab({
                   ))}
                 </SelectContent>
               </Select>
-              <Input ref={settingsHolder} placeholder="Account Holder" />
               <Input
-                ref={settingsNumber}
-                placeholder="Account Number"
+                value={updateHolder}
+                onChange={(e) => setUpdateHolder(e.target.value)}
+                placeholder={t("Extract.Settings.Accounts.holder")}
+              />
+              <Input
+                value={updateNumber}
+                placeholder={t("Extract.Settings.Accounts.number")}
                 readOnly
                 className="bg-gray-100"
               />
               <Select
+                key={`currency-${activeAccount}`}
+                value={updateCurrency ?? undefined}
                 onValueChange={(v) => {
-                  if (settingsCurrency.current) settingsCurrency.current.value = v;
+                  setUpdateCurrency(v);
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Currency" />
+                  <SelectValue placeholder={t("Extract.Settings.Accounts.currency")} />
                 </SelectTrigger>
                 <SelectContent>
                   {CURRENCIES.map((c) => (
@@ -209,9 +275,39 @@ export function AccountsTab({
                   ))}
                 </SelectContent>
               </Select>
-              <Input ref={settingsType} placeholder="Account Type" />
+              <Input
+                value={updateAccountType || ""}
+                onChange={(e) => setUpdateAccountType(e.target.value)}
+                placeholder={t("Extract.Settings.Accounts.type")}
+              />
+
+              <div className="col-span-2 space-y-2 border p-3 rounded-md">
+                <label className="text-sm font-medium">{t("Assign Business Units")}</label>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                  {businessUnits.map((bu) => (
+                    <div key={`update-bu-${bu._id}`} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`update-bu-${bu._id}`}
+                        checked={updateAssignedBUs.includes(bu._id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setUpdateAssignedBUs([...updateAssignedBUs, bu._id]);
+                          } else {
+                            setUpdateAssignedBUs(updateAssignedBUs.filter(id => id !== bu._id));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <label htmlFor={`update-bu-${bu._id}`} className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                        {bu.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <Button onClick={saveAccountUpdates}>Save Changes</Button>
+            <Button onClick={saveAccountUpdates}>{t("Extract.Settings.Accounts.save")}</Button>
           </CardContent>
         </Card>
       )}
@@ -219,11 +315,11 @@ export function AccountsTab({
       {activeAccount && (
         <Card className="border-red-200 bg-red-50">
           <CardHeader>
-            <CardTitle className="text-red-600">Danger Zone</CardTitle>
+            <CardTitle className="text-red-600">{t("Extract.Settings.Accounts.danger")}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-red-800 mb-4">
-              Deleting this account will also remove all associated transactions
+              {t("Extract.Settings.Accounts.dangerDesc")}
             </p>
             <Button
               variant="destructive"
@@ -231,7 +327,7 @@ export function AccountsTab({
               className="w-full"
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete Account
+              {t("Extract.Settings.Accounts.delete")}
             </Button>
           </CardContent>
         </Card>

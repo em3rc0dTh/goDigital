@@ -6,11 +6,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const { t } = useI18n();
   // const supabase = createClient();
 
   // const handleRegister = async (e: React.FormEvent) => {
@@ -27,7 +29,7 @@ export function RegisterForm() {
     <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
-          Sign in to your account
+          {t("Auth.Register.title")}
         </h2>
       </div>
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
@@ -57,9 +59,9 @@ export function RegisterForm() {
           </Button>
         </form> */}
         <p className="text-center text-sm pt-4">
-          Already have an account?{" "}
+          {t("Auth.Register.alreadyHaveAccount")}{" "}
           <Link href="/login" className="text-blue-500 hover:underline">
-            Login
+            {t("Auth.Register.loginLink")}
           </Link>
         </p>
       </div>

@@ -1,0 +1,877 @@
+{
+    "Login": {
+        "error": {
+            "title": "Error",
+            "generic": "An error occurred"
+        },
+        "success": {
+            "title": "Login successful",
+            "selectWorkspace": "Please select your workspace"
+        }
+    },
+    "Workspace": {
+        "select": {
+            "title": "Select Workspace",
+            "description": "You have access to multiple workspaces. Choose one to continue."
+        },
+        "role": "Role: {role}"
+    },
+    "Common": {
+        "cancel": "Cancel",
+        "close": "Close",
+        "apply": "Apply"
+    },
+    "Auth": {
+        "Tabs": {
+            "login": "Login",
+            "signUp": "Sign up",
+            "reset": "Reset Password"
+        },
+        "Labels": {
+            "workEmail": "Work Email Address",
+            "password": "Password",
+            "fullName": "Full Name",
+            "confirmPassword": "Confirm Password"
+        },
+        "Placeholders": {
+            "fullName": "Full Name",
+            "workEmail": "Work Email Address",
+            "password": "Password",
+            "confirmPassword": "Can repeat your password?",
+            "email": "your.email@example.com"
+        },
+        "Buttons": {
+            "login": "Log In →",
+            "loggingIn": "Logging in...",
+            "signUp": "Sign Up →",
+            "signingUp": "Signing up...",
+            "resetPasswordLink": "reset my password.",
+            "googleLogin": "Sign in with Google",
+            "magicLink": "Send Magic Link",
+            "resendVerification": "Resend Verification Email",
+            "goToLogin": "Go to Login",
+            "sendResetLink": "Send Reset Link",
+            "sending": "Sending...",
+            "backToLogin": "Back to login"
+        },
+        "Messages": {
+            "needReset": "I may need to ",
+            "or": "or",
+            "passwordsDoNotMatch": "Passwords do not match",
+            "emailNotVerified": "Email Not Verified",
+            "checkInbox": "Please check your inbox and verify your email address",
+            "authFailed": "Authentication Failed",
+            "accountCreated": "Account Created!",
+            "checkEmailVerify": "Please check your email to verify your account",
+            "loginSuccessful": "Login Successful",
+            "selectWorkspace": "Please select your workspace",
+            "resendingEmail": "Resending verification email...",
+            "emailSent": "Email Sent!",
+            "pleaseCheckInbox": "Please check your inbox",
+            "failedResend": "Failed to resend email",
+            "failedResendDesc": "Failed to resend verification email",
+            "googleLoginFailed": "Google Login Failed",
+            "enterEmailReset": "Enter your email to receive a password reset link",
+            "validEmail": "Please enter a valid email address",
+            "resetLinkSent": "If an account exists with this email, you will receive a password reset link shortly.",
+            "resetLinkFailed": "Failed to send reset link. Please try again.",
+            "networkError": "Network error. Please check your connection and try again.",
+            "rememberPassword": "Remember your password?",
+            "didntReceive": "Didn't receive the email?",
+            "checkInboxDetail": "Please check your inbox and click the verification link to activate your account.",
+            "weSentLink": "We've sent a verification link to"
+        },
+        "Dialogs": {
+            "VerifyEmail": {
+                "title": "Verify Your Email"
+            },
+            "SelectWorkspace": {
+                "title": "Select Workspace",
+                "description": "You have access to multiple workspaces. Choose one to continue."
+            },
+            "Error": {
+                "title": "Error",
+                "generic": "An unexpected error occurred"
+            }
+        },
+        "LeftContent": {
+            "Login": {
+                "title1": "Pro Tip:",
+                "title2": "Stay secure with fine grain access control.",
+                "description": "Your organization's source of truth for secrets across all projects, teams, and infrastructure."
+            },
+            "SignUp": {
+                "title1": "SecretOps Platform",
+                "title2": "Get Started Now",
+                "description": "Your organization's source of truth for secrets across all projects.",
+                "subDescription": "Seamlessly integrate with your existing workflows."
+            },
+            "ResetPassword": {
+                "title1": "Reset your password",
+                "title2": "in just a couple minutes.",
+                "description": "Your organization's source of truth for secrets across all projects."
+            }
+        },
+        "Register": {
+            "title": "Sign in to your account",
+            "alreadyHaveAccount": "Already have an account?",
+            "loginLink": "Login"
+        },
+        "VerifyEmail": {
+            "title": "Verifying Your Email",
+            "verifying": "Please wait while we verify your email address...",
+            "successTitle": "Email Verified!",
+            "selectWorkspace": "Select your workspace:",
+            "continueToWorkspace": "Continue to Workspace",
+            "redirecting": "Redirecting to your workspace in a few seconds...",
+            "failedTitle": "Verification Failed",
+            "invalidLinkTitle": "Invalid Link",
+            "needHelp": "Need help?",
+            "contactSupport": "Contact Support",
+            "messages": {
+                "noToken": "No verification token provided",
+                "success": "Your email has been verified successfully!",
+                "failed": "Verification failed",
+                "error": "An error occurred during verification"
+            }
+        },
+        "NewResetPassword": {
+            "invalidToken": "Invalid or missing reset token",
+            "fillFields": "Please fill in all fields",
+            "passwordLength": "Password must be at least 8 characters long",
+            "successRedirect": "Password reset successfully! Redirecting to login...",
+            "failedExpired": "Failed to reset password. The link may have expired.",
+            "invalidLinkTitle": "Invalid Reset Link",
+            "invalidLinkDesc": "This password reset link is invalid or has expired.",
+            "needNewLink": "Need a new link?",
+            "requestAnother": "Request another reset",
+            "title": "Reset Your Password",
+            "enterNew": "Enter your new password below",
+            "labelNew": "New Password",
+            "placeholderNew": "Enter new password",
+            "hintLength": "Must be at least 8 characters",
+            "labelConfirm": "Confirm Password",
+            "placeholderConfirm": "Confirm new password",
+            "btnResetting": "Resetting Password...",
+            "btnReset": "Reset Password",
+            "remember": "Remember your password?",
+            "needHelp": "Need help?",
+            "contactSupport": "Contact Support"
+        }
+    },
+    "Sidebar": {
+        "menu": {
+            "Home": "Home",
+            "LaunchPad": "Launch Pad",
+            "MissionControl": "Mission Control",
+            "Projects": "Projects",
+            "Entities": "Entities",
+            "Activity": "Activity",
+            "Team": "Team",
+            "Tokens": "Tokens",
+            "Billing": "Billing",
+            "BankExtract": "Bank Extract",
+            "PaymentRequest": "Payment Request",
+            "OutflowManagement": "Outflow Management",
+            "BusinessUnits": "Business Units"
+        },
+        "bottom": {
+            "Settings": "Settings",
+            "LogOut": "Log Out"
+        }
+    },
+    "Home": {
+        "title": "Dashboard",
+        "role": "Role: {role}",
+        "loadingWorkspace": "Loading your workspace...",
+        "tryAgain": "Try again",
+        "tabs": {
+            "summary": "Summary",
+            "detailed": "Detailed"
+        },
+        "repositories": "Repositories",
+        "noDatabases": "No databases provisioned. Please complete the getting started flow.",
+        "summaryView": {
+            "title": "Summary View",
+            "description": "This view aggregates data from all {count} repositories. Add summary analytics, cross-repository insights, and summaries here."
+        },
+        "detailedView": {
+            "noAccounts": "No accounts found in this database. Create one in Settings.",
+            "latestTransactions": "Latest Transactions",
+            "loading": "Loading...",
+            "showingTransactions": "Showing {count} last transactions",
+            "transactionsHidden": "Transactions hidden"
+        },
+        "errors": {
+            "loadDatabases": "Failed to load databases. Please try again.",
+            "loadAccounts": "Failed to load accounts. Please try again."
+        }
+    },
+    "GettingStarted": {
+        "title": "Launch Pad",
+        "searchPlaceholder": "Search for Shortcuts, Projects, Secrets, etc.",
+        "setupWorkspace": "Set up your Business Workspace",
+        "createEntity": "Create Business Entity",
+        "entityConfigured": "At least one Business Entity is already configured for this workspace.",
+        "createAnother": "Create another Business Entity",
+        "form": {
+            "country": "Country",
+            "type": "Type",
+            "natural": "Natural Person",
+            "legal": "Legal Person",
+            "taxId": "Tax ID / RUC",
+            "placeholderTaxId": "RUC or business identifier",
+            "email": "Business Email",
+            "domain": "Domain (optional)",
+            "submit": "Create Business Entity →"
+        },
+        "setupProject": "Set up your first project",
+        "projectDesc": "Projects are where you define configurations and manage secrets for a single service or application.",
+        "defaultEnv": "Projects start with three default environments: Development, Staging and Production",
+        "branchConfigs": "You can branch configs to allow overrides from the root configs",
+        "goToProjects": "Go to Projects →",
+        "setupIntegration": "Set up your first integration",
+        "inviteTeammates": "Invite teammates",
+        "setupAccount": "Set up your account",
+        "setupBankAccount": "Set up your bank account",
+        "sidebar": {
+            "joining": "Joining your team's workplace?",
+            "joiningDesc": "Some of the items may already be completed. If you want to test all capabilities, create a new personal workplace.",
+            "help": "Need more help?",
+            "docs": "Check out these relevant Doppler Docs for more information.",
+            "proTip": "Pro Tip",
+            "projectNaming": "Project Naming",
+            "projectNamingDesc": "A project should be considered an encapsulated application service. Name it after the specific service."
+        }
+    },
+    "Setup": {
+        "signOut": "Sign out",
+        "welcome": "Welcome to",
+        "tellUsMore": "Tell us more about yourself so we can improve your experience.",
+        "step1": {
+            "title": "Name your workplace",
+            "desc": "Give your workplace a name that represents your team.",
+            "label": "Workplace Name",
+            "placeholder": "Radar Industries",
+            "next": "Next",
+            "joinExisting": "I'm joining an existing workplace"
+        },
+        "step2": {
+            "title": "What will you use it for?",
+            "desc": "Personalize your experience.",
+            "personal": "Personal Projects",
+            "work": "Work Projects",
+            "notsure": "Not sure yet",
+            "back": "Back"
+        },
+        "step3": {
+            "title": "Which service do you use?",
+            "desc": "Select anything you frequently use.",
+            "finish": "Finish"
+        }
+    },
+    "Extract": {
+        "title": "Bank Extract",
+        "subtitle": "Manage your bank accounts and parsed transactions",
+        "tryAgain": "Try again",
+        "analytics": "Analytics",
+        "rawData": "Raw Data",
+        "consolidatedView": "Consolidated view across all repositories",
+        "summaryView": "Summary View",
+        "summaryDesc": "This view aggregates data from all {count} repositories.",
+        "summaryPlaceholder": "Add summary analytics, cross-repository insights, and summaries here.",
+        "repositories": "Repositories",
+        "total": "{count} total",
+        "noDatabases": "No databases provisioned. Please complete the launch pad flow.",
+        "tabs": {
+            "webCapture": "Web Capture",
+            "emailCapture": "Email Capture",
+            "settings": "Settings",
+            "bankStatements": "Bank Statements",
+            "rawData": "Raw Data"
+        },
+        "BankStatement": {
+            "title": "Upload Bank Statement",
+            "subtitle": "Upload PDF files to extract transactions",
+            "upload": "Upload",
+            "uploading": "Uploading...",
+            "selectFile": "Select PDF file",
+            "dragDrop": "or drag and drop here",
+            "success": "File uploaded successfully",
+            "error": "Error uploading file",
+            "viewTransactions": "View extracted transactions",
+            "noFile": "No file selected",
+            "removeFile": "Remove file"
+        },
+        "Transactions": {
+            "title": "Web Capture",
+            "subtitle": "Manage and parse bank transactions",
+            "selectAccount": "Select Account",
+            "selectAccountDesc": "👆 Select a bank account to get started",
+            "parse": {
+                "title": "Parse Transactions",
+                "desc": "Paste your bank statement text below",
+                "placeholder": "Paste transaction text here...",
+                "button": "Parse & Save",
+                "clear": "Clear",
+                "loading": "Loading..."
+            },
+            "duplicates": {
+                "title": "⚠️ Duplicates ({count})",
+                "export": "Export Duplicates"
+            },
+            "stored": {
+                "title": "Stored Transactions",
+                "desc": "Transactions currently saved in the database",
+                "clearAll": "Clear All",
+                "confirmClear": "Delete all {count} stored transactions?",
+                "cleared": "✅ All transactions cleared.",
+                "errorClear": "❌ Error clearing transactions",
+                "export": "Export JSON",
+                "noTransactions": "No transactions to clear."
+            },
+            "dateFilter": {
+                "start": "Start Date",
+                "end": "End Date",
+                "remove": "Remove Range",
+                "confirm": "Delete {count} transactions in selected range?",
+                "removed": "✅ {count} transactions removed by date range.",
+                "error": "❌ Error removing transactions",
+                "noMatch": "No transactions matched the selected range."
+            },
+            "errors": {
+                "noAccount": "Please select a bank account first.",
+                "noText": "❌ No text to parse.",
+                "currencyMismatch": "❌ Currency mismatch: Account is \"{account}\", data is \"{data}\".",
+                "multipleCurrencies": "❌ Multiple currencies detected in same batch.",
+                "noNew": "⚠️ No new or duplicate transactions found.",
+                "saveError": "❌ Error saving transactions",
+                "success": "✅ Parsed {new} new transaction(s).",
+                "skipped": "⚠️ {dup} duplicate(s) skipped."
+            }
+        },
+        "Emails": {
+            "title": "Email Capture",
+            "subtitle": "Bank transaction emails from IMAP and Gmail API",
+            "ingestImap": "Ingest IMAP",
+            "ingestGmail": "Ingest Gmail",
+            "refresh": "Refresh",
+            "processing": "Processing...",
+            "count": "Emails ({count})",
+            "rows": "Rows:",
+            "noEmails": "No emails found. Use the ingest buttons above to load emails.",
+            "tenantError": "⚠️ Tenant information not loaded. Please refresh the page.",
+            "table": {
+                "source": "Source",
+                "from": "From",
+                "operation": "Operation",
+                "beneficiary": "Beneficiary",
+                "date": "Date",
+                "currency": "Currency",
+                "amount": "Amount"
+            },
+            "status": {
+                "missingTenant": "❌ Missing tenant information",
+                "noDb": "❌ Could not load database name",
+                "loading": "⏳ Loading emails from both sources...",
+                "imapFailed": "IMAP endpoint failed, continuing with Gmail only",
+                "noEmails": "ℹ️ No emails found in either source",
+                "loaded": "✅ Loaded {count} emails (IMAP: {imap}, Gmail: {gmail})",
+                "loadTenant": "❌ Error loading tenant information",
+                "loadAccounts": "❌ Error loading accounts",
+                "loadEmailSetups": "❌ Error loading email setups",
+                "loadImapConfig": "❌ Error loading IMAP config"
+            }
+        },
+        "Settings": {
+            "title": "Settings",
+            "subtitle": "Manage your bank accounts and email access",
+            "tabs": {
+                "accounts": "Accounts",
+                "email": "Email Setup",
+                "forwarding": "Forwarding Setup"
+            },
+            "Accounts": {
+                "add": "Add Bank Account",
+                "alias": "Alias",
+                "bank": "Bank Name",
+                "holder": "Holder Name",
+                "number": "Account Number",
+                "currency": "Currency",
+                "type": "Type",
+                "submit": "Add Account",
+                "list": "Accounts List",
+                "delete": "Delete",
+                "saving": "Saving...",
+                "update": "Update Selected Account",
+                "danger": "Danger Zone",
+                "dangerDesc": "Deleting this account will also remove all associated transactions",
+                "save": "Save Changes",
+                "accountTypePlaceholder": "Account Type (Savings, Checking...)"
+            },
+            "Email": {
+                "title": "IMAP Configuration",
+                "user": "User",
+                "password": "Password",
+                "host": "Host",
+                "port": "Port",
+                "save": "Save Configuration",
+                "saving": "Saving...",
+                "test": "Test Connection",
+                "success": "Connection Succeeded",
+                "lastChecked": "Last checked: {date}",
+                "configured": "✅ IMAP Configured",
+                "connectorTitle": "Email Connector Setup",
+                "alias": "Alias (optional)",
+                "bankName": "Bank Name",
+                "serviceType": "Service Type (e.g., email)",
+                "sender": "Email Sender (e.g., noreply@bank.com)",
+                "selectAccount": "Select an account",
+                "addSetup": "Add Email Setup",
+                "configuredSetups": "Configured Email Setups",
+                "editTitle": "Edit Email Setup",
+                "updatePass": "Update IMAP Password",
+                "currentEmail": "Current Email",
+                "newPass": "New Password",
+                "cancel": "Cancel",
+                "savePass": "Save Password"
+            },
+            "Forwarding": {
+                "title": "Forwarding Configuration (Gmail)",
+                "desc": "This configuration is used to fetch emails from Gmail API using a service account or user credentials.",
+                "entityId": "Entity ID",
+                "userEmail": "User Email (Gmail)",
+                "appPassword": "App Password",
+                "save": "Save Configuration",
+                "saving": "Saving...",
+                "configured": "✅ Gmail Configured",
+                "gmailIntegration": "Gmail Integration",
+                "connect": "Connect Gmail",
+                "disconnect": "Disconnect",
+                "connectedAs": "✅ Connected as {email}",
+                "expires": "Expires: {date}",
+                "connectDesc": "Connect your business Gmail account to enable automatic email ingestion.",
+                "checking": "Checking status...",
+                "rulesTitle": "Email Forwarding Rules",
+                "rulesDesc": "Configure which email addresses should forward transactions to specific bank accounts. Each rule maps an email address to one or more accounts.",
+                "active": "Active",
+                "inactive": "Inactive",
+                "activate": "Activate",
+                "deactivate": "Deactivate",
+                "refresh": "Refresh",
+                "deleteConfig": "Delete Config",
+                "noRules": "No forwarding rules configured",
+                "addFirst": "Add First Rule",
+                "addAnother": "Add Another Rule",
+                "emailAddress": "Email Address",
+                "forwardTo": "Forward to Accounts ({count} selected)",
+                "update": "Update Configuration"
+            }
+        }
+    },
+    "Components": {
+        "Pricing": {
+            "title": "Choose Your Plan",
+            "basic": "Basic",
+            "pro": "Pro",
+            "subscribe": "Subscribe",
+            "loading": "Loading...",
+            "features": {
+                "f1": "Feature 1",
+                "f2": "Feature 2",
+                "f3": "Feature 3"
+            }
+        }
+    },
+    "Settings": {
+        "General": {
+            "title": "System Settings",
+            "language": "Language",
+            "english": "English",
+            "spanish": "Spanish",
+            "description": "Manage your preferences and application settings",
+            "languageDescription": "Choose your preferred language for the interface",
+            "theme": "Theme",
+            "themeDescription": "Customize the appearance of your application",
+            "themeLight": "Light",
+            "themeDark": "Dark",
+            "themeSystem": "System",
+            "comingSoon": "Coming soon"
+        }
+    },
+    "Projects": {
+        "title": "Projects",
+        "description": "Manage your projects here.",
+        "add": "Add Project",
+        "searchPlaceholder": "Search projects...",
+        "status": {
+            "all": "All",
+            "active": "Active",
+            "planned": "Planned",
+            "onHold": "On Hold",
+            "completed": "Completed",
+            "cancelled": "Cancelled"
+        },
+        "table": {
+            "name": "Name",
+            "code": "Code",
+            "status": "Status",
+            "description": "Description",
+            "actions": "Actions",
+            "noProjects": "No projects found."
+        },
+        "dialog": {
+            "createTitle": "Create Project",
+            "editTitle": "Edit Project",
+            "createDesc": "Add a new project to the system.",
+            "editDesc": "Update existing project details.",
+            "name": "Name",
+            "code": "Code",
+            "status": "Status",
+            "startDate": "Start Date",
+            "endDate": "End Date",
+            "owner": "Project Owner",
+            "businessUnit": "Business Unit",
+            "description": "Description",
+            "cancel": "Cancel",
+            "save": "Save"
+        },
+        "messages": {
+            "created": "Project created",
+            "updated": "Project updated",
+            "deleted": "Project deleted",
+            "loadError": "Failed to load projects",
+            "saveError": "Failed to save project",
+            "deleteError": "Failed to delete project",
+            "confirmDelete": "Are you sure you want to delete this project?"
+        }
+    },
+    "Entities": {
+        "title": "Entities",
+        "description": "Manage your vendors, suppliers and providers.",
+        "add": "Add Entity",
+        "searchPlaceholder": "Search entities...",
+        "tabs": {
+            "all": "All",
+            "providers": "Providers",
+            "vendors": "Vendors",
+            "suppliers": "Suppliers"
+        },
+        "table": {
+            "name": "Name",
+            "taxId": "Tax ID",
+            "type": "Type",
+            "email": "Email",
+            "actions": "Actions",
+            "noEntities": "No entities found."
+        },
+        "dialog": {
+            "createTitle": "Create Entity",
+            "editTitle": "Edit Entity",
+            "createDesc": "Add a new entity to the system.",
+            "editDesc": "Update details for this entity.",
+            "name": "Name",
+            "type": "Type",
+            "legalClass": "Legal Class",
+            "businessType": "Business Type",
+            "identifiers": "Identifiers",
+            "taxId": "Tax ID (RUC/NIT)",
+            "nationalId": "National ID",
+            "contact": "Contact",
+            "email": "Email",
+            "phone": "Phone",
+            "address": "Address",
+            "cancel": "Cancel",
+            "save": "Save",
+            "options": {
+                "provider": "Provider",
+                "vendor": "Vendor",
+                "supplier": "Supplier",
+                "legalEntity": "Legal Entity",
+                "naturalEntity": "Natural Person"
+            }
+        },
+        "messages": {
+            "created": "Entity created",
+            "updated": "Entity updated",
+            "deleted": "Entity deleted",
+            "loadError": "Failed to load entities",
+            "saveError": "Failed to save entity",
+            "deleteError": "Failed to delete entity",
+            "confirmDelete": "Are you sure you want to delete this entity?"
+        }
+    },
+    "BusinessUnits": {
+        "title": "Business Units",
+        "description": "Manage your business units here.",
+        "add": "Add Business Unit",
+        "searchPlaceholder": "Search business units...",
+        "table": {
+            "name": "Name",
+            "adminEmail": "Admin Email",
+            "createdAt": "Created At",
+            "actions": "Actions",
+            "noUnits": "No business units found."
+        },
+        "dialog": {
+            "createTitle": "Create Business Unit",
+            "editTitle": "Edit Business Unit",
+            "createDesc": "Add a new business unit to the system.",
+            "editDesc": "Update existing business unit details.",
+            "name": "Name",
+            "adminEmail": "Admin Email",
+            "cancel": "Cancel",
+            "save": "Save"
+        },
+        "messages": {
+            "created": "Business Unit created",
+            "updated": "Business Unit updated",
+            "deleted": "Business Unit deleted",
+            "loadError": "Failed to load business units",
+            "saveError": "Failed to save business unit",
+            "deleteError": "Failed to delete business unit"
+        }
+    },
+    "PaymentRequestDetail": {
+        "title": "Payment Request",
+        "loading": "Loading request details...",
+        "error": {
+            "title": "Something went wrong",
+            "goBack": "Go Back"
+        },
+        "header": {
+            "created": "Created"
+        },
+        "statusFlow": {
+            "created": "Created",
+            "approved": "Approved",
+            "authorized": "Authorized",
+            "paid": "Paid"
+        },
+        "sections": {
+            "financialDetails": "Financial Details",
+            "projectVendor": "Project & Vendor",
+            "requestInfo": "Request Info"
+        },
+        "fields": {
+            "subtotal": "Amount (Subtotal)",
+            "tax": "Tax",
+            "total": "Total Amount",
+            "subjectToApproval": "Is subject to approval",
+            "project": "Project",
+            "vendor": "Vendor / Beneficiary",
+            "issueDate": "Issue Date",
+            "dueDate": "Due Date",
+            "createdBy": "Created By",
+            "paymentDate": "Payment Date",
+            "notes": "Notes",
+            "approvalNotes": "Approval Notes",
+            "authorizationNotes": "Authorization Notes",
+            "paymentNotes": "Payment Notes",
+            "description": "Description / Notes",
+            "noNotes": "No additional notes provided."
+        },
+        "status": {
+            "pending": "Pending",
+            "approved": "Approved",
+            "authorized": "Authorized",
+            "paid": "Paid",
+            "rejected": "Rejected"
+        }
+    },
+    "PaymentRequests": {
+        "title": "My Payment Requests",
+        "subtitle": "View and manage your payment requests",
+        "newRequest": "New Request",
+        "tabs": {
+            "list": "List View",
+            "dashboard": "Outflow Board",
+            "calendar": "Payment Calendars"
+        },
+        "calendar": {
+            "title": "Payment Calendar",
+            "subtitle": "View your payment requests by their due date.",
+            "today": "Today",
+            "details": "Payment Request Details",
+            "id": "ID",
+            "project": "Project",
+            "provider": "Provider",
+            "dueDate": "Due Date",
+            "amount": "Amount",
+            "eventsFor": "Events for",
+            "more": "more"
+        },
+        "dashboard": {
+            "title": "Dashboard - Payment Outflow",
+            "subtitle": "Manage your scheduled payments and monitor account liquidity.",
+            "selectDate": "Select Attention Date:",
+            "pickDate": "Pick a date",
+            "analysisTitle": "Liquidity vs. Outflow Analysis",
+            "analysisDesc": "Visual comparison of account balance (Green) vs. scheduled payments (Red).",
+            "analysisTip": "Look for Red bars extending beyond Green bars to identify overdrafts.",
+            "availableBalance": "Available Balance",
+            "currentBalance": "Current Balance",
+            "scheduledOutflow": "Scheduled Outflow",
+            "projectedBalance": "Projected Balance",
+            "status": "Status",
+            "overdraft": "OVERDRAFT",
+            "safe": "SAFE",
+            "noData": "No accounts or scheduled payments found for this date.",
+            "tab": {
+                "overview": "Overview",
+                "details": "Account Details"
+            }
+        },
+        "searchPlaceholder": "Search by project, provider or ID...",
+        "filters": "Filters",
+        "filtersDescription": "Refine your payment requests list.",
+        "allStatuses": "All Statuses",
+        "filterByDate": "Filter by Date",
+        "filterByCreatedDate": "Filter by Created Date",
+        "filterByDueDate": "Filter by Deadline Date",
+        "filterByScheduledDate": "Filter by Scheduled Date",
+        "clearFilter": "Clear Filter",
+        "table": {
+            "id": "ID",
+            "project": "Project",
+            "provider": "Provider",
+            "date": "Created Date",
+            "dueDate": "Due Date",
+            "scheduledDate": "Scheduled Date",
+            "amount": "Amount",
+            "currency": "Currency",
+            "status": "Status",
+            "loading": "Loading requests...",
+            "empty": "No payment requests found"
+        },
+        "baseAmount": "Base Amount",
+        "totalAmount": "Total with Tax",
+        "rowsPerPage": "Rows per page",
+        "viewDetails": "View Details"
+    },
+    "PaymentRequestForm": {
+        "title": "Payment Request",
+        "step1": {
+            "title": "New Payment Request",
+            "subtitle": "Select a project to begin",
+            "cardTitle": "Project Selection",
+            "cardDesc": "Choose the project this payment request will be associated with",
+            "searchPlaceholder": "Search by name, code or description...",
+            "noProjects": "No projects match your search criteria.",
+            "loading": "Loading projects...",
+            "step": "Step 0 of 4",
+            "pagination": "{start}–{end} of {total} projects",
+            "previous": "Previous",
+            "next": "Next"
+        },
+        "step2": {
+            "title": "Document Verification",
+            "subtitle": "Does your payment request include supporting files? (quotation, purchase order, or both)",
+            "yes": "Yes, I have files",
+            "yesDesc": "Upload a quotation or purchase order",
+            "no": "No, enter manually",
+            "noDesc": "Fill in the form without documents",
+            "changeProject": "Change project",
+            "step": "Step 1 of 4",
+            "cardTitle": "Document Verification",
+            "cardDesc": "Does your payment request include supporting files? (quotation, purchase order, or both)"
+        },
+        "step3": {
+            "title": "Upload Documents",
+            "subtitle": "Upload your quotation or purchase order — our AI will extract the information automatically",
+            "cardTitle": "Upload Files",
+            "cardDesc": "Upload your quotation or purchase order — our AI will extract the information automatically",
+            "processing": "Processing files...",
+            "extracting": "Extracting data with AI, please wait",
+            "filesReady": "{count} file{s} ready",
+            "clickToReplace": "Click to replace",
+            "clickToUpload": "Click to upload files",
+            "uploadDesc": "PDF, JPG or PNG — max 10 MB each",
+            "goBack": "Go back",
+            "step": "Step 3 of 4"
+        },
+        "step4": {
+            "title": "Payment Request",
+            "project": "Project:",
+            "date": "Date:",
+            "withFiles": "Review Extracted Data",
+            "manual": "Payment Request",
+            "reviewData": "Review Extracted Data",
+            "legalPerson": "Legal Person",
+            "naturalPerson": "Natural Person",
+            "requiredFields": "Required fields marked",
+            "successAlert": "Data successfully extracted from uploaded files. Please review and confirm the information below.",
+            "processingTitle": "Processing Payment Request",
+            "processingDesc": "Saving your request and sending email notifications to the project owner.",
+            "cardTitle": "Request Details",
+            "cardDescWithFiles": "Review and confirm the automatically extracted information",
+            "cardDescManual": "Complete all required fields to process your payment request",
+            "submit": "Submit Payment Request",
+            "submitting": "Submitting...",
+            "startOver": "Start over",
+            "infoAlert": "All payment requests are subject to review and approval. You will receive a notification once your request has been processed.",
+            "step": "Step 4 of 4",
+            "loadingForm": "Loading form",
+            "preparing": "Preparing your payment request...",
+            "configError": "Configuration Error",
+            "unableToLoad": "Unable to load the form schema",
+            "contactAdmin": "Form configuration not found. Please contact your administrator."
+        },
+        "personType": {
+            "title": "Vendor Classification",
+            "subtitle": "Select the legal type of the person or entity for this payment request",
+            "natural": "Natural Person",
+            "naturalDesc": "Individual freelancer or independent contractor",
+            "legal": "Legal Person",
+            "legalDesc": "Registered company or corporate entity",
+            "goBack": "Go back",
+            "step": "Step 2 of 4",
+            "cardTitle": "Vendor Classification",
+            "cardDesc": "Select the legal type of the person or entity for this payment request"
+        },
+        "toasts": {
+            "projectsLoadError": "Failed to load projects.",
+            "schemaNotFound": "Form schema '{name}' not found.",
+            "providersNotFound": "Providers not found.",
+            "formDataLoadError": "Failed to load form data.",
+            "fileProcessSuccess": "Files processed successfully!",
+            "fileProcessSuccessDesc": "Data has been extracted and populated in the form",
+            "fileProcessError": "Failed to process files",
+            "fileProcessErrorDesc": "Please try again or enter data manually",
+            "submitSuccess": "Payment request submitted successfully!",
+            "submitSuccessDesc": "Your request has been sent for approval",
+            "submitError": "Submission failed"
+        }
+    },
+    "Outflow": {
+        "title": "Outflow Management",
+        "paymentRequest": {
+            "title": "Payment Request",
+            "description": "Request a payment to a provider linked to a project or purchase order."
+        },
+        "expenseRequest": {
+            "title": "Expense Request",
+            "description": "Submit a reimbursable expense for approval and processing."
+        },
+        "administrativePayment": {
+            "title": "Administrative Payment",
+            "description": "Register an administrative payment outside of project scope."
+        },
+        "tabs": {
+            "dashboard": "Outflow Board",
+            "dashboardShort": "Dashboard",
+            "calendar": "Payment Calendar",
+            "calendarShort": "Calendar",
+            "new": "New"
+        },
+        "calendar": {
+            "title": "Payment Calendar",
+            "description": "View your payment requests organised by due date."
+        },
+        "newRequest": {
+            "title": "New Outflow Request",
+            "subtitle": "Select the type of request you'd like to create."
+        },
+        "getStarted": "Get started"
+    }
+}

@@ -1,22 +1,24 @@
 import CheckoutButton from "@/components/CheckoutButton";
 import SEO from "@/utils/seo";
-
-const plans = [
-  {
-    name: "Basic",
-    price: "$9.99/month",
-    features: ["Feature 1", "Feature 2"],
-    priceId: "price_1234",
-  },
-  {
-    name: "Pro",
-    price: "$19.99/month",
-    features: ["Feature 1", "Feature 2", "Feature 3"],
-    priceId: "price_5678",
-  },
-];
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function PricingPage() {
+  const { t } = useI18n();
+  const plans = [
+    {
+      name: t("Components.Pricing.basic"),
+      price: "$9.99/month",
+      features: [t("Components.Pricing.features.f1"), t("Components.Pricing.features.f2")],
+      priceId: "price_1234",
+    },
+    {
+      name: t("Components.Pricing.pro"),
+      price: "$19.99/month",
+      features: [t("Components.Pricing.features.f1"), t("Components.Pricing.features.f2"), t("Components.Pricing.features.f3")],
+      priceId: "price_5678",
+    },
+  ];
+
   return (
     <>
       <SEO
@@ -28,7 +30,7 @@ export default function PricingPage() {
       />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8 text-center">
-          Choose Your Plan
+          {t("Components.Pricing.title")}
         </h1>
         <div className="grid md:grid-cols-2 gap-8">
           {plans.map((plan) => (

@@ -1,9 +1,13 @@
 "use client";
+import { useI18n } from "@/i18n/I18nProvider";
+
 export function AuthLeftContent({
   tab,
 }: {
   tab: "login" | "signUp" | "resetPassword" | "signUpEmail";
 }) {
+  const { t } = useI18n();
+
   return (
     <div className="flex flex-col justify-center max-w-md mx-auto">
       {/* <div className="flex justify-start">
@@ -15,14 +19,13 @@ export function AuthLeftContent({
         {tab === "login" && (
           <>
             <h1 className="text-5xl font-bold leading-tight">
-              Pro Tip:
+              {t("Auth.LeftContent.Login.title1")}
               <br />
-              Stay secure with fine grain access control.
+              {t("Auth.LeftContent.Login.title2")}
             </h1>
 
             <p className="text-neutral-300 max-w-xl text-lg">
-              Your organization's source of truth for secrets across all
-              projects, teams, and infrastructure.
+              {t("Auth.LeftContent.Login.description")}
             </p>
           </>
         )}
@@ -30,49 +33,46 @@ export function AuthLeftContent({
         {tab === "signUp" && (
           <>
             <h1 className="text-5xl font-bold leading-tight">
-              SecretOps Platform
+              {t("Auth.LeftContent.SignUp.title1")}
               <br />
-              Get Started Now
+              {t("Auth.LeftContent.SignUp.title2")}
             </h1>
 
             <p className="text-neutral-300 max-w-xl text-lg">
-              Your organization's source of truth for secrets across all
-              projects.
+              {t("Auth.LeftContent.SignUp.description")}
             </p>
 
             <p className="text-neutral-300 max-w-xl text-lg">
-              Seamlessly integrate with your existing workflows.
+              {t("Auth.LeftContent.SignUp.subDescription")}
             </p>
           </>
         )}
         {tab === "signUpEmail" && (
           <>
             <h1 className="text-5xl font-bold leading-tight">
-              SecretOps Platform
+              {t("Auth.LeftContent.SignUp.title1")}
               <br />
-              Get Started Now
+              {t("Auth.LeftContent.SignUp.title2")}
             </h1>
 
             <p className="text-neutral-300 max-w-xl text-lg">
-              Your organization's source of truth for secrets across all
-              projects.
+              {t("Auth.LeftContent.SignUp.description")}
             </p>
 
             <p className="text-neutral-300 max-w-xl text-lg">
-              Seamlessly integrate with your existing workflows.
+              {t("Auth.LeftContent.SignUp.subDescription")}
             </p>
           </>
         )}
         {tab === "resetPassword" && (
           <>
             <h1 className="text-5xl font-bold leading-tight">
-              Reset your password
+              {t("Auth.LeftContent.ResetPassword.title1")}
               <br />
-              in just a couple minutes.
+              {t("Auth.LeftContent.ResetPassword.title2")}
             </h1>
             <p className="text-neutral-300 max-w-xl text-lg">
-              Your organization's source of truth for secrets across all
-              projects.
+              {t("Auth.LeftContent.ResetPassword.description")}
             </p>
           </>
         )}

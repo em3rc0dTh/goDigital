@@ -1,20 +1,25 @@
 "use client"
 import { useState, useEffect } from "react";
-import { BarChart3, Database, FileText, List, Mail, Settings, TrendingUp, Building2 } from "lucide-react";
+import { BarChart3, Database, FileText, List, Mail, Settings, TrendingUp, Building2, Landmark } from "lucide-react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import Transactions from "../../../components/extract/transactions";
 import SettingsView from "../../../components/extract/settings";
 import EmailsPage from "../../../components/extract/emailsPage";
+import BankStatement from "../../../components/extract/bankStatement";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { useI18n } from "@/i18n/I18nProvider";
+import RawDataPage from "@/components/extract/raw-data";
+
 
 export default function Extract() {
   const router = useRouter();
+  const { t } = useI18n(); // Hook usage
   const [databases, setDatabases] = useState<any[]>([]);
   const [activeDatabase, setActiveDatabase] = useState<string | null>(null);
   const [showView, setShowView] = useState<"consolidated" | "extract">("consolidated");
-  const [activeView, setActiveView] = useState<"transactions" | "emails" | "settings">("transactions");
+  const [activeView, setActiveView] = useState<"transactions" | "emails" | "rawData" | "settings" | "bankStatement">("transactions");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const API_BASE =
@@ -84,9 +89,11 @@ export default function Extract() {
   };
 
   const views = [
-    { id: "transactions", label: "Web Capture", icon: FileText },
-    { id: "emails", label: "Email Capture", icon: Mail },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "transactions", label: t("Extract.tabs.webCapture"), icon: FileText },
+    { id: "emails", label: t("Extract.tabs.emailCapture"), icon: Mail },
+    { id: "bankStatement", label: t("Extract.tabs.bankStatements"), icon: Landmark },
+    { id: "rawData", label: t("Extract.tabs.rawData"), icon: Database },
+    { id: "settings", label: t("Extract.tabs.settings"), icon: Settings },
   ] as const;
 
   if (isLoading && databases.length === 0) {
@@ -103,7 +110,7 @@ export default function Extract() {
   return (
     <>
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+        <div className="max-w-7xl mx-auto px-1">
           <Tabs value={showView} onValueChange={(v) => setShowView(v as any)} className="w-full">
             <TabsList className="h-auto p-0 bg-transparent border-0 w-full justify-start">
               <TabsTrigger
@@ -111,21 +118,21 @@ export default function Extract() {
                 className="gap-2 px-4 sm:px-6 py-3 sm:py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-gray-600 data-[state=active]:text-blue-600 font-medium"
               >
                 <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="inline">Analytics</span>
+                <span className="inline">{t("Extract.analytics")}</span>
               </TabsTrigger>
               <TabsTrigger
                 value="extract"
                 className="gap-2 px-4 sm:px-6 py-3 sm:py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-gray-600 data-[state=active]:text-blue-600 font-medium"
               >
                 <List className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="inline">Bank Extract</span>
+                <span className="inline">{t("Extract.title")}</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
       </div>
       {showView === "consolidated" && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
+        <div className="max-w-7xl mx-auto px-1 py-6 sm:py-8">
           <Card className="border border-gray-200 shadow-sm overflow-hidden">
             {/* Card Header */}
             <div className="border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5">
@@ -134,8 +141,8 @@ export default function Extract() {
                   <TrendingUp className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Analytics</h2>
-                  <p className="text-sm text-gray-600">Consolidated view across all repositories</p>
+                  <h2 className="text-lg font-semibold text-gray-900">{t("Extract.analytics")}</h2>
+                  <p className="text-sm text-gray-600">{t("Extract.consolidatedView")}</p>
                 </div>
               </div>
             </div>
@@ -147,11 +154,12 @@ export default function Extract() {
                   <BarChart3 className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
-                  Summary View
+                  {t("Extract.summaryView")}
                 </h3>
                 <p className="text-sm sm:text-base text-gray-600 mb-8 leading-relaxed">
-                  This view aggregates data from all {databases.length} repositories.
-                  Add summary analytics, cross-repository insights, and summaries here.
+                  {t("Extract.summaryDesc", { count: databases.length })}
+                  {" "}
+                  {t("Extract.summaryPlaceholder")}
                 </p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {databases.map((db) => (
@@ -170,7 +178,7 @@ export default function Extract() {
       )}
       {showView === "extract" && (
         <div className="min-h-screen bg-white pb-16 lg:pb-0">
-          <div className="px-4 sm:px-6 lg:px-12 py-6 sm:py-8 max-w-7xl mx-auto">
+          <div className="px-2 sm:px-4 py-6 sm:py-8 w-full max-w-[98%] mx-auto">
             {/* Header Card */}
             <Card className="mb-6 border border-gray-200 shadow-sm overflow-hidden">
               <div className="border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5">
@@ -179,8 +187,8 @@ export default function Extract() {
                     <Building2 className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
-                    <h1 className="text-lg font-semibold text-gray-900">Bank Extract</h1>
-                    <p className="text-sm text-gray-600">Manage your bank accounts and parsed transactions</p>
+                    <h1 className="text-lg font-semibold text-gray-900">{t("Extract.title")}</h1>
+                    <p className="text-sm text-gray-600">{t("Extract.subtitle")}</p>
                   </div>
                 </div>
               </div>
@@ -197,7 +205,7 @@ export default function Extract() {
                   }}
                   className="mt-2 text-red-600 hover:text-red-800 text-sm font-medium underline"
                 >
-                  Try again
+                  {t("Extract.tryAgain")}
                 </button>
               </div>
             )}
@@ -208,10 +216,10 @@ export default function Extract() {
                 <div className="flex items-center gap-2 mb-4">
                   <Database size={18} className="text-gray-700" />
                   <h2 className="text-sm font-semibold text-gray-900">
-                    Repositories
+                    {t("Extract.repositories")}
                   </h2>
                   <span className="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                    {databases.length} total
+                    {t("Extract.total", { count: databases.length })}
                   </span>
                 </div>
 
@@ -240,7 +248,7 @@ export default function Extract() {
             {databases.length === 0 && !isLoading && (
               <div className="mb-6 p-8 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50">
                 <p className="text-gray-600 text-center text-sm">
-                  No databases provisioned. Please complete the launch pad flow.
+                  {t("Extract.noDatabases")}
                 </p>
               </div>
             )}
@@ -262,6 +270,16 @@ export default function Extract() {
                       activeDatabase={activeDatabase}
                     />
                   )}
+                  {activeView === "bankStatement" && (
+                    <BankStatement
+                      key={activeDatabase}
+                      activeDatabase={activeDatabase}
+                    />
+                  )}
+                  {activeView === "rawData" && (
+                    <RawDataPage key={activeDatabase} />
+                  )}
+
                   {activeView === "settings" && (
                     <SettingsView
                       key={activeDatabase}
