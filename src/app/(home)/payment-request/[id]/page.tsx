@@ -11,6 +11,7 @@ import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { PaymentStatusFlow } from "@/components/payment-requests/PaymentStatusFlow";
+import { WorkflowTimeline } from "@/components/payment-requests/WorkflowTimeline";
 import { useI18n } from "@/i18n/I18nProvider";
 
 export default function PaymentRequestDetailPage() {
@@ -323,6 +324,19 @@ export default function PaymentRequestDetailPage() {
                 <Card className="shadow-sm border-muted-foreground/20 my-6">
                     <CardContent className="pt-6">
                         <PaymentStatusFlow status={data.status} dates={dates} />
+                    </CardContent>
+                </Card>
+
+                {/* Temporal Workflow Timeline */}
+                <Card className="shadow-sm border-muted-foreground/20 mb-8">
+                    <CardHeader className="bg-muted/30 pb-4">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <span className="inline-flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+                            Workflow Timeline
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        <WorkflowTimeline paymentRequestId={id} />
                     </CardContent>
                 </Card>
             </div>

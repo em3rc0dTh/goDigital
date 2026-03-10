@@ -5,9 +5,6 @@ import dynamic from "next/dynamic";
 import {
   Sparkles,
   Folder,
-  Activity,
-  Users,
-  Coins,
   Rocket,
   TowerControl,
   CreditCard,
@@ -17,6 +14,9 @@ import {
   LogOut,
   Menu,
   Briefcase,
+  GitBranch,
+  Users,
+  Wallet,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ export default function Sidebar() {
     {
       icon: CreditCard,
       label: t("Sidebar.menu.OutflowManagement"),
-      link: "/outflow-management", // sigue siendo una page
+      link: "/outflow-management",
       children: [
         {
           icon: ScrollText,
@@ -68,6 +68,16 @@ export default function Sidebar() {
           icon: ScrollText,
           label: t("Sidebar.menu.PaymentRequest"),
           link: "/payment-requests",
+        },
+        {
+          icon: Wallet,
+          label: "Solicitudes de Caja",
+          link: "/cash-requests",
+        },
+        {
+          icon: GitBranch,
+          label: "Workflows",
+          link: "/workflows",
         },
       ],
     },

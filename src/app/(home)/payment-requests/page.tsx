@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
+import dynamic from "next/dynamic";
 import {
     Table,
     TableBody,
@@ -30,7 +31,15 @@ import {
     ArrowUpDown,
     ArrowUp,
     ArrowDown,
+    Zap,
+    GitBranch,
 } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import {
     Sheet,
     SheetClose,
@@ -46,6 +55,20 @@ import { Separator } from "@/components/ui/separator";
 import { useI18n } from "@/i18n/I18nProvider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+
+// Lazy-load WorkflowCanvas (uses ReactFlow — client only)
+const WorkflowCanvas = dynamic(
+    () => import("@/components/payment-requests/WorkflowCanvas").then(m => ({ default: m.WorkflowCanvas })),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="flex items-center justify-center h-full gap-3 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-sm">Loading canvas…</span>
+            </div>
+        ),
+    }
+);
 
 interface PaymentRequest {
     _id: string;
@@ -89,6 +112,16 @@ export default function PaymentRequestsPage() {
     const router = useRouter();
     const { t, locale } = useI18n();
     const [data, setData] = useState<PaymentRequest[]>([]);
+
+    // Workflow canvas dialog state
+    const [canvasOpen, setCanvasOpen] = useState(false);
+    const [canvasPrId, setCanvasPrId] = useState<string | null>(null);
+
+    const openCanvas = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCanvasPrId(id);
+        setCanvasOpen(true);
+    };
 
     const getDateLocale = () => (locale === "es" ? es : enUS);
 
@@ -316,6 +349,16 @@ export default function PaymentRequestsPage() {
                                 </span>
                             </div>
                         ))}
+
+                        {/* Examina tu flujo — global workflows */}
+                        <Button
+                            variant="outline"
+                            onClick={() => router.push("/workflows")}
+                            className="gap-2 shadow-sm border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/60 transition-all"
+                        >
+                            <GitBranch className="h-4 w-4" />
+                            Examina tu flujo
+                        </Button>
 
                         <Button
                             onClick={() => router.push("/payment-request")}
@@ -618,7 +661,17 @@ export default function PaymentRequestsPage() {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
-                                                    <div className="flex justify-end">
+                                                    <div className="flex justify-end items-center gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-7 gap-1.5 text-xs text-primary opacity-0 group-hover:opacity-100 transition-all px-2"
+                                                            onClick={(e) => openCanvas(item._id, e)}
+                                                            title="Examina el flujo de esta solicitud"
+                                                        >
+                                                            <Zap className="h-3.5 w-3.5" />
+                                                            Flujo
+                                                        </Button>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
@@ -690,6 +743,21 @@ export default function PaymentRequestsPage() {
                     </div>
                 )}
             </div>
+
+            {/* ── Workflow Canvas Dialog ─────────────────────────────────── */}
+            <Dialog open={canvasOpen} onOpenChange={setCanvasOpen}>
+                <DialogContent className="max-w-[95vw] w-[1100px] h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+                    <DialogHeader className="px-5 py-3 border-b border-border shrink-0">
+                        <DialogTitle className="flex items-center gap-2 text-base">
+                            <Zap className="h-4 w-4 text-primary" />
+                            Workflow — {canvasPrId ? `#${canvasPrId.slice(-6).toUpperCase()}` : ""}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="flex-1 min-h-0">
+                        {canvasPrId && <WorkflowCanvas paymentRequestId={canvasPrId} />}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
