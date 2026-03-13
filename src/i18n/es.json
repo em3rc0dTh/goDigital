@@ -875,5 +875,168 @@
             "subtitle": "Seleccione el tipo de solicitud que le gustaría crear."
         },
         "getStarted": "Comenzar"
+    },
+    "CashRequests": {
+        "title": "Solicitudes de Caja",
+        "description": "Gestiona los avances de efectivo y liquidaciones de gastos",
+        "newRequest": "Nueva Solicitud",
+        "summary": {
+            "total": "Total",
+            "active": "Activas",
+            "closed": "Cerradas",
+            "totalAmount": "Monto Total"
+        },
+        "filters": {
+            "search": "Buscar por proyecto, propósito o ID…",
+            "allStatuses": "Todos los estados"
+        },
+        "table": {
+            "id": "ID",
+            "project": "Proyecto",
+            "purpose": "Propósito",
+            "requested": "Solicitado",
+            "authorized": "Autorizado",
+            "status": "Estado",
+            "date": "Fecha",
+            "actions": "Acciones",
+            "empty": "No se encontraron solicitudes de caja"
+        },
+        "status": {
+            "created": "Creada",
+            "approved": "Aprobada",
+            "authorized": "Autorizada",
+            "paid": "Pagada",
+            "expense_draft": "Gasto en Borrador",
+            "submitted": "Gasto Enviado",
+            "review": "Revisión",
+            "reimbursement": "Reembolso",
+            "refund": "Devolución",
+            "closed": "Cerrada",
+            "rejected": "Rechazada"
+        },
+        "actions": {
+            "approve": "Aprobar",
+            "authorize": "Autorizar",
+            "pay": "Desembolsar",
+            "submitExpense": "Enviar Expense Report",
+            "review": "Revisar",
+            "close": "Cerrar Liquidación",
+            "reject": "Rechazar"
+        },
+        "dialogs": {
+            "detail": {
+                "title": "Detalle de Solicitud de Caja",
+                "created": "Creada",
+                "project": "Proyecto",
+                "beneficiary": "Beneficiario",
+                "purpose": "Propósito",
+                "expensePeriod": "Período de Gastos",
+                "requestedAmount": "Monto Solicitado",
+                "authorizedAmount": "Monto Autorizado",
+                "general": "Detalle General",
+                "totalSpent": "Total Gastado",
+                "balance": "Balance",
+                "files": "Archivos",
+                "creationDate": "Fecha creación",
+                "notes": "Notas",
+                "close": "Cerrar",
+                "exact": "Exacto",
+                "companyOwes": "empresa debe",
+                "employeeRefunds": "empleado devuelve",
+                "documents": "documento(s)"
+            },
+            "new": {
+                "title": "Nueva Solicitud de Caja",
+                "project": "Proyecto *",
+                "selectProject": "Selecciona un proyecto",
+                "requestedAmount": "Monto Solicitado *",
+                "currency": "Moneda",
+                "purpose": "Propósito *",
+                "purposePlaceholder": "Ej: Materiales para obra, viáticos Lima…",
+                "otherBeneficiary": "Este retiro de caja es para otro usuario",
+                "beneficiaryEmail": "Correo del Beneficiario *",
+                "beneficiaryEmailDesc": "La persona con este correo será la encargada de presentar las facturas.",
+                "notes": "Notas adicionales",
+                "notesPlaceholder": "Detalles adicionales (opcional)",
+                "cancel": "Cancelar",
+                "create": "Crear Solicitud",
+                "errors": {
+                    "required": "Proyecto, Monto, y Propósito son obligatorios.",
+                    "beneficiaryEmail": "Debe ingresar el correo del beneficiario.",
+                    "createError": "Error al crear la solicitud."
+                }
+            },
+            "action": {
+                "approve": "Aprobar Solicitud de Caja",
+                "authorize": "Autorizar Monto y Período",
+                "pay": "Desembolsar Efectivo",
+                "submitExpense": "Enviar Expense Report",
+                "review": "Revisar Expense Report",
+                "close": "Cerrar Liquidación",
+                "reject": "Rechazar Solicitud",
+                "summary": {
+                    "purpose": "Propósito:",
+                    "requestedAmount": "Monto solicitado:",
+                    "authorizedAmount": "Monto autorizado:"
+                },
+                "fields": {
+                    "authorizedAmount": "Monto Autorizado *",
+                    "expensePeriod": "Días para presentar gastos",
+                    "expensePeriodDesc": "El empleado tendrá este período para subir facturas.",
+                    "paymentProof": "Referencia / Comprobante de desembolso",
+                    "paymentProofPlaceholder": "Nro operación, cheque, transferencia…",
+                    "totalSpent": "Total Gastado *",
+                    "totalSpentOptional": "Total Gastado * (Solo requerido para Enviar final)",
+                    "fileUrls": "URLs de archivos (separados por coma)",
+                    "uploadDraft": "Subir boleta o factura (Borrador)",
+                    "draftUploading": "Subiendo archivo...",
+                    "draftSavesImmediately": "El archivo se guardará como borrador inmediatamente. Puedes subir varios comprobantes en diferentes momentos antes de \"Enviar Expense Report\".",
+                    "totalSpentBills": "Total Gastado (según facturas) *",
+                    "liquidationProof": "Comprobante de liquidación",
+                    "liquidationPlaceholder": "Nro operación / URL de comprobante",
+                    "rejectReason": "Motivo del rechazo *",
+                    "rejectPlaceholder": "Describe el motivo…",
+                    "notesOptional": "Notas (opcionales)"
+                },
+                "balance": {
+                    "title": "Balance Preview",
+                    "authorized": "Autorizado:",
+                    "spent": "Gastado:",
+                    "zero": "✅ Balance = 0 → Cierre directo",
+                    "reimbursement": "↑ Reembolso empresa:",
+                    "refund": "↓ Devolución empleado:"
+                },
+                "buttons": {
+                    "cancel": "Cancelar",
+                    "saveDraft": "Guardar Borrador",
+                    "reject": "Rechazar",
+                    "approve": "Aprobar",
+                    "authorize": "Autorizar",
+                    "pay": "Desembolsar",
+                    "submitExpense": "Enviar Expense Report",
+                    "review": "Revisar",
+                    "close": "Cerrar"
+                },
+                "errors": {
+                    "authorizedAmount": "El monto autorizado es requerido.",
+                    "totalSpent": "El total gastado es requerido.",
+                    "reason": "El motivo es requerido.",
+                    "uploadError": "Error al subir archivo",
+                    "readError": "Error al leer archivo"
+                }
+            }
+        }
+    },
+    "Workflows": {
+        "title": "Flujos de Trabajo Temporal",
+        "description": "Explorador visual — haz clic en cualquier nodo para inspeccionar señales, tiempos de espera y notificaciones",
+        "production": "producción",
+        "demo": "demo",
+        "registered": "Flujos Registrados",
+        "moreComing": "Más flujos próximamente",
+        "timeouts": "Tiempos de Espera",
+        "steps": "pasos",
+        "demoWarning": "Flujo demo — aún no implementado en temporal-suite. El lienzo es solo para diseño/vista previa.",
+        "selectPrompt": "Selecciona un flujo para explorarlo"
     }
 }

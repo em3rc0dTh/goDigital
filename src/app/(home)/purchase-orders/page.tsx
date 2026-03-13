@@ -252,6 +252,64 @@ export default function PurchaseOrdersPage() {
                     </select>
                 </div>
 
+                {/* Mobile cards */}
+                <div className="md:hidden flex-1 overflow-y-auto space-y-2.5 pb-2">
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center p-8 text-muted-foreground gap-3">
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                            <p className="text-sm">Cargando datos de Odoo...</p>
+                        </div>
+                    ) : paginatedData.length === 0 ? (
+                        <div className="text-center p-8 text-muted-foreground text-sm border rounded-lg bg-card border-dashed">
+                            No se encontraron órdenes de compra
+                        </div>
+                    ) : (
+                        paginatedData.map((item) => (
+                            <Card
+                                key={item.id}
+                                className="p-4 space-y-3 shadow-sm hover:shadow-md transition-shadow duration-150 border-muted-foreground/15 cursor-pointer"
+                                onClick={() => handleViewDetails(item.id)}
+                            >
+                                <div className="flex justify-between items-start gap-2">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-muted">
+                                                {item.name}
+                                            </span>
+                                            <h3 className="font-semibold text-sm leading-tight truncate">
+                                                {item.company_id[1]}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                    <Badge variant="outline" className={`capitalize shrink-0 text-xs ${getStatusColor(item.state)}`}>
+                                        {item.state}
+                                    </Badge>
+                                </div>
+    
+                                <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-border shrink-0"></span>
+                                    {item.partner_id[1]}
+                                </p>
+    
+                                <div className="flex justify-between items-end pt-3 border-t border-muted/60 mt-2">
+                                    <div className="flex flex-col gap-0.5">
+                                        <span className="text-muted-foreground text-xs uppercase tracking-wider">Fecha</span>
+                                        <span className="text-sm font-medium">
+                                            {format(new Date(item.date_order), "dd MMM yyyy")}
+                                        </span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-xs text-muted-foreground mr-1">USD</span>
+                                        <span className="font-bold text-base leading-tight">
+                                            {item.amount_total?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))
+                    )}
+                </div>
+
                 {/* Desktop table */}
                 <Card className="hidden md:flex flex-col flex-1 min-h-0 shadow-sm border-muted-foreground/15">
                     <CardContent className="p-0 flex flex-col flex-1 min-h-0">

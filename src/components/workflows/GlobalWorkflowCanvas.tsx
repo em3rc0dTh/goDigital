@@ -798,7 +798,7 @@ export const CASH_REQUEST_WORKFLOW: WorkflowDefinition = {
     description: "Full cash advance lifecycle for employees. Covers supervisor approval, superadmin authorization with amount & time window, treasurer disbursement, expense reporting with AI document analysis, and final settlement — with reimbursement or refund handling when the balance is non-zero.",
     taskQueue: "cash-requests",
     version: "1.0.0",
-    status: "demo",
+    status: "production",
     mainPath: [
         "created",
         "approved",

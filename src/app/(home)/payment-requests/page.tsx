@@ -694,12 +694,12 @@ export default function PaymentRequestsPage() {
 
                 {/* Pagination */}
                 {filteredData.length > 0 && (
-                    <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-2.5 border rounded-lg bg-card mt-3 gap-3 sm:gap-2 shrink-0 shadow-sm">
-                        <p className="text-sm text-muted-foreground order-2 sm:order-1">
+                    <div className="flex flex-col sm:flex-row flex-wrap items-center justify-between px-4 py-2.5 border rounded-lg bg-card mt-3 gap-3 sm:gap-2 shrink-0 shadow-sm w-full">
+                        <p className="text-sm text-muted-foreground order-2 sm:order-1 text-center w-full sm:w-auto">
                             {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length}
                         </p>
 
-                        <div className="flex items-center gap-4 order-1 sm:order-2">
+                        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 order-1 sm:order-2 w-full sm:w-auto">
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-muted-foreground whitespace-nowrap">
                                     {t("PaymentRequests.rowsPerPage") || "Rows per page"}:

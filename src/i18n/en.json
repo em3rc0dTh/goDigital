@@ -873,5 +873,163 @@
             "subtitle": "Select the type of request you'd like to create."
         },
         "getStarted": "Get started"
+    },
+    "CashRequests": {
+        "title": "Cash Requests",
+        "description": "Manage cash advances and expense liquidations",
+        "newRequest": "New Request",
+        "summary": {
+            "total": "Total",
+            "active": "Active",
+            "closed": "Closed",
+            "totalAmount": "Total Amount"
+        },
+        "filters": {
+            "search": "Search by project, purpose or ID...",
+            "allStatuses": "All statuses"
+        },
+        "table": {
+            "id": "ID",
+            "project": "Project",
+            "purpose": "Purpose",
+            "requested": "Requested",
+            "authorized": "Authorized",
+            "status": "Status",
+            "date": "Date",
+            "actions": "Actions",
+            "empty": "No cash requests found"
+        },
+        "status": {
+            "created": "Created",
+            "approved": "Approved",
+            "authorized": "Authorized",
+            "paid": "Paid",
+            "expense_draft": "Expense Draft",
+            "submitted": "Expense Submitted",
+            "review": "Review",
+            "reimbursement": "Reimbursement",
+            "refund": "Refund",
+            "closed": "Closed",
+            "rejected": "Rejected"
+        },
+        "actions": {
+            "approve": "Approve",
+            "authorize": "Authorize",
+            "pay": "Pay Out",
+            "submitExpense": "Submit Expense Report",
+            "review": "Review",
+            "close": "Close Liquidation",
+            "reject": "Reject"
+        },
+        "dialogs": {
+            "detail": {
+                "title": "Cash Request Detail",
+                "created": "Created",
+                "beneficiary": "Beneficiary",
+                "expensePeriod": "Expense Period",
+                "totalSpent": "Total Spent",
+                "balance": "Balance",
+                "files": "Files",
+                "creationDate": "Creation Date",
+                "notes": "Notes",
+                "close": "Close",
+                "exact": "Exact",
+                "companyOwes": "company owes",
+                "employeeRefunds": "employee refunds",
+                "documents": "document(s)"
+            },
+            "new": {
+                "title": "New Cash Request",
+                "project": "Project *",
+                "selectProject": "Select a project",
+                "requestedAmount": "Requested Amount *",
+                "currency": "Currency",
+                "purpose": "Purpose *",
+                "purposePlaceholder": "e.g. Travel expenses, project materials...",
+                "otherBeneficiary": "This cash request is for another user",
+                "beneficiaryEmail": "Beneficiary Email *",
+                "beneficiaryEmailDesc": "The person with this email will be in charge of submitting the invoices.",
+                "notes": "Additional notes",
+                "notesPlaceholder": "Additional details (optional)",
+                "cancel": "Cancel",
+                "create": "Create Request",
+                "errors": {
+                    "required": "Project, Amount, and Purpose are required.",
+                    "beneficiaryEmail": "Must enter the beneficiary email.",
+                    "createError": "Error creating request."
+                }
+            },
+            "action": {
+                "approve": "Approve Cash Request",
+                "authorize": "Authorize Amount and Period",
+                "pay": "Disburse Cash",
+                "submitExpense": "Submit Expense Report",
+                "review": "Review Expense Report",
+                "close": "Close Liquidation",
+                "reject": "Reject Request",
+                "summary": {
+                    "purpose": "Purpose:",
+                    "requestedAmount": "Requested amount:",
+                    "authorizedAmount": "Authorized amount:"
+                },
+                "fields": {
+                    "authorizedAmount": "Authorized Amount *",
+                    "expensePeriod": "Days to submit expenses",
+                    "expensePeriodDesc": "The employee will have this period to upload invoices.",
+                    "paymentProof": "Reference / Disbursement Proof",
+                    "paymentProofPlaceholder": "Operation number, check, transfer...",
+                    "totalSpent": "Total Spent *",
+                    "totalSpentOptional": "Total Spent * (Only required for final Submit)",
+                    "fileUrls": "File URLs (comma separated)",
+                    "uploadDraft": "Upload receipt or invoice (Draft)",
+                    "draftUploading": "Uploading file...",
+                    "draftSavesImmediately": "The file will be saved as a draft immediately. You can upload multiple receipts at different times before submitting the Expense Report.",
+                    "totalSpentBills": "Total Spent (according to invoices) *",
+                    "liquidationProof": "Liquidation Proof",
+                    "liquidationPlaceholder": "Operation number / Proof URL",
+                    "rejectReason": "Rejection reason *",
+                    "rejectPlaceholder": "Describe the reason...",
+                    "notesOptional": "Notes (optional)"
+                },
+                "balance": {
+                    "title": "Balance Preview",
+                    "authorized": "Authorized:",
+                    "spent": "Spent:",
+                    "zero": "✅ Balance = 0 → Direct close",
+                    "reimbursement": "↑ Company reimbursement:",
+                    "refund": "↓ Employee refund:"
+                },
+                "buttons": {
+                    "cancel": "Cancel",
+                    "saveDraft": "Save Draft",
+                    "reject": "Reject",
+                    "approve": "Approve",
+                    "authorize": "Authorize",
+                    "pay": "Pay Out",
+                    "submitExpense": "Submit Expense Report",
+                    "review": "Review",
+                    "close": "Close"
+                },
+                "errors": {
+                    "authorizedAmount": "Authorized amount is required.",
+                    "totalSpent": "Total spent is required.",
+                    "reason": "Reason is required.",
+                    "uploadError": "Error uploading file",
+                    "readError": "Error reading file"
+                }
+            }
+        }
+    },
+    "Workflows": {
+        "title": "Temporal Workflows",
+        "description": "Visual explorer — click any node to inspect signals, timeouts, and notifications",
+        "production": "production",
+        "demo": "demo",
+        "registered": "Registered Workflows",
+        "moreComing": "More workflows coming soon",
+        "timeouts": "Timeouts",
+        "steps": "steps",
+        "demoWarning": "Demo workflow — not yet implemented in temporal-suite. Canvas is for design/preview only.",
+        "selectPrompt": "Select a workflow to explore it"
     }
 }

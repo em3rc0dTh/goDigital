@@ -137,7 +137,7 @@ export default function SidebarContent({
                                         // Also navigate to parent page if it has a link
                                         if (item.link) {
                                             router.push(item.link);
-                                            if (closeMobileMenu) closeMobileMenu();
+                                            // do not close mobile menu here so user can see/click subitems
                                         }
                                     } else {
                                         router.push(item.link);
