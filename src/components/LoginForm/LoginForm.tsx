@@ -19,6 +19,8 @@ import Cookies from "js-cookie";
 import { Mail } from "lucide-react";
 import { useI18n } from "@/i18n/I18nProvider";
 
+
+
 interface Workspace {
   tenantId: string;
   name: string;
@@ -38,8 +40,7 @@ export function LoginForm() {
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
   // Estados para workspaces
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [showWorkspaceSelector, setShowWorkspaceSelector] = useState(false);
+
 
   // 🆕 Estados para verificación de email
   const [showEmailVerification, setShowEmailVerification] = useState(false);
@@ -71,11 +72,11 @@ export function LoginForm() {
 
       // Login exitoso
       if (data.workspaces && data.workspaces.length > 1) {
-        setWorkspaces(data.workspaces);
-        setShowWorkspaceSelector(true);
+        sessionStorage.setItem("pending_workspaces", JSON.stringify(data.workspaces));
         Cookies.set("temp_token", data.user.token, { expires: 1 / 24, sameSite: "lax" });
         Cookies.set("userEmail", data.user.email, { expires: 1 / 24, sameSite: "lax" });
         toast.success(t("Auth.Messages.loginSuccessful"), { description: t("Auth.Messages.selectWorkspace") });
+        router.push("/select-workspace");
       } else {
         Cookies.set("userEmail", data.user.email, { expires: 1 / 24, sameSite: "lax" });
         await loginToWorkspace(data.workspaces[0], data.user.token);
@@ -153,9 +154,8 @@ export function LoginForm() {
 
       // Login exitoso - manejo de workspaces
       if (data.workspaces && data.workspaces.length > 1) {
-        setWorkspaces(data.workspaces);
-        setShowWorkspaceSelector(true);
-
+        sessionStorage.setItem("pending_workspaces", JSON.stringify(data.workspaces));
+        
         Cookies.set("temp_token", data.user.token, {
           expires: 1 / 24,
           sameSite: "lax",
@@ -166,6 +166,7 @@ export function LoginForm() {
         toast.success(t("Auth.Messages.loginSuccessful"), {
           description: t("Auth.Messages.selectWorkspace"),
         });
+        router.push("/select-workspace");
       } else {
         Cookies.set("userEmail", data.user.email, { expires: 1 / 24, sameSite: "lax" });
         await loginToWorkspace(data.workspaces[0], data.user.token);
@@ -339,51 +340,7 @@ export function LoginForm() {
         </DialogContent>
       </Dialog>
 
-      {/* Selector de Workspace */}
-      <Dialog open={showWorkspaceSelector} onOpenChange={setShowWorkspaceSelector}>
-        <DialogContent className="bg-white border border-gray-200 rounded-lg max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-gray-900">{t("Auth.Dialogs.SelectWorkspace.title")}</DialogTitle>
-            <DialogDescription className="text-gray-600">
-              {t("Auth.Dialogs.SelectWorkspace.description")}
-            </DialogDescription>
-          </DialogHeader>
 
-          <div className="space-y-3 py-4">
-            {workspaces.map((workspace) => (
-              <button
-                key={workspace.tenantId}
-                onClick={() => {
-                  loginToWorkspace(workspace);
-                  setShowWorkspaceSelector(false);
-                }}
-                className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-black transition-all duration-200 text-left"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-gray-900">{workspace.name}</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {t("Workspace.role", { role: workspace.role })}
-                    </p>
-                  </div>
-                  <div className="text-blue-600">→</div>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowWorkspaceSelector(false);
-              Cookies.remove("temp_token");
-            }}
-            className="w-full"
-          >
-            {t("Auth.Buttons.cancel")}
-          </Button>
-        </DialogContent>
-      </Dialog>
 
       {/* Error Dialog */}
       <Dialog open={!!errorMessage} onOpenChange={() => setErrorMessage(null)}>

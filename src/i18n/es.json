@@ -877,7 +877,7 @@
         "getStarted": "Comenzar"
     },
     "CashRequests": {
-        "title": "Solicitudes de Caja",
+        "title": "Solicitudes de Efectivo",
         "description": "Gestiona los avances de efectivo y liquidaciones de gastos",
         "newRequest": "Nueva Solicitud",
         "summary": {
@@ -899,7 +899,7 @@
             "status": "Estado",
             "date": "Fecha",
             "actions": "Acciones",
-            "empty": "No se encontraron solicitudes de caja"
+            "empty": "No se encontraron solicitudes de efectivo"
         },
         "status": {
             "created": "Creada",
@@ -925,7 +925,7 @@
         },
         "dialogs": {
             "detail": {
-                "title": "Detalle de Solicitud de Caja",
+                "title": "Detalle de Solicitud de Efectivo",
                 "created": "Creada",
                 "project": "Proyecto",
                 "beneficiary": "Beneficiario",
@@ -946,14 +946,14 @@
                 "documents": "documento(s)"
             },
             "new": {
-                "title": "Nueva Solicitud de Caja",
+                "title": "Nueva Solicitud de Efectivo",
                 "project": "Proyecto *",
                 "selectProject": "Selecciona un proyecto",
                 "requestedAmount": "Monto Solicitado *",
                 "currency": "Moneda",
                 "purpose": "Propósito *",
                 "purposePlaceholder": "Ej: Materiales para obra, viáticos Lima…",
-                "otherBeneficiary": "Este retiro de caja es para otro usuario",
+                "otherBeneficiary": "Este retiro de efectivo es para otro usuario",
                 "beneficiaryEmail": "Correo del Beneficiario *",
                 "beneficiaryEmailDesc": "La persona con este correo será la encargada de presentar las facturas.",
                 "notes": "Notas adicionales",
@@ -967,7 +967,7 @@
                 }
             },
             "action": {
-                "approve": "Aprobar Solicitud de Caja",
+                "approve": "Aprobar Solicitud de Efectivo",
                 "authorize": "Autorizar Monto y Período",
                 "pay": "Desembolsar Efectivo",
                 "submitExpense": "Enviar Expense Report",

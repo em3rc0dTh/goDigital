@@ -17,6 +17,7 @@ import {
   GitBranch,
   Users,
   Wallet,
+  LayoutGrid
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -71,7 +72,7 @@ export default function Sidebar() {
         },
         {
           icon: Wallet,
-          label: "Solicitudes de Caja",
+          label: "Solicitudes de Efectivo",
           link: "/cash-requests",
         },
         {
@@ -84,6 +85,7 @@ export default function Sidebar() {
   ];
 
   const bottomItems = [
+    { icon: LayoutGrid, label: "Cambiar Workspace", link: "/select-workspace" },
     { icon: Settings, label: t("Sidebar.bottom.Settings"), link: "/settings" },
     { icon: LogOut, label: t("Sidebar.bottom.LogOut"), action: "logout" },
   ];

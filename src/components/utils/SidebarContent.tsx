@@ -5,13 +5,15 @@ import {
     ChevronRight,
     ChevronDown,
     Sparkles,
+    Building2,
+    ArrowLeftRight
 } from "lucide-react";
 import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import Swal from "sweetalert2";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function SidebarContent({
     collapsed,
@@ -22,6 +24,12 @@ export default function SidebarContent({
     pathname,
     closeMobileMenu,
 }: any) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     const API_BASE =
         process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
@@ -105,6 +113,39 @@ export default function SidebarContent({
                     )}
                 </Button>
             </div>
+
+            {/* WORKSPACE SWITCHER */}
+            {!collapsed && (
+                <div className="px-3 mb-4">
+                    <div 
+                        onClick={() => router.push("/select-workspace")}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-neutral-50 border border-neutral-100 cursor-pointer hover:bg-neutral-100 transition-all group"
+                    >
+                        <div className="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-100">
+                            <Building2 className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-tight">Workspace Actual</p>
+                            <p className="text-sm font-bold text-neutral-900 truncate pr-2">
+                                {mounted ? (Cookies.get("workspaceName") || "Select Workspace") : "Select Workspace"}
+                            </p>
+                        </div>
+                        <ArrowLeftRight className="w-4 h-4 text-neutral-300 group-hover:text-indigo-500 transition-colors" />
+                    </div>
+                </div>
+            )}
+            {collapsed && (
+                <div className="flex justify-center mb-4">
+                     <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => router.push("/select-workspace")}
+                        className="bg-indigo-50 border border-indigo-100"
+                    >
+                        <Building2 className="w-5 h-5 text-indigo-600" />
+                    </Button>
+                </div>
+            )}
 
             {/* MENU */}
             <ScrollArea className="flex-1 px-2 py-3">

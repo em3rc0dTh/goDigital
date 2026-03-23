@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import Cookies from "js-cookie";
 import { useI18n } from "@/i18n/I18nProvider";
+import MemberInvitation from "./MemberInvitation";
 
 export default function GettingStarted() {
   const [expandedSection, setExpandedSection] = useState("businessEntity");
@@ -118,7 +119,7 @@ export default function GettingStarted() {
     }
 
     loadTenant();
-  }, []);
+  }, [API_BASE]);
 
   const toggleTask = (task: keyof typeof completedTasks) => {
     setCompletedTasks({ ...completedTasks, [task]: !completedTasks[task] });
@@ -460,37 +461,53 @@ export default function GettingStarted() {
                 </button>
 
                 {/* Invite teammates */}
-                <button
-                  onClick={() => toggleTask("teammates")}
-                  className="w-full border rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-all hover:border-purple-200 bg-white"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${completedTasks.teammates
-                        ? "bg-purple-600 border-purple-600"
-                        : "border-gray-300"
-                        }`}
-                    >
-                      {completedTasks.teammates && (
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={3}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      )}
+                <div className="border rounded-lg p-4 transition-all hover:border-purple-200 bg-white overflow-hidden">
+                  <button
+                    onClick={() =>
+                      setExpandedSection(
+                        expandedSection === "teammates" ? "" : "teammates"
+                      )
+                    }
+                    className="w-full flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${completedTasks.teammates
+                          ? "bg-purple-600 border-purple-600"
+                          : "border-gray-300"
+                          }`}
+                      >
+                        {completedTasks.teammates && (
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={3}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                      <span className="font-medium">{t("GettingStarted.inviteTeammates")}</span>
                     </div>
-                    <span className="font-medium">{t("GettingStarted.inviteTeammates")}</span>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
-                </button>
+                    {expandedSection === "teammates" ? (
+                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                    )}
+                  </button>
+
+                  {expandedSection === "teammates" && (
+                    <div className="mt-6 pl-9">
+                      <MemberInvitation />
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 

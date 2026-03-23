@@ -94,10 +94,14 @@ export default function PurchaseOrdersPage() {
         setLoading(true);
         try {
             const orders = await odooService.getOrders();
-            setData(orders);
-        } catch (error) {
-            console.error(error);
-            toast.error("Error al cargar órdenes de compra");
+            setData(Array.isArray(orders) ? orders : []);
+        } catch (error: any) {
+            console.warn("Order fetch failed, using empty data.");
+            setData([]);
+            // Only show toast if it's a real failure and not just "no data" (404/500 in this case)
+            if (error.response?.status !== 404 && error.response?.status !== 500) {
+                toast.error("Error al cargar órdenes de compra");
+            }
         } finally {
             setLoading(false);
         }

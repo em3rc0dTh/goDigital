@@ -158,12 +158,17 @@ export default function Outflow() {
 
                 if (response.ok) {
                     const result = await response.json();
-                    setData(result);
+                    setData(Array.isArray(result) ? result : []);
                 } else {
-                    console.error("Failed to fetch payment requests");
+                    // If no data is found (404), we just set an empty array without logging an error
+                    setData([]);
+                    if (response.status !== 404 && response.status !== 500) {
+                        console.warn(`Fetch notice: ${response.status}`);
+                    }
                 }
             } catch (error) {
-                console.error("Error fetching data:", error);
+                setData([]);
+                console.warn("Fetch failed, using empty data.");
             } finally {
                 setLoading(false);
             }
