@@ -302,7 +302,16 @@
             "error": "Error al subir archivo",
             "viewTransactions": "Ver transacciones extraídas",
             "noFile": "Ningún archivo seleccionado",
-            "removeFile": "Eliminar archivo"
+            "removeFile": "Eliminar archivo",
+            "viewHistory": "Ver estados guardados",
+            "historyTitle": "Historial de Estados",
+            "historySubtitle": "Estados de cuenta procesados anteriormente",
+            "backToUpload": "Volver a subir",
+            "file": "Archivo",
+            "date": "Fecha",
+            "transactions": "Transacciones",
+            "bank": "Banco",
+            "account": "Cuenta"
         },
         "Transactions": {
             "title": "Captura Web",

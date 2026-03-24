@@ -24,7 +24,11 @@ import {
     Sparkles,
     ArrowRight,
     RefreshCw,
-    Info
+    Info,
+    History,
+    ArrowLeft,
+    Calendar,
+    Hash
 } from "lucide-react";
 import Cookies from "js-cookie";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -82,6 +86,9 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [view, setView] = useState<"upload" | "history" | "details">("upload");
+    const [history, setHistory] = useState<any[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -304,6 +311,59 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
         setUploadProgress(0);
     }, [previewUrl]);
 
+    // History fetching
+    const fetchHistory = useCallback(async () => {
+        setLoadingHistory(true);
+        try {
+            const token = Cookies.get("session_token");
+            const res = await fetch(`${API_BASE}/statements`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                credentials: "include"
+            });
+            if (!res.ok) throw new Error("Failed to fetch history");
+            const data = await res.json();
+            setHistory(data.statements || []);
+            setView("history");
+        } catch (error) {
+            console.error("History fetch error:", error);
+            toast.error("Error loading historical statements");
+        } finally {
+            setLoadingHistory(false);
+        }
+    }, [API_BASE]);
+
+    const fetchHistoryDetails = useCallback(async (fileId: string) => {
+        setLoadingHistory(true);
+        try {
+            const token = Cookies.get("session_token");
+            const res = await fetch(`${API_BASE}/statements/${fileId}`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                credentials: "include"
+            });
+            if (!res.ok) throw new Error("Failed to fetch statement details");
+            const data = await res.json();
+            
+            // Re-use logic for processedData
+            const txs = data.transactions || data;
+            setProcessedData({
+                transactions: txs,
+                count: txs.length,
+                totalIncome: txs.reduce((acc: number, tx: any) => tx.amount > 0 ? acc + tx.amount : acc, 0),
+                totalExpenses: txs.reduce((acc: number, tx: any) => tx.amount < 0 ? acc + Math.abs(tx.amount) : acc, 0)
+            });
+            setView("details");
+        } catch (error) {
+            console.error("Details fetch error:", error);
+            toast.error("Error loading statement details");
+        } finally {
+            setLoadingHistory(false);
+        }
+    }, [API_BASE]);
+
     // Reset handler
     const handleReset = useCallback(() => {
         setProcessedData(null);
@@ -364,18 +424,18 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
         return processedData.transactions.map((tx: Transaction) => {
             // Remove unwanted fields
             const {
-                balance,
-                processed,
-                processedAt,
-                error,
-                __v,
-                createdAt,
-                updatedAt,
-                _id,
-                fileId,
-                fileName,
-                fecha_hora_raw,
-                currency_raw,
+                balance: _balance,
+                processed: _processed,
+                processedAt: _processedAt,
+                error: _error,
+                __v: ___v,
+                createdAt: _createdAt,
+                updatedAt: _updatedAt,
+                _id: __id,
+                fileId: _fileId,
+                fileName: _fileName,
+                fecha_hora_raw: _fecha_hora_raw,
+                currency_raw: _currency_raw,
                 ...cleanTransaction
             } = tx;
 
@@ -399,29 +459,61 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
                             <FileText className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                                {t("Extract.BankStatement.title")}
-                            </h1>
+                            <div className="flex items-center gap-2">
+                                {view !== "upload" && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                            if (view === "details") setView("history");
+                                            else setView("upload");
+                                            if (view === "history") setProcessedData(null);
+                                        }}
+                                        className="h-8 w-8 text-gray-500 hover:text-blue-600"
+                                    >
+                                        <ArrowLeft className="w-5 h-5" />
+                                    </Button>
+                                )}
+                                <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                                    {view === "history" ? t("Extract.BankStatement.historyTitle") : t("Extract.BankStatement.title")}
+                                </h1>
+                            </div>
                             <p className="text-sm sm:text-base text-gray-600 mt-1">
-                                {t("Extract.BankStatement.subtitle")}
+                                {view === "history" ? t("Extract.BankStatement.historySubtitle") : t("Extract.BankStatement.subtitle")}
                             </p>
                         </div>
                     </div>
-                    {processedData && (
-                        <Button
-                            onClick={handleReset}
-                            variant="outline"
-                            className="gap-2 hover:bg-blue-50 hover:border-blue-300 transition-all"
-                        >
-                            <RefreshCw className="w-4 h-4" />
-                            <span className="hidden sm:inline">Upload New</span>
-                        </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {view === "upload" && !processedData && (
+                            <Button
+                                onClick={fetchHistory}
+                                variant="outline"
+                                disabled={loadingHistory}
+                                className="gap-2 hover:bg-indigo-50 hover:border-indigo-300 transition-all"
+                            >
+                                <History className={cn("w-4 h-4", loadingHistory && "animate-spin")} />
+                                <span>{t("Extract.BankStatement.viewHistory")}</span>
+                            </Button>
+                        )}
+                        {processedData && (
+                            <Button
+                                onClick={() => {
+                                    handleReset();
+                                    setView("upload");
+                                }}
+                                variant="outline"
+                                className="gap-2 hover:bg-blue-50 hover:border-blue-300 transition-all"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                                <span className="hidden sm:inline">Upload New</span>
+                            </Button>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* Upload Card */}
-            {!processedData && (
+            {view === "upload" && !processedData && (
                 <Card className="border-none shadow-xl bg-white overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
                         <CardHeader>
@@ -635,6 +727,103 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
                                 )}>
                                     {status.message}
                                 </p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* History Table */}
+            {view === "history" && (
+                <Card className="border-none shadow-xl bg-white overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+                        <CardTitle className="flex items-center gap-2">
+                            <History className="w-5 h-5 text-indigo-600" />
+                            {t("Extract.BankStatement.historyTitle")}
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {loadingHistory ? (
+                            <div className="p-20 text-center">
+                                <RefreshCw className="w-10 h-10 text-indigo-500 animate-spin mx-auto mb-4" />
+                                <p className="text-gray-500">Loading processed statements...</p>
+                            </div>
+                        ) : history.length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-gray-50 border-b">
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t("Extract.BankStatement.file")}</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t("Extract.BankStatement.bank")}</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t("Extract.BankStatement.date")}</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">{t("Extract.BankStatement.transactions")}</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {history.map((stmt) => (
+                                            <tr key={stmt._id} className="hover:bg-gray-50 transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                                            <FileText className="w-4 h-4 text-blue-600" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-gray-900">{stmt.fileName}</p>
+                                                            {stmt.accountNumber && (
+                                                                <p className="text-xs text-gray-500 font-mono">{stmt.accountNumber}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-600">
+                                                    {stmt.bank || "Unknown Bank"}
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-600">
+                                                    <div className="flex items-center gap-2">
+                                                        <Calendar className="w-4 h-4 text-gray-400" />
+                                                        {new Date(stmt.createdAt || Date.now()).toLocaleDateString()}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
+                                                        <Hash className="w-3 h-3 mr-1" />
+                                                        {stmt.transactionCount}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => fetchHistoryDetails(stmt._id)}
+                                                        className="opacity-0 group-hover:opacity-100 transition-all gap-2"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                        Ver Detalle
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="p-20 text-center">
+                                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                                    <FileText className="w-8 h-8 text-gray-300" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-900">No statements found</h3>
+                                <p className="text-gray-500 mt-1 max-w-xs mx-auto">
+                                    You haven&apos;t processed any bank statements yet. Upload one to get started.
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setView("upload")}
+                                    className="mt-6 gap-2"
+                                >
+                                    <Upload className="w-4 h-4" />
+                                    Subir mi primer estado
+                                </Button>
                             </div>
                         )}
                     </CardContent>

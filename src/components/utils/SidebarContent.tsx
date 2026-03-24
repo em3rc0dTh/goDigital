@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import Swal from "sweetalert2";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function SidebarContent({
     collapsed,
@@ -24,12 +24,6 @@ export default function SidebarContent({
     pathname,
     closeMobileMenu,
 }: any) {
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
     const API_BASE =
         process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
@@ -126,8 +120,8 @@ export default function SidebarContent({
                         </div>
                         <div className="flex-1 overflow-hidden">
                             <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-tight">Workspace Actual</p>
-                            <p className="text-sm font-bold text-neutral-900 truncate pr-2">
-                                {mounted ? (Cookies.get("workspaceName") || "Select Workspace") : "Select Workspace"}
+                            <p suppressHydrationWarning className="text-sm font-bold text-neutral-900 truncate pr-2">
+                                {Cookies.get("workspaceName") || "Select Workspace"}
                             </p>
                         </div>
                         <ArrowLeftRight className="w-4 h-4 text-neutral-300 group-hover:text-indigo-500 transition-colors" />
