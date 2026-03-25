@@ -1,14 +1,7 @@
 "use client";
 
-import { Bricolage_Grotesque } from "next/font/google";
 import Sidebar from "@/components/utils/Sidebar";
 import { usePathname } from "next/navigation";
-
-export const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-});
 
 export default function RootLayout({
   children,

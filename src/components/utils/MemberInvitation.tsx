@@ -28,6 +28,11 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
+    DropdownMenuSub,
+    DropdownMenuSubTrigger,
+    DropdownMenuSubContent,
+    DropdownMenuPortal,
+    DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -55,7 +60,7 @@ export default function MemberInvitation() {
     const [isInviting, setIsInviting] = useState(false);
     const [inviteForm, setInviteForm] = useState({
         email: "",
-        role: "user",
+        role: "standard",
         name: ""
     });
 
@@ -85,6 +90,32 @@ export default function MemberInvitation() {
         fetchMembers();
     }, [fetchMembers]);
 
+    const handleUpdateRole = async (memberId: string, newRole: string) => {
+        try {
+            const token = Cookies.get("session_token");
+            const res = await fetch(`${API_BASE}/members/${memberId}`, {
+                method: "PUT",
+                headers: { 
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({ role: newRole }),
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Rol actualizado");
+                fetchMembers();
+            } else {
+                toast.error("Error al actualizar rol", { description: data.error });
+            }
+        } catch (error) {
+            console.error("Update role error:", error);
+            toast.error("Error de red");
+        }
+    };
+
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!inviteForm.email || !inviteForm.role) {
@@ -110,7 +141,7 @@ export default function MemberInvitation() {
                 toast.success("Invitación enviada", {
                     description: `Se ha enviado un correo a ${inviteForm.email}`
                 });
-                setInviteForm({ email: "", role: "user", name: "" });
+                setInviteForm({ email: "", role: "standard", name: "" });
                 fetchMembers();
             } else {
                 toast.error("Fallo al invitar", { description: data.error });
@@ -164,6 +195,8 @@ export default function MemberInvitation() {
             case "admin":
             case "superadmin":
                 return <Shield className="w-3 h-3" />;
+            case "treasurer":
+                return <Shield className="w-3 h-3 text-indigo-500" />;
             default:
                 return <UserCircle className="w-3 h-3" />;
         }
@@ -210,9 +243,10 @@ export default function MemberInvitation() {
                                     value={inviteForm.role}
                                     onChange={(e) => setInviteForm({...inviteForm, role: e.target.value})}
                                 >
-                                    <option value="user">Colaborador (User)</option>
-                                    <option value="manager">Gestor (Manager)</option>
+                                    <option value="standard">Estandar (Standard)</option>
+                                    <option value="treasurer">Tesorero (Treasurer)</option>
                                     <option value="admin">Administrador (Admin)</option>
+                                    <option value="superadmin">Super Administrador (Superadmin)</option>
                                 </select>
                             </div>
                         </div>
@@ -304,9 +338,40 @@ export default function MemberInvitation() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-48 bg-white border-neutral-200">
-                                                <DropdownMenuItem className="text-xs font-bold gap-2 cursor-pointer">
-                                                    <Shield className="w-4 h-4" /> Cambiar Rol
-                                                </DropdownMenuItem>
+                                                 <DropdownMenuSub>
+                                                    <DropdownMenuSubTrigger className="text-xs font-bold gap-2 cursor-pointer">
+                                                        <Shield className="w-4 h-4" /> Cambiar Rol
+                                                    </DropdownMenuSubTrigger>
+                                                    <DropdownMenuPortal>
+                                                        <DropdownMenuSubContent className="bg-white border-neutral-200">
+                                                            <DropdownMenuItem 
+                                                                className="text-xs font-bold cursor-pointer transition-colors hover:bg-indigo-50"
+                                                                onClick={() => handleUpdateRole(member._id, "standard")}
+                                                            >
+                                                                Estandar (Standard)
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem 
+                                                                className="text-xs font-bold cursor-pointer transition-colors hover:bg-indigo-50"
+                                                                onClick={() => handleUpdateRole(member._id, "treasurer")}
+                                                            >
+                                                                Tesorero (Treasurer)
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem 
+                                                                className="text-xs font-bold cursor-pointer transition-colors hover:bg-indigo-50"
+                                                                onClick={() => handleUpdateRole(member._id, "admin")}
+                                                            >
+                                                                Administrador (Admin)
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem 
+                                                                className="text-xs font-bold cursor-pointer transition-colors hover:bg-indigo-50"
+                                                                onClick={() => handleUpdateRole(member._id, "superadmin")}
+                                                            >
+                                                                Super Administrador (Superadmin)
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuSubContent>
+                                                    </DropdownMenuPortal>
+                                                 </DropdownMenuSub>
+                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem 
                                                     className="text-xs font-bold gap-2 text-rose-600 focus:text-rose-600 focus:bg-rose-50 cursor-pointer"
                                                     onClick={() => handleRemove(member._id)}

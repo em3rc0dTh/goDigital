@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { BarChart3, Database, FileText, List, Mail, Settings, TrendingUp, Building2, Landmark } from "lucide-react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
@@ -11,11 +11,14 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { useI18n } from "@/i18n/I18nProvider";
 import RawDataPage from "@/components/extract/raw-data";
+import PermissionGuard from "@/components/auth/PermissionGuard";
+import { usePermissions } from "@/hooks/usePermissions";
 
 
 export default function Extract() {
   const router = useRouter();
   const { t } = useI18n(); // Hook usage
+  const { can } = usePermissions();
   const [databases, setDatabases] = useState<any[]>([]);
   const [activeDatabase, setActiveDatabase] = useState<string | null>(null);
   const [showView, setShowView] = useState<"consolidated" | "extract">("consolidated");
@@ -24,12 +27,9 @@ export default function Extract() {
   const [error, setError] = useState<string | null>(null);
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
-  useEffect(() => {
 
-    loadDatabases();
-  }, []);
 
-  async function loadDatabases() {
+  const loadDatabases = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -81,20 +81,24 @@ export default function Extract() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [API_BASE, router]);
+
+  useEffect(() => {
+    loadDatabases();
+  }, [loadDatabases]);
 
   const selectDatabase = (id: string) => {
     setActiveDatabase(id);
     Cookies.set("tenantDetailId", id);
   };
 
-  const views = [
-    { id: "transactions", label: t("Extract.tabs.webCapture"), icon: FileText },
-    { id: "emails", label: t("Extract.tabs.emailCapture"), icon: Mail },
-    { id: "bankStatement", label: t("Extract.tabs.bankStatements"), icon: Landmark },
-    { id: "rawData", label: t("Extract.tabs.rawData"), icon: Database },
-    { id: "settings", label: t("Extract.tabs.settings"), icon: Settings },
-  ] as const;
+  const views = ([
+    { id: "transactions", label: t("Extract.tabs.webCapture"), icon: FileText, permission: "payment_req:view" },
+    { id: "emails", label: t("Extract.tabs.emailCapture"), icon: Mail, permission: "banks:ingest" },
+    { id: "bankStatement", label: t("Extract.tabs.bankStatements"), icon: Landmark, permission: "banks:view" },
+    { id: "rawData", label: t("Extract.tabs.rawData"), icon: Database, permission: "banks:view_raw" },
+    { id: "settings", label: t("Extract.tabs.settings"), icon: Settings, permission: "tenant:manage" },
+  ] as const).filter(v => can(v.permission));
 
   if (isLoading && databases.length === 0) {
     return (
@@ -108,7 +112,8 @@ export default function Extract() {
   }
 
   return (
-    <>
+    <PermissionGuard permission="banks:view" showUnauthorized={true}>
+      <>
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-1">
           <Tabs value={showView} onValueChange={(v) => setShowView(v as any)} className="w-full">
@@ -343,6 +348,7 @@ export default function Extract() {
           )}
         </div>
       )}
-    </>
+      </>
+    </PermissionGuard>
   );
 }

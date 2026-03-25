@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
+import { usePermissions } from "@/hooks/usePermissions";
 import dynamic from "next/dynamic";
 import {
     Table,
@@ -33,6 +34,7 @@ import {
     ArrowDown,
     Zap,
     GitBranch,
+    ClipboardCheck,
 } from "lucide-react";
 import {
     Dialog,
@@ -86,6 +88,13 @@ interface PaymentRequest {
     project?: any;
     payment_date?: string;
     provider?: any;
+    created_by?: {
+        _id: string;
+        name: string;
+        email: string;
+    };
+    approved_by_user?: { name: string };
+    authorized_by_user?: { name: string };
 }
 
 type SortKey =
@@ -111,6 +120,8 @@ function SortIcon({ column, sortKey, sortDir }: { column: SortKey; sortKey: Sort
 export default function PaymentRequestsPage() {
     const router = useRouter();
     const { t, locale } = useI18n();
+    const { role } = usePermissions();
+    const canReview = role === "superadmin" || role === "admin" || role === "treasurer";
     const [data, setData] = useState<PaymentRequest[]>([]);
 
     // Workflow canvas dialog state
@@ -165,7 +176,7 @@ export default function PaymentRequestsPage() {
                         console.warn(`Fetch notice: ${response.status}`);
                     }
                 }
-            } catch (error) {
+            } catch {
                 setData([]);
                 console.warn("Fetch failed, using empty data.");
             } finally {
@@ -587,13 +598,17 @@ export default function PaymentRequestsPage() {
                                         <SortableTh column="id" label={t("PaymentRequests.table.id")} className="w-[90px]" />
                                         <SortableTh column="date" label={t("PaymentRequests.table.date")} />
                                         <SortableTh column="project" label={t("PaymentRequests.table.project")} />
-                                        <SortableTh column="provider" label={t("PaymentRequests.table.provider")} />
-                                        <SortableTh column="payment_date" label={t("PaymentRequests.table.scheduledDate")} />
+                                        <TableHead className="bg-muted/50 backdrop-blur-sm font-semibold text-xs uppercase tracking-wide text-muted-foreground select-none">
+                                            {t("PaymentRequestDetail.fields.createdBy") || "Solicitante"}
+                                        </TableHead>
+                                        <TableHead className="bg-muted/50 backdrop-blur-sm font-semibold text-xs uppercase tracking-wide text-muted-foreground select-none">
+                                            {t("CashRequests.status.review") || "Revisión"}
+                                        </TableHead>
                                         <SortableTh column="dueDate" label={t("PaymentRequests.table.dueDate")} />
                                         <SortableTh column="currency" label={t("PaymentRequests.table.currency")} className="text-right" />
                                         <SortableTh column="total" label={t("PaymentRequests.table.amount")} className="text-right" />
                                         <SortableTh column="status" label={t("PaymentRequests.table.status")} className="w-[110px]" />
-                                        <TableHead className="w-[50px] bg-muted/50 backdrop-blur-sm" />
+                                        <TableHead className="w-[80px] bg-muted/50 backdrop-blur-sm" />
                                     </TableRow>
                                 </TableHeader>
 
@@ -618,7 +633,7 @@ export default function PaymentRequestsPage() {
                                             <TableRow
                                                 key={item._id}
                                                 className="group hover:bg-muted/40 transition-colors duration-100 cursor-pointer"
-                                                onClick={() => router.push(`/payment-request/${item._id}`)}
+                                                onClick={() => router.push(`/payment-request/${item._id}${canReview ? "/review" : ""}`)}
                                             >
                                                 <TableCell className="font-mono text-xs text-muted-foreground py-3">
                                                     #{item._id.slice(-6).toUpperCase()}
@@ -637,17 +652,10 @@ export default function PaymentRequestsPage() {
                                                         : "Unknown Project"}
                                                 </TableCell>
                                                 <TableCell className="text-sm py-3">
-                                                    {typeof item.provider_id === "object" && item.provider_id?.name
-                                                        ? (() => {
-                                                            const fullName = item.provider_id.name;
-                                                            return fullName.length > 30 ? fullName.slice(0, 30) + "…" : fullName;
-                                                        })()
-                                                        : "Unknown Provider"}
+                                                    {item.created_by?.name || "—"}
                                                 </TableCell>
                                                 <TableCell className="text-muted-foreground text-sm py-3 whitespace-nowrap">
-                                                    {item.payment_date
-                                                        ? format(parseDateAsLocal(item.payment_date) as Date, "dd/MM/yyyy", { locale: getDateLocale() })
-                                                        : "—"}
+                                                    {item.status === "pending" ? "—" : (item.approved_by_user?.name || "—")}
                                                 </TableCell>
                                                 <TableCell className="text-muted-foreground text-sm py-3 whitespace-nowrap">
                                                     {item.dueDate
@@ -677,6 +685,20 @@ export default function PaymentRequestsPage() {
                                                             <Zap className="h-3.5 w-3.5" />
                                                             Flujo
                                                         </Button>
+
+                                                        {canReview && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-7 gap-1.5 text-xs text-orange-600 opacity-0 group-hover:opacity-100 transition-all px-2 font-medium"
+                                                                onClick={() => router.push(`/payment-request/${item._id}/review`)}
+                                                                title="Revisar y ejecutar acciones"
+                                                            >
+                                                                <ClipboardCheck className="h-3.5 w-3.5" />
+                                                                Revisar
+                                                            </Button>
+                                                        )}
+
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"

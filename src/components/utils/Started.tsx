@@ -83,42 +83,92 @@ export default function GettingStarted() {
   };
 
   useEffect(() => {
-    async function loadTenant() {
+    async function loadProgress() {
       const tenantId = Cookies.get("tenantId");
       const token = Cookies.get("session_token");
+      const headers = { "Authorization": `Bearer ${token}` };
 
       try {
-        const res = await fetch(`${API_BASE}/tenants/${tenantId}`, {
-          headers: { "Authorization": `Bearer ${token}` },
+        // 1. Fetch Tenant/Business Entity
+        const tenantRes = await fetch(`${API_BASE}/tenants/${tenantId}`, {
+          headers,
           credentials: "include",
         });
+        if (tenantRes.ok) {
+          const tenantData = await tenantRes.json();
+          const hasBusinessEntities = tenantData.databases && tenantData.databases.length > 0;
+          if (hasBusinessEntities) {
+            setCompletedTasks(prev => ({ ...prev, businessEntity: true }));
+            const lastEntity = tenantData.databases[tenantData.databases.length - 1];
+            setBusinessEntity({
+              country: lastEntity.country ?? "PE",
+              entityType: lastEntity.entityType ?? "natural",
+              taxId: lastEntity.taxId ?? "",
+              businessEmail: lastEntity.businessEmail ?? "",
+              domain: lastEntity.domain ?? "",
+            });
 
-        if (!res.ok) throw new Error(await res.text());
-
-        const tenant = await res.json();
-
-        // Verifica si ya hay al menos un business entity
-        const hasBusinessEntities = tenant.databases && tenant.databases.length > 0;
-
-        if (hasBusinessEntities) {
-          setCompletedTasks(prev => ({ ...prev, businessEntity: true }));
-
-          // Prellenar formulario con el último Business Entity si quieres
-          const lastEntity = tenant.databases[tenant.databases.length - 1];
-          setBusinessEntity({
-            country: lastEntity.country ?? "PE",
-            entityType: lastEntity.entityType ?? "natural",
-            taxId: lastEntity.taxId ?? "",
-            businessEmail: lastEntity.businessEmail ?? "",
-            domain: lastEntity.domain ?? "",
-          });
+            // 5. Fetch Gmail Integration (Integration) checking all entities
+            for (const entity of tenantData.databases) {
+              const gmailRes = await fetch(`${API_BASE}/gmail/watch-status/${entity._id}`, {
+                headers,
+                credentials: "include",
+              });
+              if (gmailRes.ok) {
+                const gmailData = await gmailRes.json();
+                if (gmailData.success && gmailData.watch && gmailData.watch.status === "active") {
+                  setCompletedTasks(prev => ({ ...prev, integration: true }));
+                  break; // Found one!
+                }
+              }
+            }
+          }
         }
+
+        // 2. Fetch Members (Teammates)
+        const membersRes = await fetch(`${API_BASE}/members`, {
+          headers,
+          credentials: "include",
+        });
+        if (membersRes.ok) {
+          const data = await membersRes.json();
+          // If more than 1 member, they've invited someone
+          if (data.success && data.members && data.members.length > 1) {
+            setCompletedTasks(prev => ({ ...prev, teammates: true }));
+          }
+        }
+
+        // 3. Fetch Projects
+        const projectsRes = await fetch(`${API_BASE}/projects`, {
+          headers,
+          credentials: "include",
+        });
+        if (projectsRes.ok) {
+          const data = await projectsRes.json();
+          // Projects endpoint returns a flat array
+          if (Array.isArray(data) && data.length > 0) {
+            setCompletedTasks(prev => ({ ...prev, project: true }));
+          }
+        }
+
+        // 4. Fetch Bank Accounts
+        const accountsRes = await fetch(`${API_BASE}/accounts`, {
+          headers,
+          credentials: "include",
+        });
+        if (accountsRes.ok) {
+          const data = await accountsRes.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setCompletedTasks(prev => ({ ...prev, bankAccount: true }));
+          }
+        }
+
       } catch (error) {
-        console.error("Error loading tenant:", error);
+        console.error("Error loading onboarding progress:", error);
       }
     }
 
-    loadTenant();
+    loadProgress();
   }, [API_BASE]);
 
   const toggleTask = (task: keyof typeof completedTasks) => {

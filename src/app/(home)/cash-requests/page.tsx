@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -9,7 +8,6 @@ import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,17 +24,12 @@ import {
     ChevronLeft, ChevronRight, AlertTriangle,
     RotateCcw, ArrowLeftRight, CreditCard,
     XCircle, ReceiptText, PackageCheck,
-    Calendar, FileText, Sparkles, Camera, Building
+    Calendar, FileText, Camera, Building, Sparkles, Clock, User
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n/I18nProvider";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
     Sheet,
     SheetContent,
@@ -417,7 +410,9 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
         <Dialog open={!!action} onOpenChange={v => !v && onClose()}>
             <DialogContent className="w-[95vw] max-w-lg max-h-[95dvh] overflow-hidden flex flex-col rounded-2xl p-0 gap-0">
                 <DialogHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
-                    <DialogTitle className="text-base">{titles[action]}</DialogTitle>
+                    <DialogTitle className="text-base">
+                        {action === "submit-expense" ? "Enviar Expense Report" : titles[action]}
+                    </DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-4 p-5 overflow-y-auto flex-1 min-h-0">
@@ -474,8 +469,20 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
                     )}
                     {action === "submit-expense" && (
                         <>
+                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 mb-4">
+                                <p className="text-sm font-bold text-indigo-900 flex items-center gap-2">
+                                    <Sparkles className="h-4 w-4 text-indigo-600" />
+                                    Rendición de Gastos
+                                </p>
+                                <p className="text-xs text-indigo-700 mt-0.5">
+                                    Sube tus comprobantes y deja que la IA haga el trabajo
+                                </p>
+                            </div>
+
                             <div className="space-y-1.5">
-                                <Label className="text-sm font-medium" dangerouslySetInnerHTML={{ __html: t("CashRequests.dialogs.action.fields.totalSpentOptional") }} />
+                                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                                    Total Gastado * (Solo requerido para Enviar final)
+                                </Label>
                                 <Input type="number" min="0" step="0.01" value={form.totalSpent ?? ""}
                                     readOnly className="h-10 bg-muted/30 font-bold" />
                             </div>
@@ -565,7 +572,7 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
 
                             <div className="space-y-2 pt-3 mt-1 border-t border-border">
                                 <Label className="flex items-center gap-2 text-sm font-medium">
-                                    <FileUp className="h-4 w-4 shrink-0" /> {t("CashRequests.dialogs.action.fields.uploadDraft")}
+                                    <FileUp className="h-4 w-4 shrink-0" /> Subir boleta o factura (Borrador)
                                 </Label>
                                 <Input type="file" onChange={handleFileUpload} disabled={uploadingFile}
                                     className="cursor-pointer file:cursor-pointer file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:text-primary file:text-xs file:px-2 file:py-1" />
@@ -574,19 +581,19 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
                                         <Loader2 className="h-3 w-3 animate-spin" /> {t("CashRequests.dialogs.action.fields.draftUploading")}
                                     </span>
                                 )}
-                                <div className="space-y-2">
-                                    <Label>Total Final a Reportar *</Label>
+                                <div className="space-y-2 mt-3">
+                                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">Total Final a Reportar *</Label>
                                     <Input
                                         type="number"
                                         min="0"
                                         step="0.01"
                                         value={form.totalSpent ?? cr.total_spent ?? ""}
                                         readOnly
-                                        className="bg-muted/30 font-bold"
+                                        className="bg-muted/30 font-bold h-10"
                                     />
                                 </div>
-                                <p className="text-xs text-muted-foreground leading-tight">
-                                    {t("CashRequests.dialogs.action.fields.draftSavesImmediately")}
+                                <p className="text-xs text-muted-foreground leading-tight italic mt-2">
+                                    El archivo se guardará como borrador inmediatamente. Puedes subir varios comprobantes en diferentes momentos antes de &apos;Enviar Expense Report&apos;.
                                 </p>
                             </div>
                         </>
@@ -619,10 +626,10 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
                                         <p className={cn(
                                             "font-black text-sm",
                                             Number(form.totalSpent || cr.total_spent) === cr.authorized_amount ? "text-emerald-600" :
-                                            Number(form.totalSpent || cr.total_spent) > cr.authorized_amount ? "text-orange-600" : "text-rose-600"
+                                                Number(form.totalSpent || cr.total_spent) > cr.authorized_amount ? "text-orange-600" : "text-rose-600"
                                         )}>
-                                            {Number(form.totalSpent || cr.total_spent) === cr.authorized_amount ? "" : 
-                                             Number(form.totalSpent || cr.total_spent) > cr.authorized_amount ? "+" : ""}
+                                            {Number(form.totalSpent || cr.total_spent) === cr.authorized_amount ? "" :
+                                                Number(form.totalSpent || cr.total_spent) > cr.authorized_amount ? "+" : ""}
                                             {(Number(form.totalSpent || cr.total_spent || 0) - (cr.authorized_amount ?? 0)).toFixed(2)} {cr.currency}
                                         </p>
                                     </div>
@@ -646,7 +653,7 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
                     )}
                     {action !== "reject" && (
                         <div className="space-y-1.5">
-                            <Label className="text-sm font-medium">{t("CashRequests.dialogs.action.fields.notesOptional")}</Label>
+                            <Label className="text-sm font-medium">Notas (opcionales)</Label>
                             <Textarea value={form.notes ?? ""} onChange={e => f("notes", e.target.value)}
                                 className="min-h-[60px] resize-none" placeholder="Observaciones adicionales..." />
                         </div>
@@ -676,7 +683,7 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
                         >
                             {loading ? <Loader2 className="h-4 w-4 animate-spin shrink-0" /> : null}
                             {action === "submit-expense"
-                                ? t("CashRequests.dialogs.action.submitExpense")
+                                ? "Enviar Expense Report"
                                 : (titles[action] || "Confirmar")}
                         </Button>
                     </div>
@@ -688,26 +695,74 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
 
 // ── Detail dialog ──────────────────────────────────────────────────────────────
 
-function DetailDialog({ cr, onClose, onAction }: {
+function DetailDialog({ cr, onClose, onAction, onReload }: {
     cr: CashRequest | null;
     onClose: () => void;
     onAction: (a: ActionType) => void;
+    onReload: () => void;
 }) {
     const { t } = useI18n();
+    const { can } = usePermissions();
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
     if (!cr) return null;
+
+    const handleFileUploadAI = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files?.length || !cr) return;
+        const file = e.target.files[0];
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("method", "n8n");
+            const base = process.env.NEXT_PUBLIC_API_BASE ?? "";
+            const token = Cookies.get("token");
+            const res = await fetch(`${base}/cash-requests/${cr._id}/add-expense-ai`, {
+                method: "POST",
+                headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+                credentials: "include",
+                body: formData,
+            });
+            if (!res.ok) throw new Error("Error al subir archivo");
+            toast.success("Comprobante analizado con éxito");
+            onReload();
+        } catch (err) {
+            toast.error("Error al procesar el comprobante");
+        } finally {
+            setUploading(false);
+            if (e.target) e.target.value = "";
+        }
+    };
 
     const projectName = cr.project_id && typeof cr.project_id === "object" ? cr.project_id.name : String(cr.project_id ?? "—");
     const createdByName = cr.created_by ? (typeof cr.created_by === "object" ? cr.created_by.name || cr.created_by.email : String(cr.created_by)) : "—";
     const beneficiaryName = cr.beneficiary_id ? (typeof cr.beneficiary_id === "object" ? cr.beneficiary_id.name || cr.beneficiary_id.email : String(cr.beneficiary_id)) : createdByName;
 
     const availableActions: { label: string; action: ActionType; variant?: "destructive" | "default" | "outline"; icon: React.ElementType }[] = [];
-    if (cr.status === "created") availableActions.push({ label: t("CashRequests.actions.approve"), action: "approve", icon: CheckCircle2 });
-    if (cr.status === "approved") availableActions.push({ label: t("CashRequests.actions.authorize"), action: "authorize", icon: ShieldCheck });
-    if (cr.status === "authorized") availableActions.push({ label: t("CashRequests.actions.pay"), action: "pay", icon: CreditCard });
-    if (["paid", "expense_draft"].includes(cr.status)) availableActions.push({ label: t("CashRequests.actions.submitExpense"), action: "submit-expense", icon: ReceiptText });
-    if (cr.status === "submitted") availableActions.push({ label: t("CashRequests.actions.review"), action: "review", icon: Search as any });
-    if (["reimbursement", "refund"].includes(cr.status)) availableActions.push({ label: t("CashRequests.actions.close"), action: "close", icon: PackageCheck });
-    if (!["closed", "rejected"].includes(cr.status)) availableActions.push({ label: t("CashRequests.actions.reject"), action: "reject", variant: "destructive", icon: XCircle });
+
+    // Admins/Superadmins/Treasurers can approve, authorize, pay, review, close
+    if (cr.status === "created" && can("cash_req:approve"))
+        availableActions.push({ label: t("CashRequests.actions.approve"), action: "approve", icon: CheckCircle2 });
+
+    if (cr.status === "approved" && can("cash_req:authorize"))
+        availableActions.push({ label: t("CashRequests.actions.authorize"), action: "authorize", icon: ShieldCheck });
+
+    if (cr.status === "authorized" && can("cash_req:pay"))
+        availableActions.push({ label: t("CashRequests.actions.pay"), action: "pay", icon: CreditCard });
+
+    // Standard users (and others) can submit expenses
+    if (["paid", "expense_draft"].includes(cr.status) && can("cash_req:submit_expense"))
+        availableActions.push({ label: t("CashRequests.actions.submitExpense"), action: "submit-expense", icon: ReceiptText });
+
+    if (cr.status === "submitted" && can("cash_req:review"))
+        availableActions.push({ label: t("CashRequests.actions.review"), action: "review", icon: Search as any });
+
+    if (["reimbursement", "refund"].includes(cr.status) && can("cash_req:close"))
+        availableActions.push({ label: t("CashRequests.actions.close"), action: "close", icon: PackageCheck });
+
+    if (!["closed", "rejected"].includes(cr.status) && can("cash_req:reject"))
+        availableActions.push({ label: t("CashRequests.actions.reject"), action: "reject", variant: "destructive", icon: XCircle });
 
     return (
         <Dialog open={!!cr} onOpenChange={v => !v && onClose()}>
@@ -744,6 +799,67 @@ function DetailDialog({ cr, onClose, onAction }: {
                             ))}
                         </div>
                     </div>
+
+                    {/* Sección: Rendición de Gastos (NUEVA) */}
+                    {["paid", "expense_draft", "authorized"].includes(cr.status) && (
+                        <div className="space-y-3 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/10 border border-indigo-100 dark:border-indigo-900/30">
+                            <div className="flex items-start justify-between gap-4">
+                                <div>
+                                    <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
+                                        <Sparkles className="h-4 w-4 text-indigo-600" /> Rendición de Gastos
+                                    </h4>
+                                    <p className="text-[11px] text-indigo-700/70 dark:text-indigo-400/70 mt-0.5">
+                                        Sube tus comprobantes y deja que la IA haga el trabajo
+                                    </p>
+                                </div>
+                                <div className="shrink-0">
+                                    <input type="file" ref={fileInputRef} onChange={handleFileUploadAI} className="hidden" accept="image/*,application/pdf" />
+                                    <Button
+                                        size="sm"
+                                        className="h-8 gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                                        disabled={uploading}
+                                        onClick={() => fileInputRef.current?.click()}
+                                    >
+                                        {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                                        <span className="text-xs">Cargar con IA</span>
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Estado de los gastos */}
+                            <div className="mt-2">
+                                {(!cr.expense_items || cr.expense_items.length === 0) ? (
+                                    <div className="py-6 text-center border-2 border-dashed border-indigo-200/50 dark:border-indigo-800/30 rounded-xl bg-white/40 dark:bg-black/20">
+                                        <p className="text-[11px] font-medium text-indigo-400">No hay gastos registrados</p>
+                                        <p className="text-[10px] text-indigo-300">Haz clic en &apos;Cargar con IA&apos; para subir tu primera boleta o factura.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
+                                        {cr.expense_items.map((it: any, idx: number) => (
+                                            <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-black/20 border border-indigo-100/30">
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-[11px] font-bold truncate">{it.issuer_name || "Comprobante"}</p>
+                                                    <p className="text-[10px] text-muted-foreground">{it.amount?.toLocaleString()} {it.currency}</p>
+                                                </div>
+                                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 ml-2" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Botón de Enviar final si ya hay gastos */}
+                            {(cr.expense_items && cr.expense_items.length > 0) && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full h-8 text-xs border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 gap-1.5"
+                                    onClick={() => onAction("submit-expense")}
+                                >
+                                    <ReceiptText className="h-3.5 w-3.5" /> Enviar Expense Report
+                                </Button>
+                            )}
+                        </div>
+                    )}
 
                     {/* Sección: Finanzas y Liquidación */}
                     <div className="space-y-3">
@@ -796,77 +912,34 @@ function DetailDialog({ cr, onClose, onAction }: {
                                             ? t("CashRequests.dialogs.action.balance.reimbursement")
                                             : t("CashRequests.dialogs.action.balance.refund")}
                                 </p>
-                                <p className={cn(
-                                    "font-black text-sm",
-                                    cr.total_spent === cr.authorized_amount ? "text-emerald-600" :
-                                    cr.total_spent > cr.authorized_amount ? "text-orange-600" : "text-rose-600"
-                                )}>
-                                    {cr.total_spent === cr.authorized_amount ? "" : 
-                                     cr.total_spent > cr.authorized_amount ? "+" : ""}
+                                <p className={cn("font-black text-sm", cr.total_spent === cr.authorized_amount ? "text-emerald-600" : cr.total_spent > cr.authorized_amount ? "text-orange-600" : "text-rose-600")}>
+                                    {cr.total_spent === cr.authorized_amount ? "" : cr.total_spent > cr.authorized_amount ? "+" : ""}
                                     {((cr.total_spent ?? 0) - (cr.authorized_amount ?? 0)).toFixed(2)} {cr.currency}
                                 </p>
                             </div>
                         </div>
                     )}
-
-                    {/* Breakdown de items */}
-                    {cr.expense_items && cr.expense_items.length > 0 && (
-                        <div className="space-y-3">
-                            <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 px-0.5">
-                                <ReceiptText className="h-3.5 w-3.5" /> Rendición de Gastos
-                            </Label>
-                            <div className="space-y-2">
-                                {cr.expense_items.map((it: any, idx: number) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-muted/20 border border-border/50 shadow-sm">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className="h-9 w-9 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
-                                                <FileText className="h-5 w-5 text-indigo-600" />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-bold truncate leading-none mb-1">
-                                                    {it.issuer_name || "Comprobante"}
-                                                </p>
-                                                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                                    <Calendar className="h-3 w-3" />
-                                                    {it.date ? format(new Date(it.date), "dd/MM/yyyy") : "—"}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right shrink-0 ml-2">
-                                            <p className="text-xs font-black text-indigo-700 dark:text-indigo-400">
-                                                {it.amount?.toLocaleString()} {it.currency}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Meta/Notes */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 pt-2">
                         <div className="p-3 bg-muted/20 rounded-xl border border-border/40">
                             <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1.5">
-                                <Calendar className="h-3 w-3" /> {t("CashRequests.dialogs.detail.creationDate")}
+                                <Clock className="h-3 w-3" /> Plazo de Rendición
                             </p>
-                            <p className="text-xs font-medium">{format(new Date(cr.createdAt), "d MMM yyyy", { locale: es })}</p>
+                            <p className="text-xs font-medium">{cr.expense_period_days || 7} días</p>
                         </div>
-                        {cr.expense_period_days && (
-                            <div className="p-3 bg-muted/20 rounded-xl border border-border/40">
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1.5">
-                                    <RotateCcw className="h-3 w-3" /> {t("CashRequests.dialogs.detail.expensePeriod")}
-                                </p>
-                                <p className="text-xs font-medium">{cr.expense_period_days} días</p>
-                            </div>
-                        )}
+                        <div className="p-3 bg-muted/20 rounded-xl border border-border/40">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1.5">
+                                <User className="h-3 w-3" /> Autor original
+                            </p>
+                            <p className="text-xs font-medium truncate">{createdByName}</p>
+                        </div>
                     </div>
 
-                    {cr.notes && (
-                        <div className="bg-muted/30 rounded-xl px-3 py-3 text-sm border border-border/40">
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Descripción / Notas</p>
-                            <p className="text-xs leading-relaxed text-muted-foreground">{cr.notes}</p>
-                        </div>
-                    )}
+                    <div className="p-3 bg-muted/20 rounded-xl border border-border/40">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Descripción / Notas Adicionales</p>
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                            {cr.notes || "Sin notas adicionales reportadas."}
+                        </p>
+                    </div>
 
                     {/* Galería Visual */}
                     {(cr.expense_files?.length ?? 0) > 0 && (
@@ -880,7 +953,7 @@ function DetailDialog({ cr, onClose, onAction }: {
                                     const cleanUrl = url.startsWith("/api") && apiBase.endsWith("/api") ? url.substring(4) : url;
                                     const fullUrl = url.startsWith("http") ? url : `${apiBase}${cleanUrl}`;
                                     return (
-                                        <a key={idx} href={fullUrl} target="_blank" rel="noopener noreferrer" 
+                                        <a key={idx} href={fullUrl} target="_blank" rel="noopener noreferrer"
                                             className="h-20 w-20 rounded-xl overflow-hidden border-2 border-background shadow-md hover:border-indigo-400 transition-all group">
                                             <img src={fullUrl} alt={`Evidencia ${idx + 1}`} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300" />
                                         </a>
@@ -921,6 +994,7 @@ function CRActionButtons({ cr, onAction, compact = false }: {
     compact?: boolean;
 }) {
     const { t } = useI18n();
+    const { can } = usePermissions();
     const btnClass = compact
         ? "h-7 w-7 p-0"
         : "h-8 gap-1.5 flex-1 text-xs px-2";
@@ -939,6 +1013,12 @@ function CRActionButtons({ cr, onAction, compact = false }: {
             {actions.map(({ status, action, icon: Icon, color, label }) => {
                 const statuses = Array.isArray(status) ? status : [status];
                 if (!statuses.includes(cr.status as CRStatus)) return null;
+
+                // Permission Guard
+                let permission = `cash_req:${action}`;
+                if (action === 'submit-expense') permission = 'cash_req:submit_expense';
+                if (!can(permission)) return null;
+
                 return (
                     <Button key={action} size="sm" variant="outline"
                         className={cn(btnClass, color)}
@@ -1307,6 +1387,7 @@ export default function CashRequestsPage() {
             <NewCashRequestDialog open={showNew} onClose={() => setShowNew(false)} onCreated={fetchData} />
 
             <DetailDialog cr={detailCr} onClose={() => setDetailCr(null)}
+                onReload={fetchData}
                 onAction={action => {
                     setActionCr(detailCr);
                     setCurrentAction(action);

@@ -14,18 +14,34 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import Swal from "sweetalert2";
 import { useState } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function SidebarContent({
     collapsed,
     setCollapsed,
-    menuItems,
+    menuItems: rawMenuItems,
     bottomItems,
     router,
     pathname,
     closeMobileMenu,
 }: any) {
+    const { can } = usePermissions();
     const API_BASE =
         process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
+
+    // Filter menu items based on permissions
+    const menuItems = rawMenuItems.filter((item: any) => {
+        if (item.permission && !can(item.permission)) return false;
+        return true;
+    }).map((item: any) => {
+        if (item.children) {
+            return {
+                ...item,
+                children: item.children.filter((child: any) => !child.permission || can(child.permission))
+            };
+        }
+        return item;
+    });
 
     // Track which parent items are open. Initialise open if a child is active.
     const [openItems, setOpenItems] = useState<Record<number, boolean>>(() => {
@@ -223,6 +239,7 @@ export default function SidebarContent({
 
             <Separator />
 
+            {/* BOTTOM */}
             {/* BOTTOM */}
             <ScrollArea className="px-2 py-3">
                 {bottomItems.map((item: any, index: number) => (

@@ -16,7 +16,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import {
     Select,
@@ -26,12 +25,16 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, FileText, Calendar, DollarSign, User, Building, ArrowLeft, AlertCircle, Clock, ShieldCheck, ThumbsUp, ThumbsDown, CheckCircle, CreditCard, XCircle } from "lucide-react";
+import { Loader2, FileText, Calendar, DollarSign, User, Building, ArrowLeft, AlertCircle, Clock, ShieldCheck, ThumbsUp, CheckCircle, CreditCard, XCircle } from "lucide-react";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function PaymentRequestReview({ type = "review" }: { type?: "review" | "authorize" | "pay" }) {
+    const { role } = usePermissions();
+    const canAction = role === "superadmin" || role === "admin" || role === "treasurer";
+    
     const params = useParams();
     const router = useRouter();
     const id = params?.id as string;
@@ -238,7 +241,7 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
     };
 
     const renderActionButtons = () => {
-        if (data.status === 'rejected' || data.status === 'paid') return null;
+        if (!canAction || data.status === 'rejected' || data.status === 'paid') return null;
 
         return (
             <div className="flex gap-2">
@@ -411,7 +414,7 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                         <Button
                             variant="ghost"
                             className="h-10 w-10 rounded-full p-0 shrink-0 hover:bg-muted"
-                            onClick={() => router.back()}
+                            onClick={() => router.push('/payment-requests')}
                         >
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
