@@ -10,6 +10,9 @@ import {
     Receipt,
     Building2,
     ArrowRight,
+    ShoppingBag,
+    Wallet,
+    GitBranch,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PaymentOutflowDashboard from "@/components/payment-requests/PaymentOutflowDashboard";
@@ -52,6 +55,34 @@ const NEW_ITEMS = [
         href: "/payment-request",
     },
     {
+        key: "purchaseOrder",
+        icon: ShoppingBag,
+        titleKey: "Outflow.purchaseOrder.title",
+        descriptionKey: "Outflow.purchaseOrder.description",
+        defaultTitle: "Purchase Order",
+        defaultDescription: "Create a new purchase order for a project or vendor.",
+        gradient: "from-amber-500/10 to-amber-500/3",
+        border: "border-amber-200/70 hover:border-amber-300/90",
+        iconColor: "text-amber-600",
+        iconBg: "bg-amber-500/10",
+        ctaColor: "text-amber-600",
+        href: "/purchase-orders",
+    },
+    {
+        key: "cashRequest",
+        icon: Wallet,
+        titleKey: "Outflow.cashRequest.title",
+        descriptionKey: "Outflow.cashRequest.description",
+        defaultTitle: "Cash Request",
+        defaultDescription: "Request a cash advance or reimbursement for expenses to report.",
+        gradient: "from-rose-500/10 to-rose-500/3",
+        border: "border-rose-200/70 hover:border-rose-300/90",
+        iconColor: "text-rose-600",
+        iconBg: "bg-rose-500/10",
+        ctaColor: "text-rose-600",
+        href: "/cash-requests",
+    },
+    {
         key: "expense",
         icon: Receipt,
         titleKey: "Outflow.expenseRequest.title",
@@ -78,6 +109,20 @@ const NEW_ITEMS = [
         iconBg: "bg-violet-500/10",
         ctaColor: "text-violet-600",
         href: "/administrative-payment",
+    },
+    {
+        key: "workflows",
+        icon: GitBranch,
+        titleKey: "Outflow.workflows.title",
+        descriptionKey: "Outflow.workflows.description",
+        defaultTitle: "Workflows",
+        defaultDescription: "Automate and manage your internal approval and payment flows.",
+        gradient: "from-teal-500/10 to-teal-500/3",
+        border: "border-teal-200/70 hover:border-teal-300/90",
+        iconColor: "text-teal-600",
+        iconBg: "bg-teal-500/10",
+        ctaColor: "text-teal-600",
+        href: "/workflows",
     },
 ] as const;
 
@@ -122,8 +167,8 @@ function ActionCard({
             <div className={`flex items-center justify-center h-11 w-11 rounded-xl mb-4 ${iconBg}`}>
                 <Icon className={`h-5 w-5 ${iconColor}`} />
             </div>
-            <h3 className="font-semibold text-base text-foreground leading-snug mb-2">{title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed flex-1">{description}</p>
+            <h3 className="font-semibold text-sm sm:text-base text-foreground leading-tight mb-2">{title}</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed flex-1 line-clamp-3">{description}</p>
             <div className={`flex items-center gap-1.5 mt-5 text-sm font-medium ${ctaColor} opacity-70 group-hover:opacity-100 transition-opacity duration-150`}>
                 <span>{t("Outflow.getStarted") || "Get started"}</span>
                 <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
@@ -160,7 +205,6 @@ export default function Outflow() {
                     const result = await response.json();
                     setData(Array.isArray(result) ? result : []);
                 } else {
-                    // If no data is found (404), we just set an empty array without logging an error
                     setData([]);
                     if (response.status !== 404 && response.status !== 500) {
                         console.warn(`Fetch notice: ${response.status}`);
@@ -221,22 +265,15 @@ export default function Outflow() {
                 {/* ── DASHBOARD TAB ── */}
                 <TabsContent
                     value="dashboard"
-                    className="flex-1 min-h-0 mt-0 overflow-hidden data-[state=inactive]:hidden"
+                    className="flex-1 min-h-[500px] mt-0 overflow-hidden data-[state=inactive]:hidden"
                 >
                     <PaymentOutflowDashboard className="h-full w-full" />
                 </TabsContent>
 
-                {/* ── CALENDAR TAB ──
-                    No scroll at all. The tab content is a flex column that fills
-                    the remaining viewport height. A tiny inline header costs minimal
-                    vertical space; the calendar container gets all the rest via
-                    flex-1 min-h-0. PaymentCalendar receives h-full + w-full so it
-                    knows to fill its box — it must NOT have its own fixed height.   */}
                 <TabsContent
                     value="calendar"
                     className="flex flex-col flex-1 min-h-0 mt-0 overflow-hidden data-[state=inactive]:hidden"
                 >
-                    {/* Minimal header — one line, negligible height */}
                     <div className="shrink-0 flex items-baseline gap-2 mb-2 px-0.5">
                         <h2 className="text-sm sm:text-base font-semibold tracking-tight leading-tight">
                             {t("Outflow.calendar.title") || "Payment Calendar"}
@@ -246,14 +283,6 @@ export default function Outflow() {
                         </span>
                     </div>
 
-                    {/*
-                     * flex-1 min-h-0: takes all remaining height in the flex column.
-                     * overflow-hidden: clips anything the calendar renders beyond
-                     *   its box — PaymentCalendar should handle its own internal
-                     *   scroll if it has many events.
-                     * rounded + border: wraps the calendar in a clean card shell
-                     *   without adding a separate Card component.
-                     */}
                     <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
                         <PaymentCalendar data={data} className="h-full w-full" />
                     </div>
@@ -262,9 +291,9 @@ export default function Outflow() {
                 {/* ── NEW TAB ── */}
                 <TabsContent
                     value="new"
-                    className="flex flex-col flex-1 min-h-0 mt-0 overflow-hidden data-[state=inactive]:hidden"
+                    className="flex flex-col flex-1 min-h-0 mt-0 overflow-y-auto custom-scrollbar data-[state=inactive]:hidden"
                 >
-                    <div className="flex flex-col items-center justify-center flex-1 gap-6">
+                    <div className="flex flex-col items-center py-6 sm:py-10 gap-8">
                         {/* Centred heading */}
                         <div className="text-center">
                             <h2 className="text-lg sm:text-xl font-semibold tracking-tight">
@@ -275,9 +304,9 @@ export default function Outflow() {
                             </p>
                         </div>
 
-                        {/* Top row — 2 cards */}
-                        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-2xl">
-                            {NEW_ITEMS.slice(0, 2).map(
+                        {/* Responsive Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-5xl px-2">
+                            {NEW_ITEMS.map(
                                 ({ key, icon: Icon, titleKey, descriptionKey, defaultTitle, defaultDescription, gradient, border, iconColor, iconBg, ctaColor, href }) => (
                                     <ActionCard
                                         key={key}
@@ -293,21 +322,6 @@ export default function Outflow() {
                                     />
                                 )
                             )}
-                        </div>
-
-                        {/* Bottom row — 1 card centered */}
-                        <div className="w-full max-w-xs sm:max-w-sm">
-                            <ActionCard
-                                icon={NEW_ITEMS[2].icon}
-                                title={t(NEW_ITEMS[2].titleKey) || NEW_ITEMS[2].defaultTitle}
-                                description={t(NEW_ITEMS[2].descriptionKey) || NEW_ITEMS[2].defaultDescription}
-                                gradient={NEW_ITEMS[2].gradient}
-                                border={NEW_ITEMS[2].border}
-                                iconColor={NEW_ITEMS[2].iconColor}
-                                iconBg={NEW_ITEMS[2].iconBg}
-                                ctaColor={NEW_ITEMS[2].ctaColor}
-                                onClick={() => router.push(NEW_ITEMS[2].href)}
-                            />
                         </div>
                     </div>
                 </TabsContent>

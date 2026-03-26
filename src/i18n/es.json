@@ -52,7 +52,8 @@
             "goToLogin": "Ir a Iniciar Sesión",
             "sendResetLink": "Enviar Enlace de Restablecimiento",
             "sending": "Enviando...",
-            "backToLogin": "Volver a Iniciar Sesión"
+            "backToLogin": "Volver a Iniciar Sesión",
+            "close": "Cerrar"
         },
         "Messages": {
             "needReset": "Quizás necesite ",
@@ -869,6 +870,18 @@
         "administrativePayment": {
             "title": "Pago Administrativo",
             "description": "Registra un pago administrativo fuera del alcance del proyecto."
+        },
+        "purchaseOrder": {
+            "title": "Orden de Compra",
+            "description": "Crear una nueva orden de compra para un proyecto o vendedor."
+        },
+        "cashRequest": {
+            "title": "Solicitud de Efectivo",
+            "description": "Solicitar un adelanto en efectivo o reembolso de gastos para rendir."
+        },
+        "workflows": {
+            "title": "Flujos de Trabajo",
+            "description": "Automatiza y gestiona tus flujos internos de aprobación y pago."
         },
         "tabs": {
             "dashboard": "Tablero de Egresos",

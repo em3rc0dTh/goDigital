@@ -52,7 +52,8 @@
             "goToLogin": "Go to Login",
             "sendResetLink": "Send Reset Link",
             "sending": "Sending...",
-            "backToLogin": "Back to login"
+            "backToLogin": "Back to login",
+            "close": "Close"
         },
         "Messages": {
             "needReset": "I may need to ",
@@ -860,6 +861,18 @@
             "title": "Administrative Payment",
             "description": "Register an administrative payment outside of project scope."
         },
+        "purchaseOrder": {
+            "title": "Purchase Order",
+            "description": "Create a new purchase order for a project or vendor."
+        },
+        "cashRequest": {
+            "title": "Cash Request",
+            "description": "Request a cash advance or reimbursement for expenses to report."
+        },
+        "workflows": {
+            "title": "Workflows",
+            "description": "Automate and manage your internal approval and payment flows."
+        },
         "tabs": {
             "dashboard": "Outflow Board",
             "dashboardShort": "Dashboard",
@@ -1020,6 +1033,49 @@
                     "uploadError": "Error uploading file",
                     "readError": "Error reading file"
                 }
+            }
+        },
+        "Outflow": {
+            "getStarted": "Get started",
+            "getStartedDefault": "Get started",
+            "tabs": {
+                "dashboard": "Outflow Dashboard",
+                "dashboardShort": "Dashboard",
+                "calendar": "Payment Calendar",
+                "calendarShort": "Calendar",
+                "new": "New"
+            },
+            "newRequest": {
+                "title": "New Outflow Request",
+                "subtitle": "Select the type of request you'd like to create."
+            },
+            "calendar": {
+                "title": "Payment Calendar",
+                "description": "organised by due date"
+            },
+            "paymentRequest": {
+                "title": "Payment Request",
+                "description": "Request a payment to a provider linked to a project or purchase order."
+            },
+            "expenseRequest": {
+                "title": "Expense Request",
+                "description": "Submit a reimbursable expense for approval and processing."
+            },
+            "administrativePayment": {
+                "title": "Administrative Payment",
+                "description": "Register an administrative payment outside of project scope."
+            },
+            "purchaseOrder": {
+                "title": "Purchase Order",
+                "description": "Create a new purchase order for a project or vendor."
+            },
+            "cashRequest": {
+                "title": "Cash Request",
+                "description": "Request a cash advance or reimbursement for expenses to report."
+            },
+            "workflows": {
+                "title": "Workflows",
+                "description": "Automate and manage your internal approval and payment flows."
             }
         }
     },
