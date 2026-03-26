@@ -43,6 +43,7 @@ export const PERMISSION_MAP: Record<UserRole, string[]> = {
     "cash_req:create",
     "cash_req:submit_expense",
     "proof:upload",
+    "proof:view",
   ],
 };
 

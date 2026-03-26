@@ -19,6 +19,7 @@ import {
     BellRing,
 } from "lucide-react";
 import { format } from "date-fns";
+import Cookies from "js-cookie";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -137,7 +138,7 @@ interface NotifEntry {
     role: string;
 }
 
-function getNotifications(status: string, pr: PRData | undefined, payload?: ActionPayload): NotifEntry[] {
+function getNotifications(status: string, pr: PRData | undefined): NotifEntry[] {
     if (!pr) return [];
 
     const isSamePerson = pr.createdByEmail === pr.projectOwnerEmail;
@@ -595,7 +596,19 @@ export function WorkflowTimeline({ paymentRequestId }: { paymentRequestId: strin
             if (!silent) setLoading(true);
             else setRefreshing(true);
             setError(null);
-            const res = await fetch(`/api/payment-requests/${paymentRequestId}/workflow-timeline`, { cache: "no-store" });
+            
+            const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
+            const token = Cookies.get("session_token");
+            const tenantDetailId = Cookies.get("tenantDetailId");
+
+            const res = await fetch(`${API_BASE}/payment-requests/${paymentRequestId}/workflow-status`, { 
+                cache: "no-store",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "x-tenant-detail-id": tenantDetailId || "",
+                },
+                credentials: "include",
+            });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data: PRWorkflowState = await res.json();
             setWorkflow(data);

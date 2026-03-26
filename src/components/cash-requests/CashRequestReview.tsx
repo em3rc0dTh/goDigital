@@ -23,12 +23,16 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n/I18nProvider";
+import { usePermissions } from "@/hooks/usePermissions";
 
 // Replicando los tipos básicos necesarios (Misma lógica de page.tsx)
 type ActionType = "approve" | "authorize" | "pay" | "submit-expense" | "review" | "close" | "reject" | null;
 
 export default function CashRequestReview({ type = "review" }: { type?: string }) {
     const { t } = useI18n();
+    const { role } = usePermissions();
+    const canAction = role === "superadmin" || role === "admin" || role === "treasurer";
+    
     const params = useParams();
     const router = useRouter();
     const id = params?.id as string;
@@ -52,7 +56,7 @@ export default function CashRequestReview({ type = "review" }: { type?: string }
         if (!id) return;
         try {
             setLoading(true);
-            const token = Cookies.get("token");
+            const token = Cookies.get("session_token");
             const tenantDetailId = Cookies.get("tenantDetailId");
 
             // Assuming there's a GET route for a single cash-request in the backend. 
@@ -145,7 +149,7 @@ export default function CashRequestReview({ type = "review" }: { type?: string }
                     body = { reason: form.reason }; break;
             }
 
-            const token = Cookies.get("token");
+            const token = Cookies.get("session_token");
             const res = await fetch(`${API_BASE}${path}`, {
                 method: "PUT",
                 headers: {
@@ -177,7 +181,7 @@ export default function CashRequestReview({ type = "review" }: { type?: string }
         if (!data) return;
         setProcessingAction(true);
         try {
-            const token = Cookies.get("token");
+            const token = Cookies.get("session_token");
             const res = await fetch(`${API_BASE}/cash-requests/${id}`, {
                 method: "PUT",
                 headers: {
@@ -217,7 +221,7 @@ export default function CashRequestReview({ type = "review" }: { type?: string }
             formData.append("file", file);
             formData.append("method", "n8n");
 
-            const token = Cookies.get("token");
+            const token = Cookies.get("session_token");
             const res = await fetch(`${API_BASE}/cash-requests/${id}/add-expense-ai`, {
                 method: "POST",
                 headers: {
@@ -249,11 +253,16 @@ export default function CashRequestReview({ type = "review" }: { type?: string }
         if (!data || !data.expense_items) return;
         try {
             const newItems = [...data.expense_items];
+            const newFiles = [...(data.expense_files || [])];
+
             newItems.splice(index, 1);
+            if (newFiles.length > index) {
+                newFiles.splice(index, 1);
+            }
             
             const newTotal = newItems.reduce((sum: number, it: any) => sum + (it.amount || 0), 0);
 
-            const token = Cookies.get("token");
+            const token = Cookies.get("session_token");
             const res = await fetch(`${API_BASE}/cash-requests/${id}`, {
                 method: "PUT",
                 headers: {
@@ -263,6 +272,7 @@ export default function CashRequestReview({ type = "review" }: { type?: string }
                 credentials: "include",
                 body: JSON.stringify({ 
                     expense_items: newItems,
+                    expense_files: newFiles,
                     total_spent: newTotal
                 }),
             });
@@ -280,14 +290,16 @@ export default function CashRequestReview({ type = "review" }: { type?: string }
         if (!data) return null;
 
         const availableActions = [];
-        if (data.status === "created") availableActions.push({ label: t("CashRequests.actions.approve"), action: "approve" as ActionType, variant: "default", icon: CheckCircle2, className: "bg-emerald-600 hover:bg-emerald-700 text-white" });
-        if (data.status === "approved") availableActions.push({ label: t("CashRequests.actions.authorize"), action: "authorize" as ActionType, variant: "default", icon: ShieldCheck, className: "bg-violet-600 hover:bg-violet-700 text-white" });
-        if (data.status === "authorized") availableActions.push({ label: t("CashRequests.actions.pay"), action: "pay" as ActionType, variant: "default", icon: CreditCard, className: "bg-teal-600 hover:bg-teal-700 text-white" });
-        if (["paid", "expense_draft"].includes(data.status)) availableActions.push({ label: t("CashRequests.actions.submitExpense"), action: "submit-expense" as ActionType, variant: "default", icon: ReceiptText, className: "bg-indigo-600 hover:bg-indigo-700 text-white" });
-        if (data.status === "submitted") availableActions.push({ label: t("CashRequests.actions.review"), action: "review" as ActionType, variant: "default", icon: Search, className: "bg-amber-600 hover:bg-amber-700 text-white" });
-        if (["reimbursement", "refund"].includes(data.status)) availableActions.push({ label: t("CashRequests.actions.close"), action: "close" as ActionType, variant: "default", icon: PackageCheck, className: "bg-green-600 hover:bg-green-700 text-white" });
+        const isTreasurer = role === "treasurer";
 
-        const canReject = !["closed", "rejected", "paid"].includes(data.status);
+        if (data.status === "created" && !isTreasurer) availableActions.push({ label: t("CashRequests.actions.approve"), action: "approve" as ActionType, variant: "default", icon: CheckCircle2, className: "bg-emerald-600 hover:bg-emerald-700 text-white" });
+        if (data.status === "approved" && canAction) availableActions.push({ label: t("CashRequests.actions.authorize"), action: "authorize" as ActionType, variant: "default", icon: ShieldCheck, className: "bg-violet-600 hover:bg-violet-700 text-white" });
+        if (data.status === "authorized" && canAction) availableActions.push({ label: t("CashRequests.actions.pay"), action: "pay" as ActionType, variant: "default", icon: CreditCard, className: "bg-teal-600 hover:bg-teal-700 text-white" });
+        if (["paid", "expense_draft"].includes(data.status)) availableActions.push({ label: t("CashRequests.actions.submitExpense"), action: "submit-expense" as ActionType, variant: "default", icon: ReceiptText, className: "bg-indigo-600 hover:bg-indigo-700 text-white" });
+        if (data.status === "submitted" && canAction) availableActions.push({ label: t("CashRequests.actions.review"), action: "review" as ActionType, variant: "default", icon: Search, className: "bg-amber-600 hover:bg-amber-700 text-white" });
+        if (["reimbursement", "refund"].includes(data.status) && canAction) availableActions.push({ label: t("CashRequests.actions.close"), action: "close" as ActionType, variant: "default", icon: PackageCheck, className: "bg-green-600 hover:bg-green-700 text-white" });
+
+        const canReject = !["closed", "rejected", "paid"].includes(data.status) && (canAction || data.created_by === role); // simplification
 
         return (
             <div className="flex gap-2">
@@ -361,7 +373,7 @@ export default function CashRequestReview({ type = "review" }: { type?: string }
                     <div className="flex items-center gap-3">
                         <Badge variant="outline" className={`px-4 py-1.5 text-sm font-medium border uppercase bg-muted/50`}>
                             <span className="font-mono px-2 py-0.5 rounded text-sm mr-2 opacity-70">#{id.slice(-6)}</span>
-                            {data.status?.replace('_', ' ')}
+                            {t(`CashRequests.status.${data.status}`) || data.status?.replace('_', ' ')}
                         </Badge>
                     </div>
                 </div>
@@ -473,16 +485,16 @@ export default function CashRequestReview({ type = "review" }: { type?: string }
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <div className="text-right">
+                                                        <div className="flex items-center gap-3">
                                                             <p className="text-sm font-bold text-indigo-700 dark:text-indigo-400 tabular-nums">
                                                                 {item.amount?.toLocaleString()} {item.currency}
                                                             </p>
                                                             {["paid", "expense_draft"].includes(data.status) && (
                                                                 <button 
                                                                     onClick={() => removeExpenseItem(idx)}
-                                                                    className="text-[10px] text-red-500 hover:underline mt-0.5"
+                                                                    className="bg-red-600 text-white px-2 py-1 rounded text-[10px] font-black hover:bg-red-700 active:scale-95 transition-all"
                                                                 >
-                                                                    Eliminar
+                                                                    ELIMINAR
                                                                 </button>
                                                             )}
                                                         </div>
@@ -528,11 +540,9 @@ export default function CashRequestReview({ type = "review" }: { type?: string }
                                             </p>
                                             <div className="flex flex-wrap gap-3">
                                                 {data.expense_files.map((url: string, idx: number) => {
-                                                    // Evitar doble /api si la URL ya lo tiene y el API_BASE también
-                                                    const cleanUrl = url.startsWith("/api") && API_BASE.endsWith("/api") 
-                                                        ? url.substring(4) 
-                                                        : url;
-                                                    const fullUrl = url.startsWith("http") ? url : `${API_BASE}${cleanUrl}`;
+                                                    const apiRoot = API_BASE.replace(/\/api\/?$/, "");
+                                                    const path = url.startsWith("/api/files") ? url : `/api/files/${url.startsWith("/") ? url.substring(1) : url}`;
+                                                    const fullUrl = url.startsWith("http") ? url : `${apiRoot}${path}`;
                                                     return (
                                                         <a 
                                                             key={idx} 

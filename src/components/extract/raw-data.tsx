@@ -73,7 +73,7 @@ export default function RawDataPage() {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        "Authorization": `Bearer ${Cookies.get('token')}`,
+                        "Authorization": `Bearer ${Cookies.get('session_token')}`,
                     },
                     credentials: 'include',
                 }

@@ -173,7 +173,10 @@
             "BankExtract": "Bank Extract",
             "PaymentRequest": "Payment Request",
             "OutflowManagement": "Outflow Management",
-            "BusinessUnits": "Business Units"
+            "PurchaseOrder": "Purchase Orders",
+            "BusinessUnits": "Business Units",
+            "CashRequests": "Cash Requests",
+            "Workflows": "Workflows"
         },
         "bottom": {
             "Settings": "Settings",

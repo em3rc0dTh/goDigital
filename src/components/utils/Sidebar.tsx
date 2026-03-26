@@ -71,13 +71,13 @@ export default function Sidebar() {
         },
         {
           icon: Wallet,
-          label: "Solicitudes de Efectivo",
+          label: t("Sidebar.menu.CashRequests"),
           link: "/cash-requests",
           permission: "payment_req:view",
         },
         {
           icon: GitBranch,
-          label: "Workflows",
+          label: t("Sidebar.menu.Workflows"),
           link: "/workflows",
           permission: "roles:view",
         },

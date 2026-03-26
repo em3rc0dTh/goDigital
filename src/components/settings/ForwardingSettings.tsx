@@ -267,11 +267,17 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
     }, []);
 
     async function checkGmailStatus() {
+        const token = Cookies.get("session_token");
         const tenantDetailId = Cookies.get("tenantDetailId");
         if (!tenantDetailId) return;
         try {
             setLoadingGmail(true);
-            const res = await fetch(`${API_BASE}/gmail/status/${tenantDetailId}`);
+            const res = await fetch(`${API_BASE}/gmail/status/${tenantDetailId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                credentials: "include",
+            });
             if (res.ok) {
                 const data = await res.json();
                 setGmailStatus(data);
@@ -283,12 +289,20 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
         }
     }
 
+
     async function handleConnectGmail() {
+        const token = Cookies.get("session_token");
         const tenantDetailId = Cookies.get("tenantDetailId");
         if (!tenantDetailId) return;
         try {
             const res = await fetch(
-                `${API_BASE}/gmail/auth?tenantDetailId=${tenantDetailId}`
+                `${API_BASE}/gmail/auth?tenantDetailId=${tenantDetailId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    credentials: "include",
+                }
             );
             const data = await res.json();
             if (data.authUrl) {
@@ -299,18 +313,25 @@ export function ForwardingTab({ accounts, showStatus }: ForwardingTabProps) {
         }
     }
 
+
     async function handleDisconnectGmail() {
+        const token = Cookies.get("session_token");
         const tenantDetailId = Cookies.get("tenantDetailId");
         if (!tenantDetailId) return;
         try {
             await fetch(`${API_BASE}/gmail/disconnect/${tenantDetailId}`, {
                 method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                credentials: "include",
             });
             checkGmailStatus();
         } catch (error) {
             console.error("Error disconnecting Gmail:", error);
         }
     }
+
 
     return (
         <div className="space-y-6">

@@ -174,7 +174,9 @@
             "PaymentRequest": "Solicitudes de Pago",
             "OutflowManagement": "Gestión de Egresos",
             "PurchaseOrder": "Órdenes de Compra",
-            "BusinessUnits": "Unidades de Negocio"
+            "BusinessUnits": "Unidades de Negocio",
+            "CashRequests": "Solicitudes de Efectivo",
+            "Workflows": "Flujos de Trabajo"
         },
         "bottom": {
             "Settings": "Configuración",

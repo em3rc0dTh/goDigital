@@ -243,18 +243,27 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
     const renderActionButtons = () => {
         if (!canAction || data.status === 'rejected' || data.status === 'paid') return null;
 
+        const isTreasurer = role === "treasurer";
+
         return (
             <div className="flex gap-2">
-                <Button
-                    onClick={() => openActionDialog('reject')}
-                    variant="outline"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 gap-2"
-                >
-                    <XCircle className="h-4 w-4" />
-                    Reject
-                </Button>
+                {/* 
+                  Treasurers only act on "Authorized" requests to mark them as Paid.
+                  They shouldn't see Approve/Authorize buttons.
+                */}
+                
+                {(!isTreasurer || data.status === 'authorized') && (
+                    <Button
+                        onClick={() => openActionDialog('reject')}
+                        variant="outline"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 gap-2"
+                    >
+                        <XCircle className="h-4 w-4" />
+                        Reject
+                    </Button>
+                )}
 
-                {data.status === 'pending' && (
+                {data.status === 'pending' && !isTreasurer && (
                     <Button
                         onClick={() => openActionDialog('approve')}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
@@ -264,7 +273,7 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                     </Button>
                 )}
 
-                {data.status === 'approved' && (
+                {data.status === 'approved' && !isTreasurer && (
                     <Button
                         onClick={() => openActionDialog('authorize')}
                         className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
@@ -453,8 +462,8 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                                 <h4 className="font-medium text-blue-900 mb-1">Action Required</h4>
                                 <p className="text-sm text-blue-800/80">
                                     Current Status: <span className="font-bold uppercase">{data.status}</span>.
-                                    {data.status === 'pending' && " Please review and approve this request."}
-                                    {data.status === 'approved' && " Please authorize this request for payment."}
+                                    {data.status === 'pending' && (role === "treasurer" ? " Waiting for project owner approval." : " Please review and approve this request.")}
+                                    {data.status === 'approved' && (role === "treasurer" ? " Waiting for authorization." : " Please authorize this request for payment.")}
                                     {data.status === 'authorized' && " Please process the payment and upload proof."}
                                 </p>
                             </div>

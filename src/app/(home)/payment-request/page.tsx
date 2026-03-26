@@ -532,14 +532,12 @@ export default function PaymentRequestPage() {
         const amount = parseFloat(newData.amount) || 0;
         const tax = parseFloat(newData.tax) || 0;
 
-        // Calculate total (Amount + Tax)
-        const calculatedTotal = Number((amount + tax).toFixed(2));
-
-        // Only update if the value is different to avoid potential cycles
-        // though strictly setting key values is usually fine in this direction
+        // Calculate total: Amount + (Amount * Tax / 100)
+        const calculatedTotal = Number((amount + (amount * (tax / 100))).toFixed(2));
+        
+        // Update the total_amount field
         newData.total_amount = calculatedTotal;
 
-        console.log("Form changed:", newData);
         setFormData(newData);
     };
 

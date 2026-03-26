@@ -5,7 +5,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 const odooApi = axios.create({
     baseURL: `${API_URL}/api/odoo`,
+    withCredentials: true,
 });
+
 
 export const odooService = {
     getOrders: async (): Promise<OdooPurchaseOrder[]> => {

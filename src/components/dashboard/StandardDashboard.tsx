@@ -1,11 +1,11 @@
 "use client"
 import { useEffect, useState } from "react";
-import { 
-  Plus, 
-  FileText, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
+import {
+  Plus,
+  FileText,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
   ArrowRight,
   TrendingUp,
   Wallet
@@ -39,7 +39,7 @@ export function StandardDashboard({ workspaceName, userRole }: StandardDashboard
     try {
       const token = Cookies.get("session_token");
       const tenantDetailId = Cookies.get("tenantDetailId");
-      
+
       const res = await fetch(`${API_BASE}/payment-requests`, {
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -50,12 +50,12 @@ export function StandardDashboard({ workspaceName, userRole }: StandardDashboard
 
       if (res.ok) {
         const data = await res.json();
-        const sorted = Array.isArray(data) ? data.sort((a: any, b: any) => 
+        const sorted = Array.isArray(data) ? data.sort((a: any, b: any) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         ) : [];
-        
+
         setRecentRequests(sorted.slice(0, 5));
-        
+
         // Calculate stats
         const counts = sorted.reduce((acc: any, curr: any) => {
           const status = curr.status.toLowerCase();
@@ -64,7 +64,7 @@ export function StandardDashboard({ workspaceName, userRole }: StandardDashboard
           if (status === 'paid') acc.paid++;
           return acc;
         }, { pending: 0, approved: 0, paid: 0 });
-        
+
         setStats(counts);
       }
     } catch (error) {
@@ -95,20 +95,12 @@ export function StandardDashboard({ workspaceName, userRole }: StandardDashboard
           </p>
         </div>
         <div className="flex gap-3">
-          <Button 
-             onClick={() => router.push('/payment-request')}
-             className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 gap-2 h-12 px-6 rounded-xl transition-all hover:scale-105 active:scale-95"
+          <Button
+            onClick={() => router.push('/payment-request')}
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 gap-2 h-12 px-6 rounded-xl transition-all hover:scale-105 active:scale-95"
           >
             <Plus size={20} />
             Nueva Solicitud
-          </Button>
-          <Button 
-             variant="outline"
-             onClick={() => router.push('/cash-request')}
-             className="border-slate-200 text-slate-700 h-12 px-6 rounded-xl hover:bg-slate-50 transition-all gap-2"
-          >
-            <Wallet size={18} />
-            Rendir Caja
           </Button>
         </div>
       </div>
@@ -130,7 +122,7 @@ export function StandardDashboard({ workspaceName, userRole }: StandardDashboard
 
         <Card className="border-none bg-gradient-to-br from-blue-50 to-cyan-50 shadow-sm overflow-hidden">
           <CardContent className="p-6 relative">
-             <div className="absolute top-4 right-4 text-blue-500/20">
+            <div className="absolute top-4 right-4 text-blue-500/20">
               <CheckCircle2 size={64} />
             </div>
             <p className="text-blue-700 font-medium text-sm mb-1 uppercase tracking-wider">Aprobadas</p>
@@ -143,7 +135,7 @@ export function StandardDashboard({ workspaceName, userRole }: StandardDashboard
 
         <Card className="border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-sm overflow-hidden">
           <CardContent className="p-6 relative">
-             <div className="absolute top-4 right-4 text-purple-500/20">
+            <div className="absolute top-4 right-4 text-purple-500/20">
               <Wallet size={64} />
             </div>
             <p className="text-purple-700 font-medium text-sm mb-1 uppercase tracking-wider">Pagadas</p>
@@ -163,11 +155,11 @@ export function StandardDashboard({ workspaceName, userRole }: StandardDashboard
               <FileText size={20} className="text-blue-600" />
               Solicitudes Recientes
             </h2>
-            <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-blue-600 hover:text-blue-700 gap-1 font-semibold"
-                onClick={() => router.push('/payment-requests')}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-blue-600 hover:text-blue-700 gap-1 font-semibold"
+              onClick={() => router.push('/payment-requests')}
             >
               Ver todas
               <ArrowRight size={16} />
@@ -176,9 +168,9 @@ export function StandardDashboard({ workspaceName, userRole }: StandardDashboard
 
           <div className="space-y-3">
             {isLoading ? (
-               Array(3).fill(0).map((_, i) => (
-                 <div key={i} className="h-20 bg-slate-50 animate-pulse rounded-2xl" />
-               ))
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="h-20 bg-slate-50 animate-pulse rounded-2xl" />
+              ))
             ) : recentRequests.length > 0 ? (
               recentRequests.map((req) => {
                 const status = req.status.toLowerCase();
@@ -186,7 +178,7 @@ export function StandardDashboard({ workspaceName, userRole }: StandardDashboard
                 const StatusIcon = config.icon;
 
                 return (
-                  <div 
+                  <div
                     key={req._id}
                     onClick={() => router.push(`/payment-request/${req._id}`)}
                     className="group bg-white border border-slate-100 p-4 rounded-2xl flex items-center justify-between hover:border-blue-200 hover:shadow-md transition-all cursor-pointer"
@@ -222,51 +214,93 @@ export function StandardDashboard({ workspaceName, userRole }: StandardDashboard
             )}
           </div>
         </div>
+        {/* Panel de Resumen de Montos */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-2">
+            <TrendingUp size={20} className="text-blue-600" />
+            Resumen de Montos
+          </h2>
 
-        {/* Shortcuts / Sidebar */}
-        <div className="space-y-6">
-          <div className="bg-slate-900 rounded-3xl p-6 text-white shadow-xl shadow-slate-200 relative overflow-hidden">
-             <div className="absolute -bottom-6 -right-6 text-white/5">
-                <TrendingUp size={160} />
-             </div>
-             <h3 className="text-lg font-bold mb-2">Consejo GoDigital</h3>
-             <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                Puedes ver el flujo de aprobación en tiempo real entrando a los detalles de tu solicitud.
-             </p>
-             <Button className="w-full bg-white text-slate-900 hover:bg-slate-100 font-bold rounded-xl h-12">
-               Explorar Flujos
-             </Button>
-          </div>
+          <Card className="border-none bg-white shadow-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-0 divide-y divide-slate-100">
 
-          <Card className="border-slate-100 rounded-3xl shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Módulos Sugeridos</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-               <button 
-                  onClick={() => router.push('/projects')}
-                  className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-all text-slate-700 group"
-               >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-orange-100 text-orange-600 p-2 rounded-lg">
-                      <TrendingUp size={18} />
-                    </div>
-                    <span className="font-semibold">Mis Proyectos</span>
+              {/* Total pendiente */}
+              <div className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-yellow-50">
+                    <Clock size={18} className="text-yellow-600" />
                   </div>
-                  <ArrowRight size={16} className="text-slate-300 group-hover:text-slate-600" />
-               </button>
-               <button 
-                  onClick={() => router.push('/entities')}
-                  className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-all text-slate-700 group"
-               >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-emerald-100 text-emerald-600 p-2 rounded-lg">
-                      <CheckCircle2 size={18} />
-                    </div>
-                    <span className="font-semibold">Proveedores</span>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Por pagar</p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {recentRequests
+                        .filter(r => r.status.toLowerCase() === 'pending')
+                        .reduce((acc, r) => acc + (r.total || 0), 0)
+                        .toLocaleString('es-PE', { style: 'currency', currency: 'PEN' })}
+                    </p>
                   </div>
-                  <ArrowRight size={16} className="text-slate-300 group-hover:text-slate-600" />
-               </button>
+                </div>
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-none rounded-lg">
+                  {stats.pending}
+                </Badge>
+              </div>
+
+              {/* Total aprobado */}
+              <div className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-blue-50">
+                    <CheckCircle2 size={18} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Aprobado</p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {recentRequests
+                        .filter(r => ['approved', 'authorized'].includes(r.status.toLowerCase()))
+                        .reduce((acc, r) => acc + (r.total || 0), 0)
+                        .toLocaleString('es-PE', { style: 'currency', currency: 'PEN' })}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-none rounded-lg">
+                  {stats.approved}
+                </Badge>
+              </div>
+
+              {/* Total pagado */}
+              <div className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-purple-50">
+                    <Wallet size={18} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Pagado</p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {recentRequests
+                        .filter(r => r.status.toLowerCase() === 'paid')
+                        .reduce((acc, r) => acc + (r.total || 0), 0)
+                        .toLocaleString('es-PE', { style: 'currency', currency: 'PEN' })}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-none rounded-lg">
+                  {stats.paid}
+                </Badge>
+              </div>
+
+            </CardContent>
+          </Card>
+
+          {/* Total general */}
+          <Card className="border-none bg-gradient-to-br from-slate-800 to-slate-900 shadow-sm rounded-2xl">
+            <CardContent className="p-5">
+              <p className="text-slate-400 text-xs uppercase tracking-wider font-medium mb-1">Total en circulación</p>
+              <p className="text-white text-2xl font-bold">
+                {recentRequests
+                  .filter(r => r.status.toLowerCase() !== 'rejected')
+                  .reduce((acc, r) => acc + (r.total || 0), 0)
+                  .toLocaleString('es-PE', { style: 'currency', currency: 'PEN' })}
+              </p>
+              <p className="text-slate-500 text-xs mt-1">Basado en tus últimas solicitudes</p>
             </CardContent>
           </Card>
         </div>

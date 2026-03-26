@@ -385,10 +385,18 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
       // 🔥 Cargar emails de Gmail (puerto 4000)
       let gmailEmails: any[] = [];
       try {
+        const token = Cookies.get("session_token");
         const gmailRes = await fetch(
           `${API_BASE}/gmail/emails-list/${tenantDetailId}`,
-          { cache: "no-store" }
+          {
+            cache: "no-store",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            credentials: "include",
+          }
         );
+
 
         if (gmailRes.ok) {
           const gmailData = await gmailRes.json();
@@ -488,9 +496,16 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
 
   const loadForwardingConfig = async () => {
     try {
+      const token = Cookies.get("session_token");
       if (!tenantDetailId) throw new Error("tenantDetailId not found");
 
-      const res = await fetch(`${API_BASE}/gmail/${tenantDetailId}`);
+      const res = await fetch(`${API_BASE}/gmail/${tenantDetailId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+      });
+
       if (res.status === 404) {
         console.warn("Forwarding config not found (404)");
         return null;
@@ -525,11 +540,15 @@ export default function EmailsPage({ activeDatabase }: EmailsPageProps) {
         return;
       }
 
+      const token = Cookies.get("session_token");
       const res = await fetch(`${API_BASE}/gmail/fetch-emails`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
+
         body: JSON.stringify({
           idFetching: config.id,
           routing: {

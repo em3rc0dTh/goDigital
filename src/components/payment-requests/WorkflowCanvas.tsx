@@ -11,8 +11,6 @@ import {
     Node,
     Edge,
     NodeProps,
-    useNodesState,
-    useEdgesState,
     BackgroundVariant,
     Panel,
 } from "@xyflow/react";
@@ -29,6 +27,7 @@ import {
     Mail,
 } from "lucide-react";
 import { format } from "date-fns";
+import Cookies from "js-cookie";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -300,7 +299,7 @@ function buildGraph(workflow: PRWorkflowState | null): { nodes: Node[]; edges: E
     });
 
     // Rejection edges from each intermediate node
-    ["pending", "approved", "authorized"].forEach((src, i) => {
+    ["pending", "approved", "authorized"].forEach((src) => {
         const srcCompleted = completedStatuses.has(src);
         edges.push({
             id: `${src}->rejected`,
@@ -346,7 +345,18 @@ export function WorkflowCanvas({ paymentRequestId }: WorkflowCanvasProps) {
         try {
             if (!silent) setLoading(true);
             else setRefreshing(true);
-            const res = await fetch(`/api/payment-requests/${paymentRequestId}/workflow-timeline`, { cache: "no-store" });
+            const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
+            const token = Cookies.get("session_token");
+            const tenantDetailId = Cookies.get("tenantDetailId");
+
+            const res = await fetch(`${API_BASE}/payment-requests/${paymentRequestId}/workflow-status`, { 
+                cache: "no-store",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "x-tenant-detail-id": tenantDetailId || "",
+                },
+                credentials: "include",
+            });
             if (res.ok) setWorkflow(await res.json());
         } finally {
             setLoading(false);
@@ -357,8 +367,6 @@ export function WorkflowCanvas({ paymentRequestId }: WorkflowCanvasProps) {
     useEffect(() => { fetchWorkflow(false); }, [fetchWorkflow]);
 
     const { nodes: initialNodes, edges: initialEdges } = useMemo(() => buildGraph(workflow), [workflow]);
-    const [nodes, , onNodesChange] = useNodesState(initialNodes);
-    const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
     // Sync nodes/edges when workflow changes
     const [syncedNodes, setSyncedNodes] = useState(initialNodes);

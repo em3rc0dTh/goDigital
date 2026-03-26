@@ -23,7 +23,7 @@ import {
     Filter, RefreshCw, FileUp,
     ChevronLeft, ChevronRight, AlertTriangle,
     RotateCcw, ArrowLeftRight, CreditCard,
-    XCircle, ReceiptText, PackageCheck,
+    XCircle, X, ReceiptText, PackageCheck,
     Calendar, FileText, Camera, Building, Sparkles, Clock, User
 } from "lucide-react";
 import { toast } from "sonner";
@@ -61,6 +61,8 @@ interface CashRequest {
     balance?: number;
     expense_files?: string[];
     expense_items?: any[];
+    payment_proof?: string;
+    proof?: string;
     createdAt: string;
 }
 
@@ -103,7 +105,7 @@ function StatusBadge({ status }: { status: CRStatus }) {
 
 function useApi() {
     const base = process.env.NEXT_PUBLIC_API_BASE ?? "";
-    const token = Cookies.get("token");
+    const token = Cookies.get("session_token");
     const headers = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
     const opts = { headers, credentials: "include" as const };
 
@@ -262,36 +264,58 @@ function NewCashRequestDialog({
 }
 
 // ── Action dialog ──────────────────────────────────────────────────────────────
-
 type ActionType = "approve" | "authorize" | "pay" | "submit-expense" | "review" | "close" | "reject" | null;
 
-interface ActionDialogProps {
+function ActionDialog({ cr: initialCr, action, onClose, onDone }: {
     cr: CashRequest | null;
     action: ActionType;
     onClose: () => void;
     onDone: () => void;
-}
-
-function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
+}) {
     const { t } = useI18n();
     const api = useApi();
-    const [form, setForm] = useState<Record<string, string>>({});
+    const [cr, setCr] = useState<CashRequest | null>(initialCr);
     const [loading, setLoading] = useState(false);
     const [uploadingFile, setUploadingFile] = useState(false);
     const [error, setError] = useState("");
 
-    const resetKey = `${action ?? ""}-${cr?._id ?? ""}`;
-    const [prevKey, setPrevKey] = useState(resetKey);
+    // Sync initialCr when it changes from outside
+    useEffect(() => { setCr(initialCr); }, [initialCr]);
 
-    if (resetKey !== prevKey) {
-        setPrevKey(resetKey);
+    const [form, setForm] = useState({
+        authorizedAmount: cr?.authorized_amount?.toString() || "",
+        expensePeriodDays: cr?.expense_period_days?.toString() || "7",
+        paymentProof: cr?.payment_proof || "",
+        totalSpent: cr?.total_spent?.toString() || "0",
+        files: cr?.expense_files?.join(", ") || "",
+        notes: "",
+        proof: "",
+        reason: "",
+    });
+
+    // Auto-sync total spent from AI items
+    useEffect(() => {
+        if (cr?.expense_items) {
+            const total = cr.expense_items.reduce((acc: number, it: any) => acc + (it.amount || 0), 0);
+            setForm(prev => ({ ...prev, totalSpent: total.toString() }));
+        }
+    }, [cr?.expense_items]);
+
+    // Reset form when action or cr changes
+    useEffect(() => {
         setForm({
-            files: cr?.expense_files?.join(", ") ?? "",
+            notes: cr?.notes || "",
+            authorizedAmount: cr?.authorized_amount ? String(cr.authorized_amount) : "",
+            expensePeriodDays: cr?.expense_period_days ? String(cr.expense_period_days) : "7",
             totalSpent: cr?.total_spent != null ? String(cr.total_spent) : "",
-            notes: cr?.notes ?? ""
+            files: cr?.expense_files?.join(", ") || "",
+            paymentProof: "", // Reset specific fields for new actions
+            proof: "",
+            reason: "",
         });
         setError("");
-    }
+    }, [action, cr]);
+
 
     if (!cr || !action) return null;
 
@@ -368,7 +392,7 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
             formData.append("method", "n8n");
 
             const base = process.env.NEXT_PUBLIC_API_BASE ?? "";
-            const token = Cookies.get("token");
+            const token = Cookies.get("session_token");
 
             const res = await fetch(`${base}/cash-requests/${cr._id}/add-expense-ai`, {
                 method: "POST",
@@ -385,13 +409,18 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
             }
 
             const result = await res.json();
+            
+            // Actualizar estado local para que los nuevos items aparezcan inmediatamente
+            // Si el backend devolvió el objeto completo lo usamos directo, si no mezclamos
+            const updatedCr = result._id ? result : { ...cr, ...result };
+            setCr(updatedCr);
 
             // Si el backend devolvió el objeto actualizado, lo usamos para el formulario
-            if (result.total_spent != null || result.expense_files) {
+            if (updatedCr.total_spent != null || updatedCr.expense_files) {
                 setForm(prev => ({
                     ...prev,
-                    totalSpent: result.total_spent != null ? String(result.total_spent) : prev.totalSpent,
-                    files: result.expense_files?.join(", ") ?? prev.files
+                    totalSpent: updatedCr.total_spent != null ? String(updatedCr.total_spent) : prev.totalSpent,
+                    files: updatedCr.expense_files?.join(", ") ?? prev.files
                 }));
             }
 
@@ -403,6 +432,98 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
         } finally {
             setUploadingFile(false);
             if (e.target) e.target.value = "";
+        }
+    };
+
+    const handleRemoveExpenseItem = async (idx: number) => {
+        if (!cr) return;
+        setLoading(true);
+        try {
+            const newItems = [...(cr.expense_items || [])];
+            const newFiles = [...(cr.expense_files || [])];
+            
+            newItems.splice(idx, 1);
+            if (newFiles[idx]) newFiles.splice(idx, 1); // Remover foto asociada
+            
+            const newTotal = newItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+            
+            const base = process.env.NEXT_PUBLIC_API_BASE ?? "";
+            const token = Cookies.get("session_token");
+            const res = await fetch(`${base}/cash-requests/${cr._id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                credentials: "include",
+                body: JSON.stringify({ 
+                    expense_items: newItems, 
+                    expense_files: newFiles,
+                    total_spent: newTotal 
+                }),
+            });
+
+            if (!res.ok) throw new Error("Error al eliminar item");
+            const result = await res.json();
+            
+            setCr(result);
+            setForm(prev => ({ 
+                ...prev, 
+                totalSpent: String(newTotal),
+                files: newFiles.join(", ")
+            }));
+            toast.success("Item y foto eliminados");
+            onDone();
+        } catch (err) {
+            toast.error("Error al eliminar el item");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRemoveExpenseFile = async (idx: number) => {
+        if (!cr) return;
+        setLoading(true);
+        try {
+            const newFiles = [...(cr.expense_files || [])];
+            const newItems = [...(cr.expense_items || [])];
+            
+            newFiles.splice(idx, 1);
+            if (newItems[idx]) newItems.splice(idx, 1); // Remover item asociado
+            
+            const newTotal = newItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+            
+            const base = process.env.NEXT_PUBLIC_API_BASE ?? "";
+            const token = Cookies.get("session_token");
+            const res = await fetch(`${base}/cash-requests/${cr._id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                credentials: "include",
+                body: JSON.stringify({ 
+                    expense_files: newFiles,
+                    expense_items: newItems,
+                    total_spent: newTotal
+                }),
+            });
+
+            if (!res.ok) throw new Error("Error al eliminar archivo");
+            const result = await res.json();
+            
+            setCr(result);
+            setForm(prev => ({ 
+                ...prev, 
+                files: newFiles.join(", "),
+                totalSpent: String(newTotal)
+            }));
+            toast.success("Archivo e item eliminados");
+            onDone();
+        } catch (err) {
+            toast.error("Error al eliminar el archivo");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -426,7 +547,9 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
                     <div className="bg-muted/50 rounded-xl px-4 py-3 text-sm space-y-1.5 border border-border/50">
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                             <span className="text-muted-foreground text-xs">ID</span>
-                            <span className="font-mono text-xs bg-background px-2 py-0.5 rounded border">{cr._id.slice(-8)}</span>
+                            <span className="font-mono text-xs bg-background px-2 py-0.5 rounded border">
+                                …{cr._id?.toString().slice(-8) ?? "—"}
+                            </span>
                         </div>
                         <div className="flex items-start justify-between gap-2">
                             <span className="text-muted-foreground text-xs shrink-0">{t("CashRequests.dialogs.action.summary.purpose")}</span>
@@ -516,10 +639,19 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <div className="text-right shrink-0 ml-2">
+                                                    <div className="text-right shrink-0 ml-2 flex flex-col items-end gap-1">
                                                         <p className="text-[11px] font-black text-indigo-700 dark:text-indigo-400">
                                                             {it.amount?.toLocaleString()} {it.currency}
                                                         </p>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="h-5 w-5 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                                                            onClick={() => handleRemoveExpenseItem(idx)}
+                                                            disabled={loading}
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
                                                     </div>
                                                 </div>
 
@@ -549,21 +681,35 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
                                     <div className="flex flex-wrap gap-3">
                                         {cr?.expense_files?.map((url: string, idx: number) => {
                                             const apiBase = process.env.NEXT_PUBLIC_API_BASE || "";
-                                            // Evitar doble /api si la URL ya lo tiene y el apiBase también
-                                            const cleanUrl = url.startsWith("/api") && apiBase.endsWith("/api")
-                                                ? url.substring(4)
-                                                : url;
-                                            const fullUrl = url.startsWith("http") ? url : `${apiBase}${cleanUrl}`;
+                                            let fullUrl = url;
+                                            if (!url.startsWith("http")) {
+                                                const path = url.startsWith("/api/files") ? url : `/api/files/${url}`;
+                                                const base = apiBase.replace(/\/api\/?$/, "");
+                                                fullUrl = `${base}${path}`;
+                                            }
                                             return (
-                                                <a
-                                                    key={idx}
-                                                    href={fullUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="h-20 w-20 rounded-xl overflow-hidden border-2 border-muted hover:border-indigo-400 transition-all shadow-sm group"
-                                                >
-                                                    <img src={fullUrl} alt={`Evidencia ${idx + 1}`} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                                                </a>
+                                                <div key={idx} className="relative group">
+                                                    <a
+                                                        href={fullUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="h-20 w-20 block rounded-xl overflow-hidden border-2 border-muted hover:border-indigo-400 transition-all shadow-sm"
+                                                    >
+                                                        <img src={fullUrl} alt={`Evidencia ${idx + 1}`} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                                                    </a>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="icon"
+                                                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            handleRemoveExpenseFile(idx);
+                                                        }}
+                                                        disabled={loading}
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
                                             );
                                         })}
                                     </div>
@@ -695,7 +841,7 @@ function ActionDialog({ cr, action, onClose, onDone }: ActionDialogProps) {
 
 // ── Detail dialog ──────────────────────────────────────────────────────────────
 
-function DetailDialog({ cr, onClose, onAction, onReload }: {
+function DetailDialog({ cr: initialCr, onClose, onAction, onReload }: {
     cr: CashRequest | null;
     onClose: () => void;
     onAction: (a: ActionType) => void;
@@ -703,8 +849,12 @@ function DetailDialog({ cr, onClose, onAction, onReload }: {
 }) {
     const { t } = useI18n();
     const { can } = usePermissions();
+    const [cr, setCr] = useState<CashRequest | null>(initialCr);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    // Sync initialCr when it changes from outside
+    useEffect(() => { setCr(initialCr); }, [initialCr]);
 
     if (!cr) return null;
 
@@ -717,7 +867,7 @@ function DetailDialog({ cr, onClose, onAction, onReload }: {
             formData.append("file", file);
             formData.append("method", "n8n");
             const base = process.env.NEXT_PUBLIC_API_BASE ?? "";
-            const token = Cookies.get("token");
+            const token = Cookies.get("session_token");
             const res = await fetch(`${base}/cash-requests/${cr._id}/add-expense-ai`, {
                 method: "POST",
                 headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
@@ -725,6 +875,9 @@ function DetailDialog({ cr, onClose, onAction, onReload }: {
                 body: formData,
             });
             if (!res.ok) throw new Error("Error al subir archivo");
+            const result = await res.json();
+            
+            setCr(result); // Instant refresh
             toast.success("Comprobante analizado con éxito");
             onReload();
         } catch (err) {
@@ -732,6 +885,88 @@ function DetailDialog({ cr, onClose, onAction, onReload }: {
         } finally {
             setUploading(false);
             if (e.target) e.target.value = "";
+        }
+    };
+
+    const handleRemoveExpenseItem = async (idx: number) => {
+        if (!cr) return;
+        setUploading(true);
+        try {
+            const newItems = [...(cr.expense_items || [])];
+            const newFiles = [...(cr.expense_files || [])];
+            
+            newItems.splice(idx, 1);
+            if (newFiles[idx]) newFiles.splice(idx, 1); // Remover foto asociada
+            
+            const newTotal = newItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+            
+            const base = process.env.NEXT_PUBLIC_API_BASE ?? "";
+            const token = Cookies.get("session_token");
+            const res = await fetch(`${base}/cash-requests/${cr._id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                credentials: "include",
+                body: JSON.stringify({ 
+                    expense_items: newItems, 
+                    expense_files: newFiles,
+                    total_spent: newTotal 
+                }),
+            });
+
+            if (!res.ok) throw new Error("Error al eliminar item");
+            const result = await res.json();
+            
+            setCr(result);
+            toast.success("Item y foto eliminados");
+            onReload();
+        } catch (err) {
+            toast.error("Error al eliminar el item");
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleRemoveExpenseFile = async (idx: number) => {
+        if (!cr) return;
+        setUploading(true);
+        try {
+            const newFiles = [...(cr.expense_files || [])];
+            const newItems = [...(cr.expense_items || [])];
+            
+            newFiles.splice(idx, 1);
+            if (newItems[idx]) newItems.splice(idx, 1); // Remover item asociado
+            
+            const newTotal = newItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+            
+            const base = process.env.NEXT_PUBLIC_API_BASE ?? "";
+            const token = Cookies.get("session_token");
+            const res = await fetch(`${base}/cash-requests/${cr._id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                credentials: "include",
+                body: JSON.stringify({ 
+                    expense_files: newFiles,
+                    expense_items: newItems,
+                    total_spent: newTotal
+                }),
+            });
+
+            if (!res.ok) throw new Error("Error al eliminar archivo");
+            const result = await res.json();
+            
+            setCr(result);
+            toast.success("Archivo e item eliminados");
+            onReload();
+        } catch (err) {
+            toast.error("Error al eliminar el archivo");
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -950,13 +1185,31 @@ function DetailDialog({ cr, onClose, onAction, onReload }: {
                             <div className="flex flex-wrap gap-2.5">
                                 {cr.expense_files?.map((url: string, idx: number) => {
                                     const apiBase = process.env.NEXT_PUBLIC_API_BASE || "";
-                                    const cleanUrl = url.startsWith("/api") && apiBase.endsWith("/api") ? url.substring(4) : url;
-                                    const fullUrl = url.startsWith("http") ? url : `${apiBase}${cleanUrl}`;
+                                    let fullUrl = url;
+                                    if (!url.startsWith("http")) {
+                                        const path = url.startsWith("/api/files") ? url : `/api/files/${url}`;
+                                        const base = apiBase.replace(/\/api\/?$/, "");
+                                        fullUrl = `${base}${path}`;
+                                    }
                                     return (
-                                        <a key={idx} href={fullUrl} target="_blank" rel="noopener noreferrer"
-                                            className="h-20 w-20 rounded-xl overflow-hidden border-2 border-background shadow-md hover:border-indigo-400 transition-all group">
-                                            <img src={fullUrl} alt={`Evidencia ${idx + 1}`} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                                        </a>
+                                        <div key={idx} className="relative group/evidence">
+                                            <a href={fullUrl} target="_blank" rel="noopener noreferrer"
+                                                className="h-20 w-20 block rounded-xl overflow-hidden border-2 border-background shadow-md hover:border-indigo-400 transition-all">
+                                                <img src={fullUrl} alt={`Evidencia ${idx + 1}`} className="h-full w-full object-cover group-hover/evidence:scale-110 transition-transform duration-300" />
+                                            </a>
+                                            <Button
+                                                variant="destructive"
+                                                size="icon"
+                                                className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full shadow-lg opacity-0 group-hover/evidence:opacity-100 transition-opacity"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleRemoveExpenseFile(idx);
+                                                }}
+                                                disabled={uploading}
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </Button>
+                                        </div>
                                     );
                                 })}
                             </div>
@@ -988,9 +1241,10 @@ function DetailDialog({ cr, onClose, onAction, onReload }: {
 
 // ── Action buttons helper ──────────────────────────────────────────────────────
 
-function CRActionButtons({ cr, onAction, compact = false }: {
+function CRActionButtons({ cr, onAction, onShowDetail, compact = false }: {
     cr: CashRequest;
     onAction: (cr: CashRequest, action: ActionType) => void;
+    onShowDetail?: (cr: CashRequest) => void;
     compact?: boolean;
 }) {
     const { t } = useI18n();
@@ -1009,7 +1263,14 @@ function CRActionButtons({ cr, onAction, compact = false }: {
     ];
 
     return (
-        <>
+        <div className="flex items-center gap-1">
+            {onShowDetail && (
+                <Button size="sm" variant="ghost" className={btnClass}
+                    onClick={() => onShowDetail(cr)}>
+                    <Eye className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    {!compact && <span className="truncate">{t("CashRequests.table.actions")}</span>}
+                </Button>
+            )}
             {actions.map(({ status, action, icon: Icon, color, label }) => {
                 const statuses = Array.isArray(status) ? status : [status];
                 if (!statuses.includes(cr.status as CRStatus)) return null;
@@ -1028,7 +1289,7 @@ function CRActionButtons({ cr, onAction, compact = false }: {
                     </Button>
                 );
             })}
-        </>
+        </div>
     );
 }
 
@@ -1054,7 +1315,7 @@ export default function CashRequestsPage() {
         setLoading(true);
         try {
             const base = process.env.NEXT_PUBLIC_API_BASE ?? "";
-            const token = Cookies.get("token");
+            const token = Cookies.get("session_token");
             const headers: Record<string, string> = { "Content-Type": "application/json" };
             if (token) headers["Authorization"] = `Bearer ${token}`;
             const data = await fetch(`${base}/cash-requests`, { headers, credentials: "include" }).then(r => r.json());
@@ -1228,12 +1489,11 @@ export default function CashRequestsPage() {
                         return (
                             <Card key={cr._id} className="shadow-sm border-border/60 overflow-hidden">
                                 <CardContent className="p-4 space-y-3">
-                                    {/* Top row */}
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0 flex-1 space-y-0.5">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                                                    …{cr._id.slice(-8)}
+                                                    …{cr._id?.toString().slice(-8) ?? "—"}
                                                 </span>
                                                 <span className="font-semibold text-sm truncate">{projectName}</span>
                                             </div>
@@ -1242,7 +1502,6 @@ export default function CashRequestsPage() {
                                         <StatusBadge status={cr.status} />
                                     </div>
 
-                                    {/* Amount + date row */}
                                     <div className="flex justify-between items-center pt-2 border-t border-muted/60">
                                         <div className="text-xs text-muted-foreground">
                                             {format(new Date(cr.createdAt), "d MMM yyyy", { locale: es })}
@@ -1253,16 +1512,8 @@ export default function CashRequestsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Action buttons */}
-                                    <div className="flex items-center gap-2 pt-2 border-t border-muted/60 flex-wrap">
-                                        <Button size="sm" variant="outline" className="h-8 px-3 gap-1.5 flex-none"
-                                            onClick={() => setDetailCr(cr)}>
-                                            <Eye className="h-3.5 w-3.5" />
-                                            <span className="text-xs">{t("CashRequests.table.actions")}</span>
-                                        </Button>
-                                        <div className="flex items-center gap-2 flex-1 flex-wrap justify-end">
-                                            <CRActionButtons cr={cr} onAction={handleOpenAction} />
-                                        </div>
+                                    <div className="flex items-center gap-2 pt-2 border-t border-muted/60 flex-wrap justify-end">
+                                        <CRActionButtons cr={cr} onAction={handleOpenAction} onShowDetail={setDetailCr} />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -1305,7 +1556,7 @@ export default function CashRequestsPage() {
                                     return (
                                         <TableRow key={cr._id} className="group hover:bg-muted/20 transition-colors">
                                             <TableCell className="font-mono text-xs text-muted-foreground">
-                                                …{cr._id.slice(-8)}
+                                                …{cr._id?.toString().slice(-8) ?? "—"}
                                             </TableCell>
                                             <TableCell className="font-medium max-w-[140px]">
                                                 <span className="truncate block">{projectName}</span>
@@ -1326,12 +1577,8 @@ export default function CashRequestsPage() {
                                                 {format(new Date(cr.createdAt), "d MMM yyyy", { locale: es })}
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
-                                                        onClick={() => setDetailCr(cr)}>
-                                                        <Eye className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                    <CRActionButtons cr={cr} onAction={handleOpenAction} compact />
+                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <CRActionButtons cr={cr} onAction={handleOpenAction} onShowDetail={setDetailCr} compact />
                                                 </div>
                                             </TableCell>
                                         </TableRow>
