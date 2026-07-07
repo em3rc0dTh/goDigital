@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,7 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
     const [rejectionReason, setRejectionReason] = useState("");
     const [paymentDate, setPaymentDate] = useState("");
     const [debitedBankAccountId, setDebitedBankAccountId] = useState("");
+    const [targetBankAccountId, setTargetBankAccountId] = useState("");
     const [paymentProofUrl, setPaymentProofUrl] = useState("");
 
     // Data for dropdowns
@@ -60,45 +61,45 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
     const [businessUnit, setBusinessUnit] = useState<any>();
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!id) return;
+    const fetchData = useCallback(async () => {
+        if (!id) return;
 
-            try {
-                setLoading(true);
-                const token = Cookies.get("session_token");
-                const tenantDetailId = Cookies.get("tenantDetailId");
+        try {
+            setLoading(true);
+            const token = Cookies.get("session_token");
+            const tenantDetailId = Cookies.get("tenantDetailId");
 
-                const response = await fetch(`${API_BASE}/payment-requests/${id}`, {
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "x-tenant-detail-id": tenantDetailId || "",
-                    },
-                    credentials: "include",
-                });
+            const response = await fetch(`${API_BASE}/payment-requests/${id}`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "x-tenant-detail-id": tenantDetailId || "",
+                },
+                credentials: "include",
+            });
 
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error("Payment request not found");
-                    }
-                    throw new Error("Failed to fetch payment request details");
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error("Payment request not found");
                 }
-
-                const result = await response.json();
-                setBusinessUnit(result.project.business_unit_id || null)
-                console.log("Fetched Data:", result); // Debugging
-                setData(result);
-            } catch (err: any) {
-                console.error(err);
-                setError(err.message);
-                toast.error("Error loading details");
-            } finally {
-                setLoading(false);
+                throw new Error("Failed to fetch payment request details");
             }
-        };
 
-        fetchData();
+            const result = await response.json();
+            setBusinessUnit(result.project_id?.business_unit_id || null);
+            console.log("Fetched Data:", result); // Debugging
+            setData(result);
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message);
+            toast.error("Error loading details");
+        } finally {
+            setLoading(false);
+        }
     }, [id, API_BASE]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     useEffect(() => {
         // Fetch bank accounts on mount (or only when needed)
@@ -131,6 +132,7 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
         setRejectionReason("");
         setPaymentDate("");
         setDebitedBankAccountId("");
+        setTargetBankAccountId(data?.provider_bank_account_id || "");
         setPaymentProofUrl("");
         setActionDialogOpen(true);
     };
@@ -149,10 +151,23 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
             if (currentAction === 'approve') {
                 body = { notes };
             } else if (currentAction === 'authorize') {
+                if (!targetBankAccountId) {
+                    toast.error("You must select a destination account to authorize this payment.");
+                    setProcessingAction(false);
+                    return;
+                }
+                if (!debitedBankAccountId) {
+                    toast.error("You must select a debited bank account (internal origin) to authorize this payment.");
+                    setProcessingAction(false);
+                    return;
+                }
+                const targetAccountSnapshot = data?.provider_id?.bank_accounts?.find((acc: any) => acc._id === targetBankAccountId || acc.account_number === targetBankAccountId);
                 body = {
                     notes,
                     payment_date: paymentDate,
-                    debited_bank_account: debitedBankAccountId
+                    debited_bank_account: debitedBankAccountId,
+                    provider_bank_account_id: targetBankAccountId,
+                    provider_bank_account_snapshot: targetAccountSnapshot
                 };
             } else if (currentAction === 'pay') {
                 if (!paymentProofUrl) {
@@ -186,8 +201,8 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                 throw new Error(errData.error || "Failed to update status");
             }
 
-            const updatedData = await response.json();
-            setData(updatedData);
+            // We re-fetch the data to get the fully populated references (e.g. project name, bank accounts)
+            await fetchData();
 
             toast.success(`Request ${currentAction}d successfully`); // simple pluralization
             setActionDialogOpen(false);
@@ -352,19 +367,75 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="bank-account">Debited Bank Account (Optional)</Label>
-                                        <Select value={debitedBankAccountId} onValueChange={setDebitedBankAccountId}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select account" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {bankAccounts.map((acc) => (
-                                                    <SelectItem key={acc.id} value={acc.id}>
-                                                        {acc.bank_name} - {acc.alias} ({acc.currency}) - {acc.bank_account_type}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Label htmlFor="target-bank-account">Confirmed Target Account (Beneficiary) <span className="text-red-500">*</span></Label>
+                                        {data?.provider_id?.bank_accounts?.length > 0 ? (
+                                            <>
+                                                <Select value={targetBankAccountId} onValueChange={setTargetBankAccountId}>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select target account" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {data.provider_id.bank_accounts.map((acc: any) => (
+                                                            <SelectItem key={acc._id} value={acc._id}>
+                                                                {acc.bank_name} ({acc.currency}) - N°: {acc.account_number}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <p className="text-xs text-muted-foreground mt-1">You can confirm or change the destination account suggested by the employee.</p>
+                                            </>
+                                        ) : (
+                                            <div className="flex flex-col gap-3 p-4 border rounded-md bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+                                                <div className="flex items-start gap-2">
+                                                    <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                                                    <p className="text-sm text-amber-800 dark:text-amber-300">
+                                                        Este proveedor no tiene cuentas bancarias registradas. Debes registrar una cuenta antes de autorizar el pago.
+                                                    </p>
+                                                </div>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="w-full sm:w-auto self-start bg-white dark:bg-transparent border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/50" 
+                                                    onClick={(e) => { e.preventDefault(); window.open('/entities', '_blank'); }}
+                                                >
+                                                    Ir a Entidades para añadir cuenta
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bank-account">Debited Bank Account (Internal Origin) <span className="text-red-500">*</span></Label>
+                                        {bankAccounts.length > 0 ? (
+                                            <Select value={debitedBankAccountId} onValueChange={setDebitedBankAccountId}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select account" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {bankAccounts.map((acc) => (
+                                                        <SelectItem key={acc.id} value={acc.id}>
+                                                            {acc.bank_name} - {acc.alias} ({acc.currency}) - {acc.bank_account_type}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        ) : (
+                                            <div className="flex flex-col gap-3 p-4 border rounded-md bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+                                                <div className="flex items-start gap-2">
+                                                    <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                                                    <p className="text-sm text-amber-800 dark:text-amber-300">
+                                                        No se encontraron cuentas bancarias internas (origen) configuradas para esta Unidad de Negocio. Por favor, configura una cuenta para poder emitir pagos.
+                                                    </p>
+                                                </div>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="w-full sm:w-auto self-start bg-white dark:bg-transparent border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/50" 
+                                                    onClick={(e) => { e.preventDefault(); window.open('/setup', '_blank'); }}
+                                                >
+                                                    Ir a Configuración
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
                                 </>
                             )}
@@ -509,10 +580,10 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                                         <p className="text-sm font-medium text-muted-foreground">Project</p>
                                         <div className="p-3 bg-muted/40 rounded-lg border border-border/50">
                                             <p className="font-semibold text-sm sm:text-base">
-                                                {typeof data.project === 'object' ? data.project?.name : "Project ID"}
+                                                {typeof data.project_id === 'object' ? data.project_id?.name : "Project ID"}
                                             </p>
                                             <p className="text-xs text-muted-foreground mt-1 truncate font-mono">
-                                                {typeof data.project === 'object' ? data.project?.code : data.project_id}
+                                                {typeof data.project_id === 'object' ? data.project_id?.code : data.project_id}
                                             </p>
                                         </div>
                                     </div>
@@ -525,6 +596,40 @@ export default function PaymentRequestReview({ type = "review" }: { type?: "revi
                                             <p className="text-xs text-muted-foreground mt-1 truncate font-mono">
                                                 {typeof data.provider_id === 'object' ? data.provider_id?._id : data.provider_id}
                                             </p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <p className="text-sm font-medium text-muted-foreground">Cuenta de Destino (Target Account)</p>
+                                        <div className="p-3 bg-muted/40 rounded-lg border border-border/50">
+                                            {(() => {
+                                                const accountInfo = data.provider_bank_account_snapshot 
+                                                    || (typeof data.provider_id === 'object' && data.provider_id?.bank_accounts?.find((acc: any) => acc._id === data.provider_bank_account_id || acc.account_number === data.provider_bank_account_id));
+                                                
+                                                if (accountInfo) {
+                                                    return (
+                                                        <>
+                                                            <p className="font-semibold text-sm sm:text-base">
+                                                                🏦 {accountInfo.bank_name} ({accountInfo.currency})
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground mt-1 font-mono">
+                                                                N°: {accountInfo.account_number}
+                                                                {accountInfo.cci_number && ` | CCI: ${accountInfo.cci_number}`}
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground mt-1">
+                                                                {accountInfo.is_official
+                                                                    ? "Cuenta Propia"
+                                                                    : `Tercero: ${accountInfo.third_party_owner?.name || 'Desconocido'} ${accountInfo.third_party_owner?.tax_id ? `(ID: ${accountInfo.third_party_owner.tax_id})` : ''}`}
+                                                            </p>
+                                                        </>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <p className="text-xs text-muted-foreground font-mono">
+                                                        ID: {data.provider_bank_account_id || "No especificada"}
+                                                    </p>
+                                                );
+                                            })()}
                                         </div>
                                     </div>
                                 </div>

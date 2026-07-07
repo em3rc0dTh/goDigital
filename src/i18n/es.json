@@ -765,6 +765,7 @@
     },
     "PaymentRequestForm": {
         "title": "Solicitud de Pago",
+        "targetAccountHelpText": "Esta cuenta de destino es solo una sugerencia para nuestro administrador. Recuerda que la cuenta de destino definitiva podría ser confirmada en pasos posteriores.",
         "step1": {
             "title": "Nueva Solicitud de Pago",
             "subtitle": "Selecciona un proyecto para comenzar",

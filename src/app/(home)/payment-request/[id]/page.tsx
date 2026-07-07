@@ -176,6 +176,25 @@ export default function PaymentRequestDetailPage() {
                                             </p>
                                         </div>
                                     </div>
+                                    {data.provider_bank_account_snapshot && (
+                                        <div className="space-y-2 col-span-1 sm:col-span-2">
+                                            <p className="text-sm font-medium text-muted-foreground">Vendor Bank Account (Snapshot)</p>
+                                            <div className="p-3 bg-muted/40 rounded-lg border border-border/50">
+                                                <p className="font-semibold text-sm sm:text-base">
+                                                    {data.provider_bank_account_snapshot.bank_name} - {data.provider_bank_account_snapshot.currency}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground mt-1 truncate font-mono">
+                                                    {data.provider_bank_account_snapshot.account_number}
+                                                    {data.provider_bank_account_snapshot.cci_number && ` (CCI: ${data.provider_bank_account_snapshot.cci_number})`}
+                                                </p>
+                                                {!data.provider_bank_account_snapshot.is_official && data.provider_bank_account_snapshot.third_party_owner && (
+                                                    <p className="text-xs mt-1 text-orange-600">
+                                                        Third Party Owner: {data.provider_bank_account_snapshot.third_party_owner.name} (ID: {data.provider_bank_account_snapshot.third_party_owner.tax_id})
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

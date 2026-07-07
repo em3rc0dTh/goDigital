@@ -491,6 +491,56 @@ export default function PaymentRequestPage() {
             updateEnum(key, providers, '_id', 'name')
         );
 
+        if (formData.beneficiary) {
+            const selectedProvider: any = providers.find((p: any) => p._id === formData.beneficiary || p.id === formData.beneficiary);
+            if (selectedProvider && selectedProvider.bank_accounts && selectedProvider.bank_accounts.length > 0) {
+                const accounts = selectedProvider.bank_accounts;
+                if (accounts && accounts.length > 0) {
+                    newSchema.properties.provider_bank_account_id = {
+                        type: "string",
+                        title: "Cuenta de Destino (Destiny Account)",
+                        oneOf: accounts.map((acc: any) => {
+                            const ownership = acc.is_official 
+                                ? "Cuenta Propia" 
+                                : `Tercero: ${acc.third_party_owner?.name || 'Desconocido'} ${acc.third_party_owner?.tax_id ? `(ID: ${acc.third_party_owner.tax_id})` : ''}`;
+                            const cciInfo = acc.cci_number ? ` | CCI: ${acc.cci_number}` : "";
+                            
+                            return {
+                                const: acc._id || acc.account_number,
+                                title: `🏦 ${acc.bank_name} (${acc.currency}) | N°: ${acc.account_number}${cciInfo} | ${ownership}`
+                            };
+                        })
+                    };
+                    if (!newSchema.required) newSchema.required = [];
+                } else {
+                    newSchema.properties.provider_bank_account_id = {
+                        type: "string",
+                        title: "Cuenta de Destino (Destiny Account)",
+                        oneOf: [
+                            {
+                                const: "none",
+                                title: `El beneficiario no tiene cuentas bancarias registradas`
+                            }
+                        ]
+                    };
+                    if (!newSchema.required) newSchema.required = [];
+                }
+            } else {
+                newSchema.properties.provider_bank_account_id = {
+                    type: "string",
+                    title: "Cuenta de Destino (Destiny Account)",
+                    oneOf: [
+                        {
+                            const: "none",
+                            title: `El beneficiario no tiene cuentas bancarias`
+                        }
+                    ]
+                };
+                
+                if (!newSchema.required) newSchema.required = [];
+            }
+        }
+
         // Ensure userIdCreator exists in properties since it's required
         if (!newSchema.properties.userIdCreator) {
             newSchema.properties.userIdCreator = {
@@ -509,7 +559,7 @@ export default function PaymentRequestPage() {
         }
 
         return newSchema;
-    }, [schemaData, projects, providers, formData.documentType]);
+    }, [schemaData, projects, providers, formData.documentType, formData.beneficiary, formData.currency]);
 
     const enhancedUiSchema = React.useMemo(() => {
         if (!schemaData?.uiSchema) return null;
@@ -518,6 +568,10 @@ export default function PaymentRequestPage() {
             ...schemaData.uiSchema,
             "project": { "ui:widget": "SelectWidget" },
             "beneficiary": { "ui:widget": "SelectWidget" },
+            "provider_bank_account_id": { 
+                "ui:widget": "SelectWidget",
+                "ui:help": <span className="text-xs text-muted-foreground mt-1 block italic">{t('PaymentRequestForm.targetAccountHelpText')}</span>
+            },
             "userIdCreator": { "ui:readonly": true, "ui:widget": "hidden" }, // Hide or make readonly
             "issueDate": { "ui:readonly": true },
         };
@@ -544,17 +598,23 @@ export default function PaymentRequestPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: any) => {
+        setFormData(e.formData);
         if (isSubmitting) return;
+
         setIsSubmitting(true);
         console.log("Form submitted:", e.formData);
 
         try {
             const data = e.formData;
+            const selectedProvider: any = providers.find((p: any) => p._id === data.beneficiary || p.id === data.beneficiary);
+            const snapshot = selectedProvider?.bank_accounts?.find((acc: any) => acc._id === data.provider_bank_account_id || acc.account_number === data.provider_bank_account_id);
 
             // Map form fields to backend payload
-            const payload = {
+            const payload: any = {
                 project_id: data.project,
                 provider_id: data.beneficiary,
+                provider_bank_account_id: (data.provider_bank_account_id && data.provider_bank_account_id !== "none") ? data.provider_bank_account_id : undefined,
+                provider_bank_account_snapshot: snapshot || undefined,
                 subtotal: Number(data.amount),
                 tax: Number(data.tax),
                 total: Number(data.total_amount),
@@ -1166,26 +1226,29 @@ export default function PaymentRequestPage() {
                                 onChange={handleFormChange}
                                 onSubmit={handleSubmit}
                             >
-                                <div className="mt-6 pt-4 border-t border-muted flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                                    <Button
-                                        type="submit"
-                                        className="w-full sm:w-auto min-w-[200px] h-10 text-sm shadow-md hover:shadow-lg transition-all"
-                                        disabled={isSubmitting}
-                                    >
-                                        {isSubmitting ? (
-                                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('PaymentRequestForm.step4.submitting')}</>
-                                        ) : (
-                                            <>{t('PaymentRequestForm.step4.submit')}<CheckCircle2 className="ml-2 h-4 w-4" /></>
-                                        )}
-                                    </Button>
-                                    <button
-                                        onClick={resetForm}
-                                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
-                                        disabled={isSubmitting}
-                                    >
-                                        <ChevronLeft className="h-3 w-3" />
-                                        {t('PaymentRequestForm.step4.startOver')}
-                                    </button>
+                                <div className="mt-6 pt-4 border-t border-muted flex flex-col gap-4">
+
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                                        <Button
+                                            type="submit"
+                                            className="w-full sm:w-auto min-w-[200px] h-10 text-sm shadow-md hover:shadow-lg transition-all"
+                                            disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? (
+                                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('PaymentRequestForm.step4.submitting')}</>
+                                            ) : (
+                                                <>{t('PaymentRequestForm.step4.submit')}<CheckCircle2 className="ml-2 h-4 w-4" /></>
+                                            )}
+                                        </Button>
+                                        <button
+                                            onClick={resetForm}
+                                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                                            disabled={isSubmitting}
+                                        >
+                                            <ChevronLeft className="h-3 w-3" />
+                                            {t('PaymentRequestForm.step4.startOver')}
+                                        </button>
+                                    </div>
                                 </div>
                             </SchemaForm>
                         </CardContent>

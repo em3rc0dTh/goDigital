@@ -29,9 +29,22 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Plus, Pencil, Trash2, Search, Building2, User } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Search, Building2, User, CreditCard } from "lucide-react";
 import Cookies from "js-cookie";
 import { useI18n } from "@/i18n/I18nProvider";
+
+interface BankAccount {
+    bank_name: string;
+    currency: string;
+    account_number: string;
+    cci_number?: string;
+    alias?: string;
+    is_official: boolean;
+    third_party_owner?: {
+        name: string;
+        tax_id: string;
+    };
+}
 
 interface Entity {
     _id?: string;
@@ -52,6 +65,7 @@ interface Entity {
         phone?: string;
         address?: string;
     };
+    bank_accounts?: BankAccount[];
     is_active: boolean;
 }
 
@@ -74,6 +88,7 @@ export default function EntitiesPage() {
         vendor_type: "provider",
         identifiers: { tax_id: "", national_id: "", registration_number: "" },
         contact: { email: "", phone: "", address: "" },
+        bank_accounts: [],
         is_active: true,
     });
 
@@ -119,7 +134,8 @@ export default function EntitiesPage() {
             setFormData({
                 ...entity,
                 identifiers: { ...entity.identifiers },
-                contact: { ...entity.contact }
+                contact: { ...entity.contact },
+                bank_accounts: entity.bank_accounts || []
             });
         } else {
             setCurrentEntity(null);
@@ -131,10 +147,44 @@ export default function EntitiesPage() {
                 vendor_type: mapTabToType(currentTab) || "provider",
                 identifiers: { tax_id: "", national_id: "", registration_number: "" },
                 contact: { email: "", phone: "", address: "" },
+                bank_accounts: [],
                 is_active: true,
             });
         }
         setIsDialogOpen(true);
+    };
+
+    const handleAddBankAccount = () => {
+        setFormData({
+            ...formData,
+            bank_accounts: [
+                ...(formData.bank_accounts || []),
+                {
+                    bank_name: "",
+                    currency: "PEN",
+                    account_number: "",
+                    is_official: true
+                }
+            ]
+        });
+    };
+
+    const handleRemoveBankAccount = (index: number) => {
+        const newAccounts = [...(formData.bank_accounts || [])];
+        newAccounts.splice(index, 1);
+        setFormData({ ...formData, bank_accounts: newAccounts });
+    };
+
+    const handleUpdateBankAccount = (index: number, field: string, value: any) => {
+        const newAccounts = [...(formData.bank_accounts || [])];
+        if (field === 'third_party_owner.name') {
+            newAccounts[index].third_party_owner = { ...newAccounts[index].third_party_owner, name: value } as any;
+        } else if (field === 'third_party_owner.tax_id') {
+            newAccounts[index].third_party_owner = { ...newAccounts[index].third_party_owner, tax_id: value } as any;
+        } else {
+            (newAccounts[index] as any)[field] = value;
+        }
+        setFormData({ ...formData, bank_accounts: newAccounts });
     };
 
     // Helper to map tab value to backend type value
@@ -276,6 +326,7 @@ export default function EntitiesPage() {
                                 <TableHead>{t("Entities.table.name")}</TableHead>
                                 <TableHead>{t("Entities.table.taxId")}</TableHead>
                                 <TableHead>{t("Entities.table.type")}</TableHead>
+                                <TableHead>Cuentas</TableHead>
                                 <TableHead>{t("Entities.table.email")}</TableHead>
                                 <TableHead className="text-right">{t("Entities.table.actions")}</TableHead>
                             </TableRow>
@@ -308,6 +359,21 @@ export default function EntitiesPage() {
                                                 {entity.vendor_type || "-"}
                                             </span>
                                         </TableCell>
+                                        <TableCell>
+                                            {entity.bank_accounts && entity.bank_accounts.length > 0 ? (
+                                                <div className="flex flex-col gap-1">
+                                                    {entity.bank_accounts.map((acc, idx) => (
+                                                        <span key={idx} className="px-2 py-1 bg-green-50 text-green-700 text-[10px] font-medium rounded-md border border-green-200 truncate max-w-[250px]" title={`${acc.bank_name}: ${acc.account_number}`}>
+                                                            🏦 {acc.bank_name}: {acc.account_number}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="px-2 py-1 bg-gray-100 text-gray-500 text-[10px] font-medium rounded-full">
+                                                    Sin cuentas
+                                                </span>
+                                            )}
+                                        </TableCell>
                                         <TableCell>{entity.contact?.email || "-"}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
@@ -337,7 +403,7 @@ export default function EntitiesPage() {
             </Tabs>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-[600px]">
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>{currentEntity ? t("Entities.dialog.editTitle") : t("Entities.dialog.createTitle")}</DialogTitle>
                         <DialogDescription>
@@ -476,6 +542,130 @@ export default function EntitiesPage() {
                                     />
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Bank Accounts Section */}
+                        <div className="space-y-3 p-3 bg-muted/20 rounded-md border text-sm">
+                            <div className="flex items-center justify-between">
+                                <h4 className="font-semibold text-muted-foreground flex items-center gap-2">
+                                    <CreditCard className="h-4 w-4" /> Bank Accounts
+                                </h4>
+                                <Button type="button" variant="outline" size="sm" onClick={handleAddBankAccount}>
+                                    <Plus className="h-4 w-4 mr-1" /> Add Account
+                                </Button>
+                            </div>
+                            
+                            {(formData.bank_accounts || []).map((account, index) => (
+                                <div key={index} className="p-3 border rounded-md bg-background space-y-3 relative">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute right-1 top-1 h-6 w-6 text-destructive hover:text-destructive"
+                                        onClick={() => handleRemoveBankAccount(index)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                    <div className="grid grid-cols-2 gap-3 pr-6">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">Bank Name *</Label>
+                                            <Input
+                                                className="h-8"
+                                                value={account.bank_name}
+                                                onChange={(e) => handleUpdateBankAccount(index, 'bank_name', e.target.value)}
+                                                required
+                                                list={`peru-banks-${index}`}
+                                                placeholder="e.g. BCP"
+                                            />
+                                            <datalist id={`peru-banks-${index}`}>
+                                                <option value="Banco de Crédito del Perú (BCP)" />
+                                                <option value="BBVA" />
+                                                <option value="Interbank" />
+                                                <option value="Scotiabank" />
+                                                <option value="BanBif" />
+                                                <option value="Banco Pichincha" />
+                                                <option value="Banco de la Nación" />
+                                                <option value="Banco Falabella" />
+                                                <option value="Banco Ripley" />
+                                                <option value="Mibanco" />
+                                                <option value="Caja Arequipa" />
+                                                <option value="Caja Huancayo" />
+                                                <option value="Caja Piura" />
+                                            </datalist>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">Currency *</Label>
+                                            <Select
+                                                value={account.currency}
+                                                onValueChange={(val) => handleUpdateBankAccount(index, 'currency', val)}
+                                            >
+                                                <SelectTrigger className="h-8">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="PEN">PEN</SelectItem>
+                                                    <SelectItem value="USD">USD</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">Account Number *</Label>
+                                            <Input
+                                                className="h-8"
+                                                value={account.account_number}
+                                                onChange={(e) => handleUpdateBankAccount(index, 'account_number', e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">CCI (Optional)</Label>
+                                            <Input
+                                                className="h-8"
+                                                value={account.cci_number || ''}
+                                                onChange={(e) => handleUpdateBankAccount(index, 'cci_number', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 pt-2">
+                                        <input
+                                            type="checkbox"
+                                            id={`official-${index}`}
+                                            checked={account.is_official}
+                                            onChange={(e) => handleUpdateBankAccount(index, 'is_official', e.target.checked)}
+                                            className="h-4 w-4 rounded border-gray-300"
+                                        />
+                                        <Label htmlFor={`official-${index}`} className="text-xs font-normal cursor-pointer">
+                                            Is Official Account (Owned by Entity)
+                                        </Label>
+                                    </div>
+
+                                    {!account.is_official && (
+                                        <div className="grid grid-cols-2 gap-3 pt-2 border-t mt-2">
+                                            <div className="space-y-1">
+                                                <Label className="text-xs">Third-Party Owner Name *</Label>
+                                                <Input
+                                                    className="h-8"
+                                                    value={account.third_party_owner?.name || ''}
+                                                    onChange={(e) => handleUpdateBankAccount(index, 'third_party_owner.name', e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-xs">Third-Party Tax ID *</Label>
+                                                <Input
+                                                    className="h-8"
+                                                    value={account.third_party_owner?.tax_id || ''}
+                                                    onChange={(e) => handleUpdateBankAccount(index, 'third_party_owner.tax_id', e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            {(!formData.bank_accounts || formData.bank_accounts.length === 0) && (
+                                <p className="text-xs text-muted-foreground text-center py-2">No bank accounts added.</p>
+                            )}
                         </div>
 
                         <DialogFooter>

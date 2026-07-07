@@ -49,7 +49,7 @@ export const SchemaForm: React.FC<SchemaFormProps> = ({
     // Helper to preprocess schema and uiSchema
     const { safeSchema, safeUiSchema } = React.useMemo(() => {
         const safeSchema = JSON.parse(JSON.stringify(schema));
-        const safeUiSchema = uiSchema ? JSON.parse(JSON.stringify(uiSchema)) : {};
+        const safeUiSchema: any = uiSchema ? { ...uiSchema } : {};
 
         if (safeSchema.properties) {
             Object.keys(safeSchema.properties).forEach((key) => {
@@ -66,14 +66,16 @@ export const SchemaForm: React.FC<SchemaFormProps> = ({
                 }
 
                 // Move ui:* props to uiSchema if needed
-                // (RJSF might not support inline ui props in schema)
                 const uiProps = Object.keys(prop).filter(k => k.startsWith("ui:"));
                 if (uiProps.length > 0) {
-                    if (!safeUiSchema[key]) safeUiSchema[key] = {};
+                    if (!safeUiSchema[key]) {
+                        safeUiSchema[key] = {};
+                    } else {
+                        safeUiSchema[key] = { ...safeUiSchema[key] };
+                    }
+                    
                     uiProps.forEach(uiKey => {
                         safeUiSchema[key][uiKey] = prop[uiKey];
-                        // Optional: delete from schema if strict validation is an issue
-                        // delete prop[uiKey]; 
                     });
                 }
             });

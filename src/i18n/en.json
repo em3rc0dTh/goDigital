@@ -755,6 +755,7 @@
     },
     "PaymentRequestForm": {
         "title": "Payment Request",
+        "targetAccountHelpText": "This destination account is just a suggestion for our admin. Remember, your destination account could be confirmed in posterior steps.",
         "step1": {
             "title": "New Payment Request",
             "subtitle": "Select a project to begin",

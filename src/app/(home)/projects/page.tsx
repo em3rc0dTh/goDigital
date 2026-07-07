@@ -442,11 +442,12 @@ export default function ProjectsPage() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="projectOwner">{t("Projects.dialog.owner")}</Label>
+                                <Label htmlFor="projectOwner">{t("Projects.dialog.owner")} (Email, Nombre o ID)</Label>
                                 <Input
                                     id="projectOwner"
                                     value={formData.projectOwner}
                                     onChange={(e) => setFormData({ ...formData, projectOwner: e.target.value })}
+                                    placeholder="ej. admin@thradex.com o Eduardo"
                                 />
                             </div>
                             <div className="space-y-2">

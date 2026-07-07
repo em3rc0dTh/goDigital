@@ -78,8 +78,9 @@ const ACCEPTED_FILE_TYPE = "application/pdf";
 
 export default function BankStatement({ activeDatabase }: BankStatementProps) {
     const { t } = useI18n();
-    const [file, setFile] = useState<File | null>(null);
+    const [files, setFiles] = useState<File[]>([]);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewFile, setPreviewFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
@@ -95,17 +96,19 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
 
-    // Cleanup preview URL on unmount
+    // Cleanup on unmount
     useEffect(() => {
         return () => {
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-            }
             if (progressIntervalRef.current) {
                 clearInterval(progressIntervalRef.current);
             }
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
         };
     }, [previewUrl]);
+
+
 
     // Memoized summary calculations
     const summary: Summary = useMemo(() => {
@@ -153,28 +156,19 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
     }, []);
 
     // Handle file selection
-    const handleFileSelection = useCallback((selectedFile: File) => {
-        if (!validateFile(selectedFile)) return;
+    const handleFileSelection = useCallback((selectedFiles: FileList | File[]) => {
+        const validFiles = Array.from(selectedFiles).filter(validateFile);
+        if (validFiles.length === 0) return;
 
-        setFile(selectedFile);
-
-        // Clean up previous preview URL
-        if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-        }
-
-        // Create new preview URL
-        const url = URL.createObjectURL(selectedFile);
-        setPreviewUrl(url);
-
+        setFiles(prev => [...prev, ...validFiles]);
         setStatus(null);
         setProcessedData(null);
         setUploadProgress(0);
 
-        toast.success("File selected", {
-            description: `${selectedFile.name} is ready to upload`
+        toast.success("Files selected", {
+            description: `${validFiles.length} file(s) ready to upload`
         });
-    }, [previewUrl, validateFile]);
+    }, [validateFile]);
 
     // Drag and drop handlers
     const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -199,21 +193,20 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
         e.stopPropagation();
         setIsDragging(false);
 
-        const files = e.dataTransfer.files;
-        if (files?.[0]) {
-            handleFileSelection(files[0]);
+        if (e.dataTransfer.files?.length > 0) {
+            handleFileSelection(e.dataTransfer.files);
         }
     }, [handleFileSelection]);
 
     const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files?.[0]) {
-            handleFileSelection(e.target.files[0]);
+        if (e.target.files?.length) {
+            handleFileSelection(e.target.files);
         }
     }, [handleFileSelection]);
 
     // Upload handler
     const handleUpload = useCallback(async () => {
-        if (!file) return;
+        if (files.length === 0) return;
 
         setUploading(true);
         setStatus(null);
@@ -233,7 +226,7 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
         }, 200);
 
         const formData = new FormData();
-        formData.append("file", file);
+        files.forEach(f => formData.append("files", f));
         formData.append("entityId", activeDatabase);
 
         try {
@@ -257,26 +250,17 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
                 throw new Error(errData.error || `Upload failed: ${res.statusText}`);
             }
 
-            const data: ProcessedData = await res.json();
-            setProcessedData(data);
-
-            const successMessage = data.message || t("Extract.BankStatement.success");
-            setStatus({ type: 'success', message: successMessage });
-
             toast.success("Upload successful", {
-                description: `Processed ${data.transactions?.length || data.count || 0} transactions`
+                description: "Statements are processing in the background."
             });
 
-            // Clear file after successful upload
+            // Clear files and switch to history
             setTimeout(() => {
-                setFile(null);
-                if (previewUrl) {
-                    URL.revokeObjectURL(previewUrl);
-                    setPreviewUrl(null);
-                }
+                setFiles([]);
                 if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                 }
+                setView("history");
             }, 1000);
 
         } catch (error: any) {
@@ -295,25 +279,36 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
         } finally {
             setTimeout(() => setUploading(false), 500);
         }
-    }, [file, activeDatabase, API_BASE, previewUrl, t]);
+    }, [files, activeDatabase, API_BASE, t]);
 
-    // Remove file handler
-    const handleRemoveFile = useCallback(() => {
-        setFile(null);
+    // Preview file handler
+    const handlePreview = useCallback((file: File) => {
         if (previewUrl) {
             URL.revokeObjectURL(previewUrl);
-            setPreviewUrl(null);
         }
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
+        const url = URL.createObjectURL(file);
+        setPreviewFile(file);
+        setPreviewUrl(url);
+        setIsPreviewOpen(true);
+    }, [previewUrl]);
+
+    // Remove file handler
+    const handleRemoveFile = useCallback((index?: number) => {
+        if (index !== undefined) {
+            setFiles(prev => prev.filter((_, i) => i !== index));
+        } else {
+            setFiles([]);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
         }
         setStatus(null);
         setUploadProgress(0);
-    }, [previewUrl]);
+    }, []);
 
     // History fetching
-    const fetchHistory = useCallback(async () => {
-        setLoadingHistory(true);
+    const fetchHistory = useCallback(async (silent = false) => {
+        if (!silent) setLoadingHistory(true);
         try {
             const token = Cookies.get("session_token");
             const res = await fetch(`${API_BASE}/statements`, {
@@ -325,20 +320,37 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
             if (!res.ok) throw new Error("Failed to fetch history");
             const data = await res.json();
             setHistory(data.statements || []);
-            setView("history");
+            if (!silent) setView("history");
         } catch (error) {
             console.error("History fetch error:", error);
-            toast.error("Error loading historical statements");
+            if (!silent) toast.error("Error loading historical statements");
         } finally {
-            setLoadingHistory(false);
+            if (!silent) setLoadingHistory(false);
         }
     }, [API_BASE]);
 
-    const fetchHistoryDetails = useCallback(async (fileId: string) => {
+    // Polling for history
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (view === "history") {
+            interval = setInterval(() => {
+                fetchHistory(true);
+            }, 10000);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [view, fetchHistory]);
+
+    const fetchHistoryDetails = useCallback(async (fileId: string, accountNumber?: string) => {
         setLoadingHistory(true);
         try {
             const token = Cookies.get("session_token");
-            const res = await fetch(`${API_BASE}/statements/${fileId}`, {
+            const url = accountNumber 
+                ? `${API_BASE}/statements/${fileId}?accountNumber=${encodeURIComponent(accountNumber)}`
+                : `${API_BASE}/statements/${fileId}`;
+            
+            const res = await fetch(url, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 },
@@ -486,7 +498,7 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
                     <div className="flex items-center gap-2">
                         {view === "upload" && !processedData && (
                             <Button
-                                onClick={fetchHistory}
+                                onClick={() => fetchHistory(false)}
                                 variant="outline"
                                 disabled={loadingHistory}
                                 className="gap-2 hover:bg-indigo-50 hover:border-indigo-300 transition-all"
@@ -527,9 +539,9 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
                                         {t("Extract.BankStatement.subtitle")}
                                     </CardDescription>
                                 </div>
-                                {file && (
+                                {files.length > 0 && (
                                     <Badge variant="secondary" className="text-xs px-3 py-1">
-                                        Ready to upload
+                                        Ready to upload {files.length} {files.length === 1 ? 'file' : 'files'}
                                     </Badge>
                                 )}
                             </div>
@@ -538,7 +550,7 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
 
                     <CardContent className="p-6 space-y-6">
                         {/* Upload Area */}
-                        {!file ? (
+                        {files.length === 0 ? (
                             <div className="space-y-4">
                                 <div
                                     onDragEnter={handleDragEnter}
@@ -590,102 +602,102 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
                                             id="file-upload"
                                             ref={fileInputRef}
                                             type="file"
+                                            multiple
                                             accept=".pdf"
                                             onChange={handleFileChange}
                                             className="hidden"
-                                            aria-label="Upload bank statement PDF"
+                                            aria-label="Upload bank statement PDFs"
                                         />
                                     </label>
                                 </div>
                             </div>
                         ) : (
                             <div className="space-y-4 animate-in fade-in slide-in-from-top-3 duration-500">
-                                {/* File Preview Card */}
-                                <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-5 rounded-xl border-2 border-blue-200 shadow-md">
-                                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 justify-between">
-                                        <div className="flex items-center gap-4 w-full md:w-auto overflow-hidden">
-                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                                                <FileText className="w-7 h-7 text-white" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-base font-bold text-gray-900 truncate" title={file.name}>
-                                                    {file.name}
-                                                </p>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <Badge variant="outline" className="text-xs bg-white">
-                                                        {(file.size / 1024 / 1024).toFixed(2)} MB
-                                                    </Badge>
-                                                    <Badge variant="outline" className="text-xs bg-white">
-                                                        PDF Document
-                                                    </Badge>
+                                {/* Files Preview List */}
+                                <div className="space-y-3">
+                                    {files.map((f, idx) => (
+                                        <div key={`${f.name}-${idx}`} className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 rounded-xl border border-blue-100 shadow-sm flex items-center justify-between">
+                                            <div className="flex items-center gap-3 overflow-hidden">
+                                                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow">
+                                                    <FileText className="w-5 h-5 text-white" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-semibold text-gray-900 truncate" title={f.name}>
+                                                        {f.name}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {(f.size / 1024 / 1024).toFixed(2)} MB
+                                                    </p>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2 w-full md:w-auto">
-                                            <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-                                                <DialogTrigger asChild>
+                                                <div className="flex items-center gap-2">
                                                     <Button
-                                                        variant="outline"
+                                                        variant="ghost"
                                                         size="sm"
-                                                        className="flex-1 md:flex-none gap-2 hover:bg-blue-50 hover:border-blue-300 transition-all"
+                                                        onClick={() => handlePreview(f)}
+                                                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
                                                     >
                                                         <Eye className="w-4 h-4" />
-                                                        Preview
                                                     </Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="max-w-5xl h-[85vh] p-0">
-                                                    <DialogHeader className="px-6 py-4">
-                                                        <div className="flex items-center justify-between">
-                                                            <div>
-                                                                <DialogTitle className="text-xl font-bold">PDF Preview</DialogTitle>
-                                                                <p className="text-sm text-gray-600 mt-1">{file.name}</p>
-                                                            </div>
-                                                        </div>
-                                                    </DialogHeader>
-                                                    {previewUrl && (
-                                                        <div className="w-full h-[calc(85vh-80px)] bg-gray-100">
-                                                            <iframe
-                                                                src={previewUrl}
-                                                                className="w-full h-full"
-                                                                title="PDF Preview"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </DialogContent>
-                                            </Dialog>
-
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={handleRemoveFile}
-                                                className="flex-1 md:flex-none gap-2 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                                Remove
-                                            </Button>
-
-                                            <Button
-                                                onClick={handleUpload}
-                                                disabled={uploading}
-                                                size="sm"
-                                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white flex-1 md:flex-none min-w-[120px] gap-2 shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
-                                            >
-                                                {uploading ? (
-                                                    <>
-                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                        Processing
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Upload className="w-4 h-4" />
-                                                        Upload
-                                                        <ArrowRight className="w-4 h-4" />
-                                                    </>
-                                                )}
-                                            </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleRemoveFile(idx)}
+                                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
                                         </div>
-                                    </div>
+                                    ))}
+                                </div>
+                                <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+                                    <DialogContent className="max-w-5xl h-[85vh] p-0">
+                                        <DialogHeader className="px-6 py-4">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <DialogTitle className="text-xl font-bold">PDF Preview</DialogTitle>
+                                                    {previewFile && <p className="text-sm text-gray-600 mt-1">{previewFile.name}</p>}
+                                                </div>
+                                            </div>
+                                        </DialogHeader>
+                                        {previewUrl && (
+                                            <div className="w-full h-[calc(85vh-80px)] bg-gray-100">
+                                                <iframe
+                                                    src={previewUrl}
+                                                    className="w-full h-full"
+                                                    title="PDF Preview"
+                                                />
+                                            </div>
+                                        )}
+                                    </DialogContent>
+                                </Dialog>
+                                <div className="flex justify-end gap-3 pt-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => handleRemoveFile()}
+                                        className="gap-2 hover:bg-gray-50"
+                                    >
+                                        Clear All
+                                    </Button>
+                                    <Button
+                                        onClick={handleUpload}
+                                        disabled={uploading}
+                                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white min-w-[140px] gap-2 shadow-md transition-all"
+                                    >
+                                        {uploading ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                Processing
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Upload className="w-4 h-4" />
+                                                Upload {files.length} {files.length === 1 ? 'File' : 'Files'}
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
 
                                     {/* Upload Progress Bar */}
                                     {uploading && (
@@ -703,7 +715,6 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
                                         </div>
                                     )}
                                 </div>
-                            </div>
                         )}
 
                         {/* Status Messages */}
@@ -760,51 +771,65 @@ export default function BankStatement({ activeDatabase }: BankStatementProps) {
                                             <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {history.map((stmt) => (
-                                            <tr key={stmt._id} className="hover:bg-gray-50 transition-colors group">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                                            <FileText className="w-4 h-4 text-blue-600" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-semibold text-gray-900">{stmt.fileName}</p>
-                                                            {stmt.accountNumber && (
-                                                                <p className="text-xs text-gray-500 font-mono">{stmt.accountNumber}</p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">
-                                                    {stmt.bank || "Unknown Bank"}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">
-                                                    <div className="flex items-center gap-2">
-                                                        <Calendar className="w-4 h-4 text-gray-400" />
-                                                        {new Date(stmt.createdAt || Date.now()).toLocaleDateString()}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
-                                                        <Hash className="w-3 h-3 mr-1" />
-                                                        {stmt.transactionCount}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => fetchHistoryDetails(stmt._id)}
-                                                        className="opacity-0 group-hover:opacity-100 transition-all gap-2"
-                                                    >
-                                                        <Eye className="w-4 h-4" />
-                                                        Ver Detalle
-                                                    </Button>
+                                    {Object.entries(
+                                        history.reduce((acc, stmt) => {
+                                            const accNum = stmt.accountNumber || "Cuenta Desconocida";
+                                            if (!acc[accNum]) acc[accNum] = [];
+                                            acc[accNum].push(stmt);
+                                            return acc;
+                                        }, {} as Record<string, any[]>)
+                                    ).map(([accNum, stmts]) => (
+                                        <tbody key={accNum} className="divide-y divide-gray-100">
+                                            <tr className="bg-indigo-50/50">
+                                                <td colSpan={5} className="px-6 py-2 text-sm font-bold text-indigo-900 border-t border-b border-indigo-100">
+                                                    💳 Cuenta: {accNum}
                                                 </td>
                                             </tr>
-                                        ))}
-                                    </tbody>
+                                            {stmts.map((stmt, index) => (
+                                                <tr key={`${stmt.fileId || stmt._id}-${stmt.accountNumber || index}`} className="hover:bg-gray-50 transition-colors group">
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                                                <FileText className="w-4 h-4 text-blue-600" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-semibold text-gray-900">{stmt.fileName}</p>
+                                                                {stmt.accountNumber && (
+                                                                    <p className="text-xs text-gray-500 font-mono">{stmt.accountNumber}</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600">
+                                                        {stmt.bank || "Unknown Bank"}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600">
+                                                        <div className="flex items-center gap-2">
+                                                            <Calendar className="w-4 h-4 text-gray-400" />
+                                                            {new Date(stmt.createdAt || Date.now()).toLocaleDateString()}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
+                                                            <Hash className="w-3 h-3 mr-1" />
+                                                            {stmt.transactionCount}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => fetchHistoryDetails(stmt.fileId || stmt._id, stmt.accountNumber)}
+                                                            className="opacity-0 group-hover:opacity-100 transition-all gap-2"
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                            Ver Detalle
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    ))}
                                 </table>
                             </div>
                         ) : (
